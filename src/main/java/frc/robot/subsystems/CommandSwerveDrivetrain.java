@@ -291,7 +291,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         //final pose: megatag2 combined with megatag1(if valid)
         if(useMT1Yaw && useMT2Pose){
-            System.out.println("Just for testing, REMOVE LATER; Valid MT1 Yaw: " + mt1Result.pose.getRotation().getDegrees()+"Yaw before:" + getEstimatedPose().getRotation());
             Pose2d finalPose = new Pose2d(mt2Result.pose.getTranslation(), mt1Result.pose.getRotation());
             if(!Drive.comp) m_field.getObject("VisionEstimate").setPose(finalPose); //visualize our last valid LL pose estimate on dashboard
             addVisionMeasurement(finalPose, mt2Result.timestampSeconds, VecBuilder.fill(xyStdDev, xyStdDev, Vision.megaTag1YawStdDev));
@@ -301,7 +300,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             addVisionMeasurement(mt2Result.pose, mt2Result.timestampSeconds, VecBuilder.fill(xyStdDev, xyStdDev, 9999999));
         } else if (useMT1Yaw && !useMT2Pose) { 
             //extreme edge case, only way i see mt1 being valid but not mt2 is if we are sending wrong yaw to mt2 so it returns null; but that is the exact scenario we need mt1 for
-            System.out.println("Just for testing, REMOVE LATER; Valid MT1 Yaw: " + mt1Result.pose.getRotation().getDegrees()+"Yaw before:" + getEstimatedPose().getRotation());
             Pose2d finalPose = new Pose2d(0, 0, mt1Result.pose.getRotation());
             if(!Drive.comp) m_field.getObject("VisionEstimate").setPose(finalPose); //visualize our last valid LL pose estimate on dashboard
             addVisionMeasurement(finalPose, mt1Result.timestampSeconds, VecBuilder.fill(9999999, 9999999, Vision.megaTag1YawStdDev));
@@ -332,5 +330,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             Matrix<N3, N1> visionMeasurementStdDevs) {
         super.addVisionMeasurement(visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds),
                 visionMeasurementStdDevs);
+        // Also publish the vision measurement to telemetry (NetworkTables / DataLog)
+        try {
+            var logger = frc.robot.Telemetry.getInstance();
+            if (logger != null) {
+                logger.logVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+            }
+        } catch (Exception e) {
+            // avoid throwing from periodic/vision updates
+            System.err.println("CommandSwerveDrivetrain: failed to log vision measurement: " + e.getMessage());
+        }
     }
 }

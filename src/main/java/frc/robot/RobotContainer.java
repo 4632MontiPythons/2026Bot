@@ -36,8 +36,8 @@ public class RobotContainer {
         private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
         private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
         //initilaize slew rate limiters
-        private final SlewRateLimiter m_xspeedLimiter = new SlewRateLimiter(OI.slewRate);
-        private final SlewRateLimiter m_yspeedLimiter = new SlewRateLimiter(OI.slewRate);
+        private final SlewRateLimiter xSlewLimiter = new SlewRateLimiter(OI.slewRate);
+        private final SlewRateLimiter ySlewLimiter = new SlewRateLimiter(OI.slewRate);
         private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(OI.rotationSlewRate);
 
         /* Setting up bindings for necessary control of the swerve drive platform */
@@ -48,7 +48,7 @@ public class RobotContainer {
         private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
         private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
         private final SendableChooser<Command> autoChooser;
-        private final Telemetry logger = new Telemetry(MaxSpeed);
+        private final Telemetry logger = new Telemetry();
 
         private final CommandXboxController xboxController = new CommandXboxController(OI.driverControllerPort);
         public final CommandSwerveDrivetrain drivetrain = new CommandSwerveDrivetrain(
@@ -73,9 +73,9 @@ public class RobotContainer {
                 // Drivetrain default command
                 drivetrain.setDefaultCommand(
                                 drivetrain.applyRequest(() -> drive
-                                                .withVelocityX(m_xspeedLimiter.calculate(-xboxController.getLeftY())
+                                                .withVelocityX(xSlewLimiter.calculate(-xboxController.getLeftY())
                                                                 * MaxSpeed)
-                                                .withVelocityY(m_yspeedLimiter.calculate(-xboxController.getLeftX())
+                                                .withVelocityY(ySlewLimiter.calculate(-xboxController.getLeftX())
                                                                 * MaxSpeed)
                                                 .withRotationalRate(m_rotLimiter.calculate(-xboxController.getRightX() 
                                                                 * MaxAngularRate))));
@@ -105,11 +105,11 @@ public class RobotContainer {
                                 drivetrain,
                                 () -> {
                                         double rawForward = -xboxController.getLeftY();
-                                        return (Math.abs(rawForward) < OI.deadband) ? 0.0 : m_xspeedLimiter.calculate(rawForward) * MaxSpeed;
+                                        return (Math.abs(rawForward) < OI.deadband) ? 0.0 : xSlewLimiter.calculate(rawForward) * MaxSpeed;
                                 },
                                 () -> {
                                         double rawLeft = -xboxController.getLeftX();
-                                        return (Math.abs(rawLeft) < OI.deadband) ? 0.0 : m_yspeedLimiter.calculate(rawLeft) * MaxSpeed;
+                                        return (Math.abs(rawLeft) < OI.deadband) ? 0.0 : ySlewLimiter.calculate(rawLeft) * MaxSpeed;
                                 }
                         )
                 );
