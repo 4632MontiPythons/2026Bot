@@ -7,6 +7,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import java.util.function.DoubleSupplier;
@@ -98,16 +99,13 @@ public class PointAtHub extends Command {
     }
 
     private void rumbleDriver(double seconds) {
-        if (driverController == null) return;
+        // in initialize() where you want to rumble
         var hid = driverController.getHID();
-        hid.setRumble(RumbleType.kLeftRumble, 1.0);
-        hid.setRumble(RumbleType.kRightRumble, 1.0);
-        // clear rumble after a short delay on a background thread
-        new Thread(() -> {
-            try { Thread.sleep((long)(seconds * 1000)); } catch (InterruptedException ignored) {}
-            hid.setRumble(RumbleType.kLeftRumble, 0.0);
-            hid.setRumble(RumbleType.kRightRumble, 0.0);
-        }).start();
+        Commands.sequence(
+            Commands.runOnce(() -> { hid.setRumble(RumbleType.kLeftRumble, 1.0); hid.setRumble(RumbleType.kRightRumble, 1.0); }),
+            Commands.waitSeconds(0.5),
+            Commands.runOnce(() -> { hid.setRumble(RumbleType.kLeftRumble, 0.0); hid.setRumble(RumbleType.kRightRumble, 0.0); })
+        ).schedule();
     }
 
     @Override

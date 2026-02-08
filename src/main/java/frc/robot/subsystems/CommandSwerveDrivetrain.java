@@ -325,7 +325,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         try {
             var logger = frc.robot.Telemetry.getInstance();
             if (logger != null) {
-                logger.logVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+                logger.logVisionMeasurement(visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds), visionMeasurementStdDevs);
             }
         } catch (Exception e) {
             // avoid throwing from periodic/vision updates
