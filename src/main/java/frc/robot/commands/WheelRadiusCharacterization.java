@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.generated.TunerConstants;
 
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import static edu.wpi.first.units.Units.Inches;
 
@@ -18,7 +19,8 @@ public class WheelRadiusCharacterization extends Command {
     private final SwerveRequest.RobotCentric spinRequest = new SwerveRequest.RobotCentric()
             .withVelocityX(0)
             .withVelocityY(0)
-            .withRotationalRate(ROTATION_SPEED); 
+            .withRotationalRate(ROTATION_SPEED)
+            .withDriveRequestType(DriveRequestType.Velocity);
 
     private double lastYawRadians;
     private double accumulatedYawRadians = 0;

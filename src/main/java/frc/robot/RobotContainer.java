@@ -68,9 +68,8 @@ public class RobotContainer {
         }
 
         private void configureBindings() {
-                // Note that X is defined as forward according to WPILib convention,
-                // and Y is defined as to the left according to WPILib convention.
-                // Drivetrain default command
+
+                // Drivetrain default command; runs when nothing else is using drivetrain subsystem.
                 drivetrain.setDefaultCommand(
                                 drivetrain.applyRequest(() -> drive
                                                 .withVelocityX(xSlewLimiter.calculate(-xboxController.getLeftY())
