@@ -256,7 +256,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          0);
 
         //first we'll check MegaTag1 results for just yaw estimation; we are very very picky about this data because pigeon is generally very accurate for yaw
-        //this is mainly just for this year, because of the bump; consider removing this code for future seasons
+        //this is mainly just for this year, because of the bump; consider removing this code for future seasons if you trust the IMU
         var mt1Result = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight"); //grab LL estimate
         boolean useMT1Yaw = false;
         boolean useMT2Pose = false;

@@ -1,5 +1,8 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
@@ -12,6 +15,7 @@ public final class Constants {
     }
 
     public static final class Drive {
+        public static final double maxAngularRateRadPerSec = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
         //Most Drive constants are located in /generated/TunerConstants.java
         public static final double odometryXYStdDevs = 0.03;
         public static final double odometryYawStdDev = Units.degreesToRadians(0.75);
@@ -75,7 +79,7 @@ public final class Constants {
         public static final double slewRate = 3.0; //limits change to (100*k)% per second, meaning would take 1/k seconds to go from requesting 0 to requesting full throttle
         public static final double rotationSlewRate = 6.0;
     }
-    public static final class Shooter {
+    public static final class Shooting {
         // Hub coordinates in meters (X, Y)
         public static final double redGoalX = Units.inchesToMeters(469.11);
         public static final double redGoalY = Units.inchesToMeters(158.84);
@@ -85,6 +89,7 @@ public final class Constants {
 
         public static final double redXBoundary = Units.inchesToMeters(470);
         public static final double blueXBoundary = Units.inchesToMeters(180);
+        public static final double kPAngle = 3.0; // Proportional gain for angle control
 
     }
 }

@@ -12,9 +12,10 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import java.util.function.DoubleSupplier;
 
-import frc.robot.Constants;
+import frc.robot.Constants.Drive;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.MatchInfo;
+import frc.robot.Constants.Shooting;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -26,15 +27,9 @@ public class PointAtHub extends Command {
     private double hubX;
     private double hubY;
 
-    // Reuse the request object to improve performance (avoid garbage collection)
     private final SwerveRequest.FieldCentric driveRequest = new SwerveRequest.FieldCentric()
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
-    // Maximum angular speed
-    private final double maxAngularRateRadPerSec = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
-
-    // Proportional gain for heading controller
-    private static final double kP_angle = 3.0;
 
     public PointAtHub(CommandSwerveDrivetrain drivetrain, CommandXboxController driverController, DoubleSupplier vxSupplier, DoubleSupplier vySupplier) {
         this.drivetrain = drivetrain;
@@ -53,17 +48,17 @@ public class PointAtHub extends Command {
         if (optAlliance.isPresent()) {
             Alliance alliance = optAlliance.get();
             if (alliance == Alliance.Red) {
-                this.hubX = Constants.Shooter.redGoalX;
-                this.hubY = Constants.Shooter.redGoalY;
+                this.hubX = Shooting.redGoalX;
+                this.hubY = Shooting.redGoalY;
             } else {
-                this.hubX = Constants.Shooter.blueGoalX;
-                this.hubY = Constants.Shooter.blueGoalY;
+                this.hubX = Shooting.blueGoalX;
+                this.hubY = Shooting.blueGoalY;
             }
 
             Pose2d pose = drivetrain.getEstimatedPose();
             double x = pose.getX();
-            double blueBoundary = Constants.Shooter.blueXBoundary;
-            double redBoundary = Constants.Shooter.redXBoundary;
+            double blueBoundary = Shooting.blueXBoundary;
+            double redBoundary = Shooting.redXBoundary;
 
             boolean inNeutral = (x > blueBoundary && x < redBoundary);
             boolean inWrongZone = (alliance == Alliance.Blue && x >= redBoundary) || (alliance == Alliance.Red && x <= blueBoundary);
@@ -74,10 +69,10 @@ public class PointAtHub extends Command {
         } else {
             // Fallback: choose closest hub
             Pose2d pose = drivetrain.getEstimatedPose();
-            double bx = Constants.Shooter.blueGoalX;
-            double by = Constants.Shooter.blueGoalY;
-            double rx = Constants.Shooter.redGoalX;
-            double ry = Constants.Shooter.redGoalY;
+            double bx = Shooting.blueGoalX;
+            double by = Shooting.blueGoalY;
+            double rx = Shooting.redGoalX;
+            double ry = Shooting.redGoalY;
 
             double distToBlue = Math.hypot(pose.getX() - bx, pose.getY() - by);
             double distToRed = Math.hypot(pose.getX() - rx, pose.getY() - ry);
@@ -126,11 +121,11 @@ public class PointAtHub extends Command {
         double currentYaw = pose.getRotation().getRadians();
         double angleError = MathUtil.angleModulus(desiredYaw - currentYaw);
         
-        double pidOutput = kP_angle * angleError;
+        double pidOutput = Shooting.kPAngle * angleError;
 
         // 5. Combine and Saturate
         double totalRotRate = pidOutput + omegaFF;
-        totalRotRate = MathUtil.clamp(totalRotRate, -maxAngularRateRadPerSec, maxAngularRateRadPerSec);
+        totalRotRate = MathUtil.clamp(totalRotRate, -Drive.maxAngularRateRadPerSec, Drive.maxAngularRateRadPerSec);
 
         // 6. Apply Request
         drivetrain.setControl(driveRequest
