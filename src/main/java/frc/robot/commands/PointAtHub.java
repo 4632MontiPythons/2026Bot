@@ -62,7 +62,7 @@ public class PointAtHub extends Command {
             boolean inWrongZone = (alliance == Alliance.Blue && x >= redBoundary) || (alliance == Alliance.Red && x <= blueBoundary);
 
             if (inNeutral || inWrongZone) {
-                rumbleDriver(0.5);
+                rumbleDriver();
             }
         } else {
             // Fallback: choose closest hub
@@ -85,7 +85,7 @@ public class PointAtHub extends Command {
         }
     }
 
-    private void rumbleDriver(double seconds) {
+    private void rumbleDriver() {
         var hid = driverController.getHID();
         Commands.sequence(
             Commands.runOnce(() -> { hid.setRumble(RumbleType.kLeftRumble, 1.0); hid.setRumble(RumbleType.kRightRumble, 1.0); }),
