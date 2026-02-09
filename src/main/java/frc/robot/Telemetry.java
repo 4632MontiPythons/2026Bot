@@ -24,9 +24,6 @@ public class Telemetry {
     private DoubleArrayLogEntry m_visionStdDevLog;
     private DoubleLogEntry m_visionTimestampLog;
     private DoubleLogEntry m_batteryLog;
-    // SysId logging entries
-    private DoubleArrayLogEntry m_sysIdTranslationLog;
-    private DoubleArrayLogEntry m_sysIdRotationLog;
     public static Telemetry getInstance() {
         if (s_instance == null) s_instance = new Telemetry();
         return s_instance;
@@ -41,11 +38,6 @@ public class Telemetry {
             //tell the log to record everything in NetworkTables:
             DataLogManager.logNetworkTables(true); 
             m_batteryLog = new DoubleLogEntry(log, "System/BatteryVoltage");
-            // SysId compatible logs: append arrays matching (voltage, position, velocity)
-            // Translation: [voltage, position_meters, velocity_mps]
-            m_sysIdTranslationLog = new DoubleArrayLogEntry(log, "SysId/Translation");
-            // Rotation: [rotational_rate_as_voltage, pigeon_yaw_deg, pigeon_yaw_rate_deg_per_sec]
-            m_sysIdRotationLog = new DoubleArrayLogEntry(log, "SysId/Rotation");
         }
     }
 
@@ -74,25 +66,6 @@ public class Telemetry {
         driveOdometryFrequency.set(1.0 / state.OdometryPeriod);
     }
 
-    /**
-     * SysId translation to WPILog.
-     * The array layout is: [voltage, position_meters, velocity_mps].
-     */
-    public void logSysIdTranslation(double voltage, double positionMeters, double velocityMetersPerSec) {
-        if (m_sysIdTranslationLog == null) return;
-        m_sysIdTranslationLog.append(new double[] { voltage, positionMeters, velocityMetersPerSec });
-    }
-
-    /**
-     * Log SysId rotation data to WPILog.
-     * The array layout is: [rotational_rate_as_voltage, pigeon_yaw_degrees, pigeon_yaw_rate_deg_per_sec].
-     * docs for sysID rotation say: set "voltage" = rotational_rate, "position" = pigeon_yaw, "velocity" = pigeon_yaw_rate
-     * and scale position and velocity by pi/180 when importing.
-     */
-    public void logSysIdRotation(double rotationalRateAsVoltage, double pigeonYawDegrees, double pigeonYawRateDegPerSec) {
-        if (m_sysIdRotationLog == null) return;
-        m_sysIdRotationLog.append(new double[] { rotationalRateAsVoltage, pigeonYawDegrees, pigeonYawRateDegPerSec });
-    }
 
     //log vision measurements
     public void logVisionMeasurement(Pose2d visionPose, double timestampSeconds, Matrix<N3, N1> visionStdDevs) {
