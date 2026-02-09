@@ -19,9 +19,6 @@ public final class Constants {
         //Most Drive constants are located in /generated/TunerConstants.java
         public static final double odometryXYStdDevs = 0.03;
         public static final double odometryYawStdDev = Units.degreesToRadians(0.75);
-        public static final double wheelXtocenter = Units.inchesToMeters(11.125);
-        public static final double wheelYtocenter = Units.inchesToMeters(11.125);
-
         public static final boolean comp = false; //CHANGE THIS AT COMP
         public static final boolean log = false; //change to true once we get a usb stick for the rio
 
@@ -80,8 +77,9 @@ public final class Constants {
         public static final double rotationSlewRate = 6.0;
     }
     public static final class Shooting {
-        // Hub coordinates in meters (X, Y)
-        public static final double redGoalX = Units.inchesToMeters(469.11);
+    // Hub coordinates in meters (X, Y)
+    // Use the existing edu.wpi.first.math.util.Units helper (returns double meters)
+    public static final double redGoalX = Units.inchesToMeters(469.11);
         public static final double redGoalY = Units.inchesToMeters(158.84);
 
         public static final double blueGoalX = Units.inchesToMeters(182.11);
@@ -89,7 +87,7 @@ public final class Constants {
 
         public static final double redXBoundary = Units.inchesToMeters(470);
         public static final double blueXBoundary = Units.inchesToMeters(180);
-        public static final double kPAngle = 3.0; // Proportional gain for angle control
+        public static final double kPAngle = 3.0; // Proportional gain for heading control when aiming on the move
 
     }
 }
