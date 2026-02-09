@@ -5,8 +5,6 @@
 package frc.robot;
 
 import frc.robot.Constants.Drive;
-import frc.robot.Constants.Vision;
-import frc.robot.util.LimelightHelpers;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -28,9 +26,6 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void robotInit() {
-		LimelightHelpers.setCameraPose_RobotSpace(
-				Vision.camName, Vision.camX, Vision.camY, Vision.camZ,
-				Vision.camRoll, Vision.camPitch, Vision.camYaw);
 		SmartDashboard.putData(CommandScheduler.getInstance());
 		if (Drive.comp)
 			Elastic.selectTab("Prematch");
@@ -47,8 +42,7 @@ public class Robot extends TimedRobot {
 			if (m_updateTick % 10 == 0) {
 				MatchInfo.getInstance().ensureInitialized();
 			}
-
-			// Update display/notifications every 10 loops (200ms) while teleop
+			// Update display/notifications every 10 loops (200ms) while teleop; I would move it to teleopPeriodic but then I'd have to call matchTime again or pass it in some other way, and this is cleaner
 			if (DriverStation.isTeleopEnabled() && (m_updateTick % 10 == 0)) {
 				m_notifications.update(matchTime);
 			}
@@ -73,9 +67,6 @@ public class Robot extends TimedRobot {
 		}
 
 		if(Drive.comp) {
-			// Reset and try to prime cached FMS/alliance data at teleop start.
-			MatchInfo.getInstance().reset();
-			MatchInfo.getInstance().ensureInitialized();
 			Elastic.selectTab("Teleop");
 		}
 	}
@@ -97,7 +88,7 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void teleopPeriodic() {
-
+		
 	}
 
 	@Override

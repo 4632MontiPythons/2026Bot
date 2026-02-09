@@ -41,6 +41,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final Field2d m_field = new Field2d(); // dashboard pose visualization
     private RobotConfig ppRobotConfig;
 
+    
 
 
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
@@ -171,6 +172,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             () -> DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Red, //as noted above, this will run when auto starts, so we don't have to be worried about being connected to FMS when booting bot
             this
         );
+        
+        LimelightHelpers.setCameraPose_RobotSpace(
+				Vision.camName, Vision.camX, Vision.camY, Vision.camZ,
+				Vision.camRoll, Vision.camPitch, Vision.camYaw);
     }
 
     /**
