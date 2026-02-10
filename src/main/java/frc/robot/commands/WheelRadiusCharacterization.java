@@ -8,12 +8,15 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import static edu.wpi.first.units.Units.Inches;
 
-
+/* Wheel Characterization Command
+ * Prints out the current wheel radius and a new calculated wheel radius based on the actual distance traveled during a 10 rotation spin.
+ * Bases measurements off of the gyro for actual distance traveled, and the wheel odometry for measured distance traveled.
+ * So if gryo is inaccurate this won't work properly. Test IMU before using by spinning a few times and checking if the yaw changes by the expected amount.
+ */
 public class WheelRadiusCharacterization extends Command {
     private final CommandSwerveDrivetrain drivetrain;
     
-    // Configurable rotation speed (rad/s). 
-    // Slower = more accurate data, but takes longer. 1.0 is a good balance.
+    // rotation speed (rad/s). 
     private static final double ROTATION_SPEED = 1.0; 
     
     private final SwerveRequest.RobotCentric spinRequest = new SwerveRequest.RobotCentric()

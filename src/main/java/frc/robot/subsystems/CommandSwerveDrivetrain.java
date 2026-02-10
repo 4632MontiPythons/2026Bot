@@ -155,7 +155,7 @@
             }
 
             AutoBuilder.configure( //something to note is that this is just supplying pathplanner with the required functions, not running them
-                this::getEstimatedPose,        //pose supplier
+                () -> this.getState().Pose,        //pose supplier
                 this::resetPose,               //reset pose method
                 () -> this.getState().Speeds,  //robot-relative chassis speeds
                 (speeds, ff) -> {
@@ -174,14 +174,6 @@
             LimelightHelpers.setCameraPose_RobotSpace(
                     Vision.camName, Vision.camX, Vision.camY, Vision.camZ,
                     Vision.camRoll, Vision.camPitch, Vision.camYaw);
-        }
-
-        /**
-         * Returns the current estimated pose of the robot from the CTRE SwerveDrivetrain.
-         * @return The Pose2d of the robot.
-         */
-        public Pose2d getEstimatedPose() {
-            return this.getState().Pose; //Return the pose calculated by the underlying TunerSwerveDrivetrain/SwerveDrivetrain
         }
 
         /**
@@ -222,7 +214,7 @@
         @Override
         public void periodic() {
             updateVision();
-            m_field.setRobotPose(getEstimatedPose()); // Update the dashboard field with the pose from the CTRE estimator
+            m_field.setRobotPose(this.getState().Pose); // Update the dashboard field with the pose from the CTRE estimator
             /*
             * Periodically try to apply the operator perspective.
             * If we haven't applied the operator perspective before, then we should apply

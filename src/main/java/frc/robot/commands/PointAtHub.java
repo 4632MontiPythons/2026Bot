@@ -51,7 +51,7 @@ public class PointAtHub extends Command {
                 this.hubY = Shooting.blueGoalY;
             }
 
-            Pose2d pose = drivetrain.getEstimatedPose();
+            Pose2d pose = drivetrain.getState().Pose;
             double x = pose.getX();
             double blueBoundary = Shooting.blueXBoundary;
             double redBoundary = Shooting.redXBoundary;
@@ -65,7 +65,7 @@ public class PointAtHub extends Command {
             }
         } else {
             // Fallback: choose closest hub
-            Pose2d pose = drivetrain.getEstimatedPose();
+            Pose2d pose = drivetrain.getState().Pose;
             double bx = Shooting.blueGoalX;
             double by = Shooting.blueGoalY;
             double rx = Shooting.redGoalX;
@@ -95,7 +95,7 @@ public class PointAtHub extends Command {
 
     @Override
     public void execute() {
-        Pose2d pose = drivetrain.getEstimatedPose();
+        Pose2d pose = drivetrain.getState().Pose;
 
         //Get Inputs so driver can move 
         double vx = vxSupplier.getAsDouble();

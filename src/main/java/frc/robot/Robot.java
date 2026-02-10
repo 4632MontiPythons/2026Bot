@@ -6,7 +6,6 @@ package frc.robot;
 
 import frc.robot.Constants.Drive;
 
-import com.ctre.phoenix6.SignalLogger;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -32,7 +31,6 @@ public class Robot extends TimedRobot {
 		SmartDashboard.putData(CommandScheduler.getInstance());
 		if (Drive.comp)
 			Elastic.selectTab("Prematch");
-		SignalLogger.setPath("/media/sda1/ctre-logs/");
 	}
 
 	@Override
@@ -121,7 +119,7 @@ public class Robot extends TimedRobot {
 				if (!MatchInfo.getInstance().isFmsDataValid()) {
 					//no FMS data yet
 						hexColor = COLOR_YELLOW;
-						timeUntilNextShift = 0; 
+						timeUntilNextShift = -1; 
 				} else {
 					// Calculate which 25s block we are in
 					int block = (int) ((130 - time) / 25);
