@@ -16,7 +16,7 @@ import frc.robot.Constants.Drive;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.MatchInfo;
 import frc.robot.Constants.Shooting;
-
+import frc.robot.util.Elastic;
 public class PointAtHub extends Command {
     private final CommandSwerveDrivetrain drivetrain;
     private final DoubleSupplier vxSupplier;
@@ -39,12 +39,10 @@ public class PointAtHub extends Command {
     }
 
     @Override
-    public void initialize() { //todo: refactor this to be cleaner and readable
-        MatchInfo.getInstance().ensureInitialized();
-        var optAlliance = MatchInfo.getInstance().getOwnAlliance();
-
-        if (optAlliance.isPresent()) {
-            Alliance alliance = optAlliance.get();
+    public void initialize() {
+        Elastic.Notification wrongZoneNotification = new Elastic.Notification(Elastic.NotificationLevel.ERROR, "Wrong Zone", "Estimated Pose is not in shooting zone. Move or manually calibrate pose.");
+        if (MatchInfo.getInstance().ensureInitialized()) {
+            Alliance alliance = MatchInfo.getInstance().getOwnAlliance().get();
             if (alliance == Alliance.Red) {
                 this.hubX = Shooting.redGoalX;
                 this.hubY = Shooting.redGoalY;
@@ -63,6 +61,7 @@ public class PointAtHub extends Command {
 
             if (inNeutral || inWrongZone) {
                 rumbleDriver();
+                Elastic.sendNotification(wrongZoneNotification);
             }
         } else {
             // Fallback: choose closest hub
@@ -88,9 +87,9 @@ public class PointAtHub extends Command {
     private void rumbleDriver() {
         var hid = driverController.getHID();
         Commands.sequence(
-            Commands.runOnce(() -> { hid.setRumble(RumbleType.kLeftRumble, 1.0); hid.setRumble(RumbleType.kRightRumble, 1.0); }),
+            Commands.runOnce(() -> { hid.setRumble(RumbleType.kBothRumble, 1.0); }),
             Commands.waitSeconds(0.5),
-            Commands.runOnce(() -> { hid.setRumble(RumbleType.kLeftRumble, 0.0); hid.setRumble(RumbleType.kRightRumble, 0.0); })
+            Commands.runOnce(() -> { hid.setRumble(RumbleType.kBothRumble, 0.0); })
         ).schedule();
     }
 
@@ -108,8 +107,8 @@ public class PointAtHub extends Command {
         double distSq = rx * rx + ry * ry;
 
         // Calculate Angular Feedforward (compensating for lateral translation)
-        // if you're translating laterally, you need to rotate to keep facing the hub.
-        //this will help to predict rather than just react. results in smoother rotation and better tracking, especially at higher speeds.
+        // if you're translating laterally, you need to apply a constant rotational velocity to stay facing a static object.
+        //this will help to predict rather than just react. results in smoother rotation and better tracking compared to pure PID.
         // Formula: FF = (ry * vx - rx * vy) / radius^2
         double omegaFF = 0;
         omegaFF = (ry * vx - rx * vy) / distSq;
