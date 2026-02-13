@@ -9,7 +9,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import static edu.wpi.first.units.Units.Inches;
 
 /* Wheel Characterization Command
- * Prints out the current wheel radius and a new calc   ulated wheel radius based on the actual distance traveled during a 10 rotation spin.
+ * Prints out the current wheel radius and a new calculated wheel radius based on the actual distance traveled during a 10 rotation spin.
  * Bases measurements off of the gyro for actual distance traveled, and the wheel odometry for measured distance traveled.
  * So if gryo is inaccurate this won't work properly. Test IMU before using by spinning a few times and checking if the yaw changes by the expected amount.
  */

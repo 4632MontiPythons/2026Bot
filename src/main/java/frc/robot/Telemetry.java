@@ -57,10 +57,6 @@ public class Telemetry {
     private final DoublePublisher driveTimestamp = driveStateTable.getDoubleTopic("Timestamp").publish();
     private final DoublePublisher driveOdometryFrequency = driveStateTable.getDoubleTopic("OdometryFrequency").publish();
     
-    /* Vision NetworkTables */
-    private final NetworkTable visionTable = inst.getTable("Vision");
-    private final StringPublisher visionCameraNamePub = visionTable.getStringTopic("ActiveCamera").publish();
-
     /** * Telemeterize the swerve drive state. 
      */
     public void telemeterize(SwerveDriveState state) {
@@ -81,9 +77,6 @@ public class Telemetry {
      */
     public void logVisionMeasurement(Pose2d visionPose, double timestampSeconds, Matrix<N3, N1> visionStdDevs, String cameraName) {
         long timestampMicro = (long) (timestampSeconds * 1e6);
-
-        // NetworkTables update
-        visionCameraNamePub.set(cameraName);
 
         // DataLog updates
         if (Constants.Drive.log) {
