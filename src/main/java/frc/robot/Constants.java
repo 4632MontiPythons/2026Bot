@@ -47,11 +47,11 @@ public final class Constants {
         public static final boolean kDisableVisionVizualization = false;
         
         public static final double kYawRateCoefficent = (1.0/200.0);
-        public static final double kTagDistCoefficent = 0.3;
+        public static final double kTagDistCoefficent = 0.3; //2 meters is 1.6x
 
         public static final double kMaxTagDistance_Meters = 4.0;
         public static final double kMaxYawRate_DegPerSec = 200; 
-
+        public static final double kMaxSingleTagPoseAmbiguity = 0.15;
         //for mt1 and photonvision yaw
         public static final int kMinTagsForYaw = 2;
         public static final double kYawMaxTagDistance = 2.0;
@@ -68,7 +68,7 @@ public final class Constants {
         public static final double camPitch = 0.0; //nose up is +pitch
         public static final double camYaw = 0.0;   //nose right is +yaw
 
-        public static final double LL_baseXYStdDev = 0.05; //mt2 is quite a bit better than pv so lower std dev
+        public static final double LL_mt2baseStdDev = 0.05; //mt2 is quite a bit better than pv so lower std dev
 
     /*  PhotonVision constants  */
         public static final AprilTagFieldLayout kTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);

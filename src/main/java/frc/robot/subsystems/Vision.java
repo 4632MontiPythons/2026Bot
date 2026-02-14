@@ -60,13 +60,14 @@ public class Vision {
         var results = camera.getAllUnreadResults(); //this grabs all unread results, and clears the stored queue.
         if (results.isEmpty()) return;
 
-        // Since we're running 30-60 fps we should be good with just grabbing most recent.
+        //grabbing most recent.
         PhotonPipelineResult result = results.get(results.size() - 1);
         if (!result.hasTargets()) return;
 
         Optional<EstimatedRobotPose> visionEst = estimator.estimateCoprocMultiTagPose(result);
-        if (visionEst.isEmpty()) {
-            visionEst = estimator.estimateLowestAmbiguityPose(result);
+        if (visionEst.isEmpty()) { //fall back to single tag if multi-tag unavailable; if ambiguity is still high, discard
+            if(result.getTargets().get(0).getPoseAmbiguity() < kMaxSingleTagPoseAmbiguity) visionEst = estimator.estimateLowestAmbiguityPose(result);
+            else return; 
         }
 
         if (visionEst.isPresent()) {
@@ -111,7 +112,7 @@ public class Vision {
         if (mt2Result != null && mt2Result.tagCount > 0 && mt2Result.avgTagDist < kMaxTagDistance_Meters) {
             
             double mult = (mt2Result.avgTagDist * kTagDistCoefficent + Math.abs(yawRate) * kYawRateCoefficent);
-            double xyStdDev = (LL_baseXYStdDev / mt2Result.tagCount) * (1 + mult);
+            double xyStdDev = (LL_mt2baseStdDev / mt2Result.tagCount) * (1 + mult);
 
             m_drivetrain.addVisionMeasurement(
                 mt2Result.pose, 
