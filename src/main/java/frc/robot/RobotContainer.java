@@ -55,8 +55,7 @@ public class RobotContainer {
                         TunerConstants.DrivetrainConstants,
                         0, // odometry update frequency (0 = use default)
                         VecBuilder.fill(Drive.odometryXYStdDevs, Drive.odometryXYStdDevs, Drive.odometryYawStdDev),
-                        VecBuilder.fill(999, 999, 999), // this is the *default* vision std dev. These values are never
-                                                        // used because we always dynamically set it in updateVision()
+                        VecBuilder.fill(999, 999, 999), // this is the *default* vision std dev. These values are never used because we always dynamically set
                         TunerConstants.FrontLeft,
                         TunerConstants.FrontRight,
                         TunerConstants.BackLeft,

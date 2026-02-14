@@ -56,82 +56,82 @@ public class Vision {
         }
     }
 
-private void processPhotonCamera(PhotonCamera camera, PhotonPoseEstimator estimator, double yawRate, String vizName) {
-    var results = camera.getAllUnreadResults(); //this grabs all unread results, and clears the stored queue.
-    if (results.isEmpty()) return;
+    private void processPhotonCamera(PhotonCamera camera, PhotonPoseEstimator estimator, double yawRate, String vizName) {
+        var results = camera.getAllUnreadResults(); //this grabs all unread results, and clears the stored queue.
+        if (results.isEmpty()) return;
 
-    // Since we're running 30-60 fps we should be good with just grabbing most recent.
-    PhotonPipelineResult result = results.get(results.size() - 1);
-    if (!result.hasTargets()) return;
+        // Since we're running 30-60 fps we should be good with just grabbing most recent.
+        PhotonPipelineResult result = results.get(results.size() - 1);
+        if (!result.hasTargets()) return;
 
-    Optional<EstimatedRobotPose> visionEst = estimator.estimateCoprocMultiTagPose(result);
-    if (visionEst.isEmpty()) {
-        visionEst = estimator.estimateLowestAmbiguityPose(result);
-    }
-
-    if (visionEst.isPresent()) {
-        EstimatedRobotPose estimatedPose = visionEst.get();
-        Pose2d pose2d = estimatedPose.estimatedPose.toPose2d();
-        
-        //get avg tag dist:
-        double avgDist = 0;
-        var targets = estimatedPose.targetsUsed;
-        for (var target : targets) {
-            avgDist += target.getBestCameraToTarget().getTranslation().getNorm();
+        Optional<EstimatedRobotPose> visionEst = estimator.estimateCoprocMultiTagPose(result);
+        if (visionEst.isEmpty()) {
+            visionEst = estimator.estimateLowestAmbiguityPose(result);
         }
-        avgDist /= targets.size();
 
-        //calc xy std dev
-        double mult = (avgDist* kTagDistCoefficent + Math.abs(yawRate)* kYawRateCoefficent);
-        double xyStdDev = (PV_baseXYStdDev / targets.size())*(1+mult);
+        if (visionEst.isPresent()) {
+            EstimatedRobotPose estimatedPose = visionEst.get();
+            Pose2d pose2d = estimatedPose.estimatedPose.toPose2d();
+            
+            //get avg tag dist:
+            double avgDist = 0;
+            var targets = estimatedPose.targetsUsed;
+            for (var target : targets) {
+                avgDist += target.getBestCameraToTarget().getTranslation().getNorm();
+            }
+            avgDist /= targets.size();
+
+            //calc xy std dev
+            double mult = (avgDist* kTagDistCoefficent + Math.abs(yawRate)* kYawRateCoefficent);
+            double xyStdDev = (PV_baseXYStdDev / targets.size())*(1+mult);
+            
+            //Trust yaw under strict conditions
+            double thetaStdDev = targets.size() >= kMinTagsForYaw && avgDist< kYawMaxTagDistance ? kYawStdDev : Double.POSITIVE_INFINITY;
+
+            if (!Drive.comp && !kDisableVisionVizualization) m_field.getObject(vizName).setPose(pose2d);
+
+            m_drivetrain.addVisionMeasurement(
+                pose2d, 
+                estimatedPose.timestampSeconds, 
+                VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev),
+                vizName
+            );
+        }
+    }
+
+    private void updateLimelight(double yaw, double yawRate, double pitch, double roll) {
+        //Send orientation to LL for MegaTag2
+        LimelightHelpers.SetRobotOrientation(LL_camName, yaw, yawRate, pitch, 0, roll, 0);
         
-        //Trust yaw under strict conditions
-        double thetaStdDev = targets.size() >= kMinTagsForYaw && avgDist< kYawMaxTagDistance ? kYawStdDev : Double.POSITIVE_INFINITY;
-
-        if (!Drive.comp && !kDisableVisionVizualization) m_field.getObject(vizName).setPose(pose2d);
-
-        m_drivetrain.addVisionMeasurement(
-            pose2d, 
-            estimatedPose.timestampSeconds, 
-            VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev),
-            vizName
-        );
-    }
-}
-
-private void updateLimelight(double yaw, double yawRate, double pitch, double roll) {
-    //Send orientation to LL for MegaTag2
-    LimelightHelpers.SetRobotOrientation(LL_camName, yaw, yawRate, pitch, 0, roll, 0);
-    
-    //Grab both estimates
-    var mt2Result = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(LL_camName);
-    var mt1Result = LimelightHelpers.getBotPoseEstimate_wpiBlue(LL_camName);
-    
-    //Use MegaTag2 for Translation
-    if (mt2Result != null && mt2Result.tagCount > 0 && mt2Result.avgTagDist < kMaxTagDistance_Meters) {
+        //Grab both estimates
+        var mt2Result = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(LL_camName);
+        var mt1Result = LimelightHelpers.getBotPoseEstimate_wpiBlue(LL_camName);
         
-        double mult = (mt2Result.avgTagDist * kTagDistCoefficent + Math.abs(yawRate) * kYawRateCoefficent);
-        double xyStdDev = (LL_baseXYStdDev / mt2Result.tagCount) * (1 + mult);
+        //Use MegaTag2 for Translation
+        if (mt2Result != null && mt2Result.tagCount > 0 && mt2Result.avgTagDist < kMaxTagDistance_Meters) {
+            
+            double mult = (mt2Result.avgTagDist * kTagDistCoefficent + Math.abs(yawRate) * kYawRateCoefficent);
+            double xyStdDev = (LL_baseXYStdDev / mt2Result.tagCount) * (1 + mult);
 
-        m_drivetrain.addVisionMeasurement(
-            mt2Result.pose, 
-            mt2Result.timestampSeconds, 
-            VecBuilder.fill(xyStdDev, xyStdDev, Double.POSITIVE_INFINITY),
-            LL_camName + "_MT2"
-        );
+            m_drivetrain.addVisionMeasurement(
+                mt2Result.pose, 
+                mt2Result.timestampSeconds, 
+                VecBuilder.fill(xyStdDev, xyStdDev, Double.POSITIVE_INFINITY),
+                LL_camName + "_MT2"
+            );
 
-        if (!Drive.comp && !kDisableVisionVizualization) m_field.getObject("LL_MT2_Pose").setPose(mt2Result.pose);
+            if (!Drive.comp && !kDisableVisionVizualization) m_field.getObject("LL_MT2_Pose").setPose(mt2Result.pose);
+        }
+
+        //MegaTag1 for Yaw, strict requriements
+        if (mt1Result != null && mt1Result.tagCount >= kMinTagsForYaw && mt1Result.avgTagDist < kYawMaxTagDistance) {
+
+            m_drivetrain.addVisionMeasurement(
+                mt1Result.pose,
+                mt1Result.timestampSeconds,
+                VecBuilder.fill(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, kYawStdDev),
+                LL_camName + "_MT1"
+            );
+        }
     }
-
-    //MegaTag1 for Yaw, strict requriements
-    if (mt1Result != null && mt1Result.tagCount >= kMinTagsForYaw && mt1Result.avgTagDist < kYawMaxTagDistance) {
-
-        m_drivetrain.addVisionMeasurement(
-            mt1Result.pose,
-            mt1Result.timestampSeconds,
-            VecBuilder.fill(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, kYawStdDev),
-            LL_camName + "_MT1"
-        );
-    }
-}
 }

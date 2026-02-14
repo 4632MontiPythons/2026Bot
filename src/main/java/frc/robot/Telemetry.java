@@ -9,7 +9,6 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.util.datalog.DoubleArrayLogEntry;
@@ -24,7 +23,7 @@ public class Telemetry {
     private DoubleArrayLogEntry m_visionPoseLog;
     private DoubleArrayLogEntry m_visionStdDevLog;
     private DoubleLogEntry m_visionTimestampLog;
-    private StringLogEntry m_visionCameraNameLog; // Added for DataLog
+    private StringLogEntry m_visionCameraNameLog; 
     private DoubleLogEntry m_batteryLog;
 
     public static Telemetry getInstance() {
@@ -38,7 +37,7 @@ public class Telemetry {
             m_visionPoseLog = new DoubleArrayLogEntry(log, "Vision/Pose");
             m_visionStdDevLog = new DoubleArrayLogEntry(log, "Vision/StdDevs");
             m_visionTimestampLog = new DoubleLogEntry(log, "Vision/Timestamp");
-            m_visionCameraNameLog = new StringLogEntry(log, "Vision/CameraName"); // Initialize Log
+            m_visionCameraNameLog = new StringLogEntry(log, "Vision/CameraName");
             
             DataLogManager.logNetworkTables(true); 
             m_batteryLog = new DoubleLogEntry(log, "System/BatteryVoltage");

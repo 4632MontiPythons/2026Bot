@@ -42,7 +42,7 @@ public final class Constants {
     }
 
     public static final class kVision {
-        /* Common constants for photonvision and LL */
+    /* Common constants for photonvision and LL */
         public static final boolean USE_PHOTONVISION = false; //until we actually get the hardware set up
         public static final boolean kDisableVisionVizualization = false;
         
@@ -52,13 +52,14 @@ public final class Constants {
         public static final double kMaxTagDistance_Meters = 4.0;
         public static final double kMaxYawRate_DegPerSec = 200; 
 
+        //for mt1 and photonvision yaw
         public static final int kMinTagsForYaw = 2;
         public static final double kYawMaxTagDistance = 2.0;
         public static final double kYawMaxYawRate_DegPerSec = 50.0;
         public static final double kYawStdDev = Units.degreesToRadians(2.75);
 
 
-        /* Limelight constants */
+    /* Limelight constants */
         public static final String LL_camName = "limelight";
         public static final double camX = 0.0;     //forward is +X
         public static final double camY = 0.0;     //right is +Y
@@ -69,7 +70,7 @@ public final class Constants {
 
         public static final double LL_baseXYStdDev = 0.05; //mt2 is quite a bit better than pv so lower std dev
 
-        /*  PhotonVision constants  */
+    /*  PhotonVision constants  */
         public static final AprilTagFieldLayout kTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
 
         public static final String kPhotonCam1Name = "Camera_Left";
