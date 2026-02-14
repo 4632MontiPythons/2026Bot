@@ -17,7 +17,7 @@ public class WheelRadiusCharacterization extends Command {
     private final CommandSwerveDrivetrain drivetrain;
     
     // rotation speed (rad/s). 
-    private static final double ROTATION_SPEED = 1.0; 
+    private static final double ROTATION_SPEED = 1.5; 
     
     private final SwerveRequest.RobotCentric spinRequest = new SwerveRequest.RobotCentric()
             .withVelocityX(0)
@@ -68,6 +68,7 @@ public class WheelRadiusCharacterization extends Command {
     public void execute() {
         drivetrain.setControl(spinRequest);
 
+
         // ---- Robot Rotation (Gyro) ----
         double currentYawRadians = drivetrain.getState().Pose.getRotation().getRadians();
         double deltaYaw = currentYawRadians - lastYawRadians;
@@ -95,7 +96,7 @@ public class WheelRadiusCharacterization extends Command {
     @Override
     public boolean isFinished() {
         // Stop after 10 full rotations (20 * PI) to ensure a large sample size
-        return accumulatedYawRadians >= (2 * Math.PI * 10);
+        return accumulatedYawRadians >= (2 * Math.PI * 3);
     }
 
     @Override
