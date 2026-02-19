@@ -54,12 +54,12 @@ public class Vision {
         );
 
         if (USE_PHOTONVISION) {
-            processPhotonCamera(m_cameraIntake, m_estimatorIntake, yawRate, kPhotonCam1Name);
-            processPhotonCamera(m_cameraRight, m_estimatorRight, yawRate, kPhotonCam2Name);
+            processPhotonResults(m_cameraIntake, m_estimatorIntake, yawRate, kPhotonCam1Name);
+            processPhotonResults(m_cameraRight, m_estimatorRight, yawRate, kPhotonCam2Name);
         }
     }
 
-    private void processPhotonCamera(PhotonCamera camera, PhotonPoseEstimator estimator, double yawRate, String vizName) {
+    private void processPhotonResults(PhotonCamera camera, PhotonPoseEstimator estimator, double yawRate, String vizName) {
         var results = camera.getAllUnreadResults(); //this grabs all unread results, and clears the stored queue.
         if (results.isEmpty()) return;
 

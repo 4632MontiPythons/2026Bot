@@ -56,7 +56,7 @@ public class Telemetry {
     private final DoublePublisher driveTimestamp = driveStateTable.getDoubleTopic("Timestamp").publish();
     private final DoublePublisher driveOdometryFrequency = driveStateTable.getDoubleTopic("OdometryFrequency").publish();
     
-    /** * Telemeterize the swerve drive state. 
+    /** Telemeterize the swerve drive state. 
      */
     public void telemeterize(SwerveDriveState state) {
         if (m_batteryLog != null) {
