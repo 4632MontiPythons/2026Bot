@@ -36,7 +36,7 @@ import com.pathplanner.lib.config.RobotConfig;
  */
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
     private final Field2d m_field = new Field2d(); // dashboard pose visualization
-    private final Vision m_vision; // Vision subsystem instance
+    // private final Vision m_vision; // Vision subsystem instance
     private RobotConfig ppRobotConfig;
 
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
@@ -138,7 +138,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         SmartDashboard.putData("Field", m_field);
         
         // Initialize Vision
-        m_vision = new Vision(this, m_field);
+        // m_vision = new Vision(this, m_field);
 
         com.pathplanner.lib.util.PathPlannerLogging.setLogActivePathCallback(
             (poses) -> m_field.getObject("path").setPoses(poses)
@@ -213,7 +213,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     @Override
     public void periodic() {
-        m_vision.update();
+        // m_vision.update();
 
         m_field.setRobotPose(this.getState().Pose); // Update the dashboard field with the pose from the CTRE estimator
         /*
