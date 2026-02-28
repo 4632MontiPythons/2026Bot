@@ -2,6 +2,8 @@ package frc.robot;
 
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.PowerDistribution;
+import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -25,6 +27,8 @@ public class Telemetry {
     private DoubleLogEntry m_visionTimestampLog;
     private StringLogEntry m_visionCameraNameLog; 
     private DoubleLogEntry m_batteryLog;
+    private DoubleLogEntry m_PDHCurrentLog;
+    private final PowerDistribution m_pdh = new PowerDistribution(1, ModuleType.kRev); // Use your actual ID/Type
 
     public static Telemetry getInstance() {
         if (s_instance == null) s_instance = new Telemetry();
@@ -41,6 +45,7 @@ public class Telemetry {
             
             DataLogManager.logNetworkTables(true); 
             m_batteryLog = new DoubleLogEntry(log, "System/BatteryVoltage");
+            m_PDHCurrentLog = new DoubleLogEntry(log, "System/PDHCurrent");
         }
     }
 
@@ -61,6 +66,9 @@ public class Telemetry {
     public void telemeterize(SwerveDriveState state) {
         if (m_batteryLog != null) {
             m_batteryLog.append(edu.wpi.first.wpilibj.RobotController.getBatteryVoltage());
+        }
+        if (m_PDHCurrentLog != null) {
+            m_PDHCurrentLog.append(m_pdh.getTotalCurrent());
         }
         drivePose.set(state.Pose);
         driveSpeeds.set(state.Speeds);
