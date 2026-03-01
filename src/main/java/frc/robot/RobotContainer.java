@@ -33,16 +33,15 @@ import com.pathplanner.lib.auto.NamedCommands;
 
 public class RobotContainer {
         private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
-
+        private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
         // initilaize slew rate limiters
         private final SlewRateLimiter xSlewLimiter = new SlewRateLimiter(OI.slewRate);
         private final SlewRateLimiter ySlewLimiter = new SlewRateLimiter(OI.slewRate);
-        private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(OI.rotationSlewRate);
 
         /* Setting up bindings for necessary control of the swerve drive platform */
         private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
                         .withDeadband(MaxSpeed * OI.deadband)
-                        .withRotationalDeadband(Drive.maxAngularRateRadPerSec * OI.deadband) // Add a deadband
+                        .withRotationalDeadband(MaxAngularRate * OI.deadband) // Add a deadband
                         .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive
                                                                                  // motors
         private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
@@ -82,8 +81,8 @@ public class RobotContainer {
                                                                 * MaxSpeed)
                                                 .withVelocityY(ySlewLimiter.calculate(-xboxController.getLeftX())
                                                                 * MaxSpeed)
-                                                .withRotationalRate(m_rotLimiter.calculate(-xboxController.getRightX()
-                                                                * Drive.maxAngularRateRadPerSec))));
+                                                .withRotationalRate(-xboxController.getRightX()
+                                                                * MaxAngularRate)));
 
                 // Idle while the robot is disabled. This ensures the configured
                 // neutral mode is applied to the drive motors while disabled.

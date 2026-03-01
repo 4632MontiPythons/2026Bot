@@ -24,7 +24,7 @@ public final class Constants {
         public static final double odometryXYStdDevs = 0.03;
         public static final double odometryYawStdDev = Units.degreesToRadians(0.75);
         public static final boolean comp = false; //CHANGE THIS AT COMP
-        public static final boolean log = false; //change to true once we get a usb stick for the rio
+        public static final boolean log = false; //off this year cause we cant fit a usb stick under the chassis
 
         //Auto config
         public final static PPHolonomicDriveController ppController =
@@ -91,11 +91,12 @@ public final class Constants {
     public static final class OI {
         public static final double deadband = 0.10; //percentage of max speed/rotational rate. e.g. 10% deadband should be 0.10
         public static final int driverControllerPort = 0;
-        public static final double slewRate = 5.0; //limits change to (100*k)% per second, meaning would take 1/k seconds to go from requesting 0 to requesting full throttle
-        public static final double rotationSlewRate = 10.0;
+        public static final double slewRate = 7.5; //limits change to (100*k)% per second, meaning would take 1/k seconds to go from requesting 0 to requesting full throttle
     }
     public static final class Shooting {
-    // Hub coordinates in meters (X, Y)
+        public static final int shooterMotorID = -1;
+        public static final int followerShooterMotorID = -1;
+        // Hub coordinates in meters (X, Y)
         public static final double redGoalX = Units.inchesToMeters(469.11);
         public static final double redGoalY = Units.inchesToMeters(158.84);
 
