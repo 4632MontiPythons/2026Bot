@@ -24,7 +24,7 @@ public final class Constants {
         public static final double odometryXYStdDevs = 0.03;
         public static final double odometryYawStdDev = Units.degreesToRadians(0.75);
         public static final boolean comp = false; //CHANGE THIS AT COMP
-        public static final boolean log = true; //change to true once we get a usb stick for the rio
+        public static final boolean log = false; //change to true once we get a usb stick for the rio
 
         //Auto config
         public final static PPHolonomicDriveController ppController =
