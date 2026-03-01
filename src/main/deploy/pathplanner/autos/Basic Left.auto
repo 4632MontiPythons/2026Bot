@@ -3,7 +3,14 @@
   "command": {
     "type": "sequential",
     "data": {
-      "commands": []
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Left Start to Left Trench"
+          }
+        }
+      ]
     }
   },
   "resetOdom": true,

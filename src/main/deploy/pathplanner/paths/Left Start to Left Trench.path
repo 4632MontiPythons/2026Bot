@@ -8,24 +8,24 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.2817963584423264,
-        "y": 7.496137981776685
+        "x": 4.504850213980027,
+        "y": 7.521968616262482
       },
       "isLocked": false,
       "linkedName": "Left Start"
     },
     {
       "anchor": {
-        "x": 2.5152861230329044,
-        "y": 6.091645207439199
+        "x": 6.911440798858774,
+        "y": 7.056176890156919
       },
       "prevControl": {
-        "x": 3.594726233839678,
-        "y": 7.5484100873411855
+        "x": 6.458555529226633,
+        "y": 7.154112665137725
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Left Shooting"
+      "linkedName": "Left Neutral Trench"
     }
   ],
   "rotationTargets": [],
@@ -41,8 +41,8 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0.0,
-    "rotation": -45.0
+    "velocity": 0,
+    "rotation": -57.724355685422665
   },
   "reversed": false,
   "folder": null,
