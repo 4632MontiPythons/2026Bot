@@ -1,0 +1,37 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Left Start to Left Neutral"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "IntakeAuto"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Left Neutral to Left Shooting"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Left Shooting to Left Climb"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

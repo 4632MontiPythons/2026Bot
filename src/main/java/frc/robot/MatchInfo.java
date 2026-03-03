@@ -29,7 +29,7 @@ public final class MatchInfo {
     public synchronized boolean ensureInitialized() {
         if (m_fmsDataValid) return true;
 
-        String gameData = DriverStation.getGameSpecificMessage();
+        String gameData = DriverStation.getGameSpecificMessage(); //gets first alliance active shift
         var alliance = DriverStation.getAlliance();
 
         if (gameData != null && !gameData.isEmpty() && alliance.isPresent()) {

@@ -42,8 +42,7 @@ public class RobotContainer {
         private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
                         .withDeadband(MaxSpeed * OI.deadband)
                         .withRotationalDeadband(MaxAngularRate * OI.deadband) // Add a deadband
-                        .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive
-                                                                                 // motors
+                        .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control
         private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
         private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
         private final SendableChooser<Command> autoChooser;
