@@ -209,7 +209,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 SignalLogger.start();
             })
             .finallyDo((interrupted) -> SignalLogger.stop());
-    }
+    }   
 
     @Override
     public void periodic() {

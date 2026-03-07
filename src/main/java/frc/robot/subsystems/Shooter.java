@@ -1,119 +1,187 @@
 package frc.robot.subsystems;
 
-import java.util.function.DoubleSupplier;
-
-import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.*;
+import com.ctre.phoenix6.controls.NeutralOut;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Constants.Drive;
 import frc.robot.Constants.kShooter;
 
-
+import static edu.wpi.first.units.Units.*;
+/* 
+ * Shooter subsystem with velocity closed-loop control and SysID.
+ * Something to note is that rpms  are in motor shaft rpm, not flywheel rpm
+ * There is a 4:1 gear reduction between the motor and flywheel, so 4000 motor rpm corresponds to 1000 flywheel rpm.
+ * i decided against converting just to keep it consistent everywhere.
+ */
 public class Shooter extends SubsystemBase {
-	private final TalonFX m_motor;
 
-	// Optional supplier that returns the current measured shooter speed in RPM.
-	// If null, RPM commands will fall back to open-loop feedforward only.
-	private final DoubleSupplier m_rpmSupplier;
+    private final TalonFX m_motor;
 
-	// Controllers
-	private PIDController m_pid = new PIDController(0.0, 0.0, 0.0);
-	private SimpleMotorFeedforward m_ff = new SimpleMotorFeedforward(0.0, 0.0, 0.0);
+    private final VelocityVoltage m_velocityRequest =
+            new VelocityVoltage(0).withSlot(0).withEnableFOC(false); //too poor lol
+    private final NeutralOut m_stopRequest = new NeutralOut();
 
-	// Last commanded outputs
-	private double lastCommandedPercent = 0.0;
-	private double lastTargetRPM = 0.0;
+    // ── State ─────────────────────────────────────────────────────────────────
+    private double m_targetRpm = 0.0;
+    private boolean m_isStopped = true;
 
-    private static final TalonFXConfiguration shooterConfigs = new TalonFXConfiguration().withCurrentLimits(
-        new CurrentLimitsConfigs()
-            .withSupplyCurrentLimit(70.0)         // Peak supply from battery, can only be sustained for a few seconds w/ 40A breakers.
-            .withSupplyCurrentLowerLimit(45.0)    // Sustained supply limit, using 40A so this should be able to last minutes
-            .withSupplyCurrentLowerTime(1.0)      // Allow 1 second of 70A before dropping to protect breakers from resetting
-            .withSupplyCurrentLimitEnable(true)            
-    );
+    private final SysIdRoutine m_sysIdRoutine;
 
-	/**
-	 * Construct a Shooter with an explicit RPM supplier.
-	 * @param canId CAN ID of the TalonFX
-	 * @param canBusName CAN bus name (matches TunerConstants CAN bus)
-	 * @param rpmSupplier supplier that returns current shooter RPM (rotations per minute)
-	 */
-	public Shooter(int canId, String canBusName, DoubleSupplier rpmSupplier) {
-	this.m_motor = new TalonFX(canId, canBusName);
-		this.m_rpmSupplier = rpmSupplier;
-	}
+    // ── Motor controller configuration ───────────────────────────────────────
+    private static TalonFXConfiguration buildMotorConfig() {
+        var cfg = new TalonFXConfiguration();
 
-	/**
-	 * Command a target shooter speed in RPM. If an RPM supplier was provided,
-	 * closed-loop PID + feedforward will be used. Otherwise this falls back to
-	 * open-loop feedforward only (percent = voltage/12).
-	 * @param rpm target rotations per minute
-	 */
-	public void setRPM(double rpm) {
-		lastTargetRPM = rpm;
+        // --- Current limits ---
+        cfg.CurrentLimits
+            // Supply (from battery) — protects breakers and stops brownouts
+            .withSupplyCurrentLimit(60.0)          // burst limit, can be sustained for 1 sec
+            .withSupplyCurrentLowerLimit(45.0)     // lower limit, after 1 sec
+            .withSupplyCurrentLowerTime(1)       // allow burst for 1 s then drop to 45 A
+            .withSupplyCurrentLimitEnable(true)
+            // Stator (in motor) — protects the motor itself
+            .withStatorCurrentLimit(120.0)
+            .withStatorCurrentLimitEnable(true);
 
-		// convert RPM -> rotations per second
-		double targetRps = rpm / 60.0;
+        cfg.MotorOutput
+            .withNeutralMode(NeutralModeValue.Coast)  // shooter wheels should coast when idle
+            .withInverted(InvertedValue.CounterClockwise_Positive);
 
-		// WPILib SimpleMotorFeedforward expects velocity in radians/sec.
-		double targetRadPerSec = targetRps * 2.0 * Math.PI;
+        // Units: rotations/second for velocity, volts for kS/kV
+        // todo: Run SysID to get real kS and kV; these are placeholder values.
+        cfg.Slot0
+            .withKS(0.20)   // static friction (V) — from SysID
+            .withKV(0.115)  // velocity gain (V per rot/s) — from SysID; ~1/kRPM*60
+            .withKA(0.01)   // acceleration gain (V per rot/s²) — usually small for flywheel
+            .withKP(0.15)   // proportional (V per rot/s error)
+            .withKI(0.0)
+            .withKD(0.0);
 
-		double ffVolts = m_ff.calculate(targetRadPerSec);
+        // Ramp up voltage limit to avoid stressing the flywheel and tripping current limits.
+        cfg.ClosedLoopRamps.withVoltageClosedLoopRampPeriod(0.05); // 50 ms ramp
+        return cfg;
+    }
 
-		if (m_rpmSupplier != null) {
-			double measuredRpm = m_rpmSupplier.getAsDouble();
-			double measuredRadPerSec = (measuredRpm / 60.0) * 2.0 * Math.PI;
-			double pidOutputVolts = m_pid.calculate(measuredRadPerSec, targetRadPerSec);
-			// total volts to command
-			double volts = Math.max(-12.0, Math.min(12.0, pidOutputVolts + ffVolts));
-			lastCommandedPercent = volts / 12.0;
-			m_motor.set(lastCommandedPercent);
-		} else {
-			// Open-loop feedforward only (approximate)
-			double volts = Math.max(-12.0, Math.min(12.0, ffVolts));
-			lastCommandedPercent = volts / 12.0;
-			m_motor.set(lastCommandedPercent);
+    // ── Constructor ───────────────────────────────────────────────────────────
+    public Shooter() {
+        m_motor = new TalonFX(kShooter.shooterMotorID, "SWERVE");
+        m_motor.getConfigurator().apply(buildMotorConfig());
+
+        // SysID: ramp voltage up and record velocity to extract kS and kV
+		if(!Drive.comp){
+        m_sysIdRoutine = new SysIdRoutine(
+            new SysIdRoutine.Config(
+                Volts.of(0.5).per(Second),  // ramp rate: 0.5 V/s
+                Volts.of(7.0),              //step voltage for kA
+                Seconds.of(12.5)            // timeout
+            ),
+            new SysIdRoutine.Mechanism(
+                // Drive: apply raw voltage
+                volts -> m_motor.setVoltage(volts.in(Volts)),
+                // Log: record position and velocity
+                log -> {
+                    var posSignal = m_motor.getPosition();
+                    var velSignal = m_motor.getVelocity();
+                    var voltSignal = m_motor.getMotorVoltage();
+                    log.motor("shooter-flywheel")
+                        .voltage(Volts.of(voltSignal.getValueAsDouble()))
+                        .angularPosition(Rotations.of(posSignal.getValueAsDouble()))
+                        .angularVelocity(RotationsPerSecond.of(velSignal.getValueAsDouble()));
+                },
+                this
+            )
+        );
 		}
-	}
+    }
 
-	/** Stop the shooter. */
-	public void stop() {
-		lastTargetRPM = 0.0;
-		lastCommandedPercent = 0.0;
-		m_motor.stopMotor();
-	}
+    // ── Public API, call these in commands ────────────────────────────────────────────────────────────
 
-	public double getLastTargetRPM() {
-		return lastTargetRPM;
-	}
+    /**
+     * Set shooter speed by looking up RPM from the interpolating distance table.
+     * @param distanceMeters distance to target in meters
+     */
+    public void setShootingDistance(double distanceMeters) {
+        double rpm = kShooter.rpmTable.get(distanceMeters);
+        setRPM(rpm);
+    }
 
-	/** Configure PID gains (P,I,D). Units: P/I/D operate on radians/sec if using setRPM with supplier. */
-	public void configurePID(double p, double i, double d) {
-		m_pid = new PIDController(p, i, d);
-		m_pid.setTolerance(50.0);
-		SmartDashboard.putNumber("Shooter/P", p);
-		SmartDashboard.putNumber("Shooter/I", i);
-		SmartDashboard.putNumber("Shooter/D", d);
-	}
+    /**
+     * Command a target shooter speed in RPM using onboard velocity closed-loop.
+     * @param rpm target rotations per minute
+     */
+    public void setRPM(double rpm) {
+        m_targetRpm = rpm;
+        m_isStopped = false;
+        // TalonFX velocity PID operates in rotations/second
+        double rps = rpm / 60.0;
+        m_motor.setControl(m_velocityRequest.withVelocity(rps));
+    }
 
-	/** Configure feedforward gains kS (volts), kV (V per rad/s), kA (V per rad/s^2). */
-	public void configureFeedforward(double kS, double kV, double kA) {
-		m_ff = new SimpleMotorFeedforward(kS, kV, kA);
-		SmartDashboard.putNumber("Shooter/kS", kS);
-		SmartDashboard.putNumber("Shooter/kV", kV);
-		SmartDashboard.putNumber("Shooter/kA", kA);
-	}
+    /** Stop the shooter and coast */
+    public void stop() {
+        m_targetRpm = 0.0;
+        m_isStopped = true;
+        m_motor.setControl(m_stopRequest);
+    }
 
-	@Override
-	public void periodic() {
-		SmartDashboard.putNumber("Shooter/LastPercent", lastCommandedPercent);
-		SmartDashboard.putNumber("Shooter/TargetRPM", lastTargetRPM);
-		if (m_rpmSupplier != null) {
-			SmartDashboard.putNumber("Shooter/MeasuredRPM", m_rpmSupplier.getAsDouble());
-		}
+    /** @return current measured shooter speed in RPM */
+    public double getMeasuredRPM() {
+        return m_motor.getVelocity().getValueAsDouble() * 60.0;
+    }
+
+    /** @return true if shooter is within ±tolerance RPM of target */
+    public boolean atTargetRPM() {
+        return !m_isStopped && Math.abs(getMeasuredRPM() - m_targetRpm) < kShooter.rpmTolerance;
+    }
+
+    /** @return the last commanded target RPM */
+    public double getTargetRPM() { return m_targetRpm; }
+
+    // ── SysID Commands ────────────────────────────────────────────────────────
+
+    /**
+     * Quasistatic SysID test — slowly ramps voltage to measure kS and kV.
+     * Bind to a button; hold until routine completes.
+     * @param direction SysIdRoutine.Direction.kForward or kReverse
+     */
+    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+        if(!Drive.comp) return m_sysIdRoutine.quasistatic(direction);
+        return null;
+    }
+
+    /**
+     * Dynamic SysID test — applies a voltage step to measure kA.
+     * @param direction SysIdRoutine.Direction.kForward or kReverse
+     */
+    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+        if(!Drive.comp) return m_sysIdRoutine.dynamic(direction);
+        return null;
+    }
+
+    // ── Periodic ──────────────────────────────────────────────────────────────
+    @Override
+    public void periodic() {
+        double measuredRpm = getMeasuredRPM();
+        SmartDashboard.putNumber("Shooter/TargetRPM",   m_targetRpm);
+        SmartDashboard.putNumber("Shooter/MeasuredRPM", measuredRpm);
+	// ── Test mode: allow RPM override from dashboard ──────────────────────
+    if (!Drive.comp) {
+        // putNumber only sets the default the first time; after that the
+        // driver-station widget value is used when the entry already exists.
+        SmartDashboard.putNumber("Shooter/TestRPM", SmartDashboard.getNumber("Shooter/TestRPM", m_targetRpm));
+        double dashRpm = SmartDashboard.getNumber("Shooter/TestRPM", 0.0);
+        if (dashRpm > 0.0) {
+            setRPM(dashRpm);
+        } else {
+            stop();
+        }
+    }
 	}
 }

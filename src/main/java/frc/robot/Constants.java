@@ -11,6 +11,7 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 
 public final class Constants {
@@ -104,7 +105,19 @@ public final class Constants {
 
         public static final double redXBoundary = Units.inchesToMeters(470);
         public static final double blueXBoundary = Units.inchesToMeters(180);
-        public static final double kPAngle = 3.0; // Proportional gain for heading control when aiming on the move
+        public static final double rpmTolerance = 100; //will be ready to shoot if +/- 100 rpm of target
 
+        public static final InterpolatingDoubleTreeMap rpmTable = new InterpolatingDoubleTreeMap();
+        static {
+            // Distance (m) → Shooter RPM, placeholders
+            //todo: get actual measurements
+            rpmTable.put(1.0,  2500.0);
+            rpmTable.put(2.0,  3200.0);
+            rpmTable.put(2.5,  3600.0);
+            rpmTable.put(3.0,  3900.0);
+            rpmTable.put(3.5,  4200.0);
+            rpmTable.put(4.0,  4500.0);
+            rpmTable.put(5.0,  5000.0); //max possible distance is 4.6 m
+        }
     }
 }
