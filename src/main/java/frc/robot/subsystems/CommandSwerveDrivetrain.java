@@ -192,8 +192,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             .beforeStarting(() -> {
                 System.out.println("Running SysID Quasistatic");
                 SignalLogger.start();
-            })
-            .finallyDo((interrupted) -> SignalLogger.stop());
+            });
     }
 
     /**
@@ -207,8 +206,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             .beforeStarting(() -> {
                 System.out.println("Running SysID Dynamic");
                 SignalLogger.start();
-            })
-            .finallyDo((interrupted) -> SignalLogger.stop());
+            });
     }   
 
     @Override

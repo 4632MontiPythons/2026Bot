@@ -111,7 +111,7 @@ public class Shooter extends SubsystemBase {
         double rpm = kShooter.rpmTable.get(distanceMeters);
         setRPM(rpm);
     }
-
+	
     /**
      * Command a target shooter speed in RPM using onboard velocity closed-loop.
      * @param rpm target rotations per minute
@@ -136,7 +136,7 @@ public class Shooter extends SubsystemBase {
         return m_motor.getVelocity().getValueAsDouble() * 60.0;
     }
 
-    /** @return true if shooter is within ±tolerance RPM of target */
+    /** @return true if shooter is within ±100 RPM of target */
     public boolean atTargetRPM() {
         return !m_isStopped && Math.abs(getMeasuredRPM() - m_targetRpm) < kShooter.rpmTolerance;
     }
