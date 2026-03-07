@@ -1,0 +1,120 @@
+set up this better, have it fully configure the krakenx60 motor controller. we're going to calculate velocity needed based on interpolating table when we run a command, and request rpm through subsystem. add a sysID routine to calculate kV and kS:
+package frc.robot.subsystems;
+
+import java.util.function.DoubleSupplier;
+
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.hardware.TalonFX;
+
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.kShooter;
+
+
+public class Shooter extends SubsystemBase {
+    private final TalonFX m_motor;
+
+    // Optional supplier that returns the current measured shooter speed in RPM.
+    // If null, RPM commands will fall back to open-loop feedforward only.
+    private final DoubleSupplier m_rpmSupplier;
+
+    // Controllers
+    private PIDController m_pid = new PIDController(0.0, 0.0, 0.0);
+    private SimpleMotorFeedforward m_ff = new SimpleMotorFeedforward(0.0, 0.0, 0.0);
+
+    // Last commanded outputs
+    private double lastCommandedPercent = 0.0;
+    private double lastTargetRPM = 0.0;
+
+    private static final TalonFXConfiguration shooterConfigs = new TalonFXConfiguration().withCurrentLimits(
+        new CurrentLimitsConfigs()
+            .withSupplyCurrentLimit(70.0)         // Peak supply from battery, can only be sustained for a few seconds w/ 40A breakers.
+            .withSupplyCurrentLowerLimit(45.0)    // Sustained supply limit, using 40A so this should be able to last minutes
+            .withSupplyCurrentLowerTime(1.0)      // Allow 1 second of 70A before dropping to protect breakers from resetting
+            .withSupplyCurrentLimitEnable(true)            
+    );
+
+    /**
+     * Construct a Shooter with an explicit RPM supplier.
+     * @param canId CAN ID of the TalonFX
+     * @param canBusName CAN bus name (matches TunerConstants CAN bus)
+     * @param rpmSupplier supplier that returns current shooter RPM (rotations per minute)
+     */
+    public Shooter(int canId, String canBusName, DoubleSupplier rpmSupplier) {
+    this.m_motor = new TalonFX(canId, canBusName);
+        this.m_rpmSupplier = rpmSupplier;
+    }
+
+    /**
+     * Command a target shooter speed in RPM. If an RPM supplier was provided,
+     * closed-loop PID + feedforward will be used. Otherwise this falls back to
+     * open-loop feedforward only (percent = voltage/12).
+     * @param rpm target rotations per minute
+     */
+    public void setRPM(double rpm) {
+        lastTargetRPM = rpm;
+
+        // convert RPM -> rotations per second
+        double targetRps = rpm / 60.0;
+
+        // WPILib SimpleMotorFeedforward expects velocity in radians/sec.
+        double targetRadPerSec = targetRps * 2.0 * Math.PI;
+
+        double ffVolts = m_ff.calculate(targetRadPerSec);
+
+        if (m_rpmSupplier != null) {
+            double measuredRpm = m_rpmSupplier.getAsDouble();
+            double measuredRadPerSec = (measuredRpm / 60.0) * 2.0 * Math.PI;
+            double pidOutputVolts = m_pid.calculate(measuredRadPerSec, targetRadPerSec);
+            // total volts to command
+            double volts = Math.max(-12.0, Math.min(12.0, pidOutputVolts + ffVolts));
+            lastCommandedPercent = volts / 12.0;
+            m_motor.set(lastCommandedPercent);
+        } else {
+            // Open-loop feedforward only (approximate)
+            double volts = Math.max(-12.0, Math.min(12.0, ffVolts));
+            lastCommandedPercent = volts / 12.0;
+            m_motor.set(lastCommandedPercent);
+        }
+    }
+
+    /** Stop the shooter. */
+    public void stop() {
+        lastTargetRPM = 0.0;
+        lastCommandedPercent = 0.0;
+        m_motor.stopMotor();
+    }
+
+    public double getLastTargetRPM() {
+        return lastTargetRPM;
+    }
+
+    /** Configure PID gains (P,I,D). Units: P/I/D operate on radians/sec if using setRPM with supplier. */
+    public void configurePID(double p, double i, double d) {
+        m_pid = new PIDController(p, i, d);
+        m_pid.setTolerance(50.0);
+        SmartDashboard.putNumber("Shooter/P", p);
+        SmartDashboard.putNumber("Shooter/I", i);
+        SmartDashboard.putNumber("Shooter/D", d);
+    }
+
+    /** Configure feedforward gains kS (volts), kV (V per rad/s), kA (V per rad/s^2). */
+    public void configureFeedforward(double kS, double kV, double kA) {
+        m_ff = new SimpleMotorFeedforward(kS, kV, kA);
+        SmartDashboard.putNumber("Shooter/kS", kS);
+        SmartDashboard.putNumber("Shooter/kV", kV);
+        SmartDashboard.putNumber("Shooter/kA", kA);
+    }
+
+    @Override
+    public void periodic() {
+        SmartDashboard.putNumber("Shooter/LastPercent", lastCommandedPercent);
+        SmartDashboard.putNumber("Shooter/TargetRPM", lastTargetRPM);
+        if (m_rpmSupplier != null) {
+            SmartDashboard.putNumber("Shooter/MeasuredRPM", m_rpmSupplier.getAsDouble());
+        }
+    }
+}
