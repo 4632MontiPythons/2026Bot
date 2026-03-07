@@ -15,7 +15,7 @@ import java.util.function.DoubleSupplier;
 import frc.robot.Constants.Drive;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.MatchInfo;
-import frc.robot.Constants.Shooting;
+import frc.robot.Constants.kShooter;
 import frc.robot.util.Elastic;
 /**
  *  Points robot at hub, taking control of heading, but allowing driver to control translation.
@@ -51,17 +51,17 @@ public class PointAtHub extends Command {
         if (MatchInfo.getInstance().ensureInitialized()) {
             Alliance alliance = MatchInfo.getInstance().getOwnAlliance().get();
             if (alliance == Alliance.Red) {
-                this.hubX = Shooting.redGoalX;
-                this.hubY = Shooting.redGoalY;
+                this.hubX = kShooter.redGoalX;
+                this.hubY = kShooter.redGoalY;
             } else {
-                this.hubX = Shooting.blueGoalX;
-                this.hubY = Shooting.blueGoalY;
+                this.hubX = kShooter.blueGoalX;
+                this.hubY = kShooter.blueGoalY;
             }
 
             Pose2d pose = drivetrain.getState().Pose;
             double x = pose.getX();
-            double blueBoundary = Shooting.blueXBoundary;
-            double redBoundary = Shooting.redXBoundary;
+            double blueBoundary = kShooter.blueXBoundary;
+            double redBoundary = kShooter.redXBoundary;
 
             boolean inNeutral = (x > blueBoundary && x < redBoundary);
             boolean inWrongZone = (alliance == Alliance.Blue && x >= redBoundary) || (alliance == Alliance.Red && x <= blueBoundary);
@@ -73,10 +73,10 @@ public class PointAtHub extends Command {
         } else {
             // Fallback: choose closest hub
             Pose2d pose = drivetrain.getState().Pose;
-            double bx = Shooting.blueGoalX;
-            double by = Shooting.blueGoalY;
-            double rx = Shooting.redGoalX;
-            double ry = Shooting.redGoalY;
+            double bx = kShooter.blueGoalX;
+            double by = kShooter.blueGoalY;
+            double rx = kShooter.redGoalX;
+            double ry = kShooter.redGoalY;
 
             double distToBlue = Math.hypot(pose.getX() - bx, pose.getY() - by);
             double distToRed = Math.hypot(pose.getX() - rx, pose.getY() - ry);
@@ -125,7 +125,7 @@ public class PointAtHub extends Command {
         double currentYaw = pose.getRotation().getRadians();
         double angleError = MathUtil.angleModulus(desiredYaw - currentYaw);
         
-        double pidOutput = Shooting.kPAngle * angleError;
+        double pidOutput = kShooter.kPAngle * angleError;
 
         //Combine PID and FF, clamp to max angular rate
         double totalRotRate = pidOutput + omegaFF;
