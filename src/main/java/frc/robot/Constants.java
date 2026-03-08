@@ -128,4 +128,13 @@ public final class Constants {
         public static final int solenoidR_Reverse = -1;
         public static final double intakeSpeed = 0.5;
     }
+    public static final class kFeeder {
+        public static final int feederMotorID = -1;      // set to your actual CAN ID
+        public static final boolean inverted = false;
+        public static final double feedSpeed = 0.5;   
+        public static final double reverseSpeed = -0.4;    // slower reverse for unjamming
+        public static final double jamCurrentThreshold = 35.0; // how many amps till assumed jammed
+        public static final double reverseTimeSec = 0.3;  // how long to reverse when jammed
+        public static final double retryTimeSec = 0.5;  // how long to try feeding before giving up
+    }   
 }
