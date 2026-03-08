@@ -126,7 +126,6 @@ public class RobotContainer {
                         xboxController.leftTrigger()
                                         .onTrue(new WheelRadiusCharacterization(drivetrain));
                 }
-
                 drivetrain.registerTelemetry(logger::telemeterize);
         }
 

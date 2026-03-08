@@ -120,4 +120,12 @@ public final class Constants {
             rpmTable.put(5.0,  5000.0); //max possible distance is 4.6 m
         }
     }
+    public static final class kIntake {
+        public static final int motorID = -1;
+        public static final int solenoidL_Forward = -1;
+        public static final int solenoidL_Reverse = -1;
+        public static final int solenoidR_Forward = -1;
+        public static final int solenoidR_Reverse = -1;
+        public static final double intakeSpeed = 0.5;
+    }
 }
