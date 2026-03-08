@@ -20,7 +20,7 @@ public class Intake extends SubsystemBase {
     private final DoubleSolenoid deploySolenoidB;
 
     public Intake() {
-        motor = new SparkMax(kIntake.motorID, MotorType.kBrushed);
+        motor = new SparkMax(kIntake.intakeMotorID, MotorType.kBrushed);
 
         SparkMaxConfig config = new SparkMaxConfig();
         config.idleMode(IdleMode.kBrake);

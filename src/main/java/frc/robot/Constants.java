@@ -11,6 +11,7 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 
@@ -97,11 +98,10 @@ public final class Constants {
     public static final class kShooter {
         public static final int shooterMotorID = -1;
         // Hub coordinates in meters (X, Y)
-        public static final double redGoalX = Units.inchesToMeters(469.11);
-        public static final double redGoalY = Units.inchesToMeters(158.84);
-
-        public static final double blueGoalX = Units.inchesToMeters(182.11);
-        public static final double blueGoalY = Units.inchesToMeters(158.84);
+        public static final Translation2d kRedGoal = new Translation2d(
+            Units.inchesToMeters(469.11), Units.inchesToMeters(158.84));
+        public static final Translation2d kBlueGoal = new Translation2d(
+            Units.inchesToMeters(182.11), Units.inchesToMeters(158.84));
 
         public static final double redXBoundary = Units.inchesToMeters(470);
         public static final double blueXBoundary = Units.inchesToMeters(180);
@@ -121,7 +121,7 @@ public final class Constants {
         }
     }
     public static final class kIntake {
-        public static final int motorID = -1;
+        public static final int intakeMotorID = -1;
         public static final int solenoidL_Forward = -1;
         public static final int solenoidL_Reverse = -1;
         public static final int solenoidR_Forward = -1;

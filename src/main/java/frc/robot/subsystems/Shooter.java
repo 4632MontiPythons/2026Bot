@@ -29,7 +29,7 @@ public class Shooter extends SubsystemBase {
             new VelocityVoltage(0).withSlot(0).withEnableFOC(false); //too poor lol
     private final NeutralOut m_stopRequest = new NeutralOut();
 
-    // ── State ─────────────────────────────────────────────────────────────────
+    // ── Initial State ─────────────────────────────────────────────────────────
     private double m_targetRpm = 0.0;
     private boolean m_isStopped = true;
 
@@ -59,7 +59,7 @@ public class Shooter extends SubsystemBase {
         cfg.Slot0
             .withKS(0.20)   // static friction (V) — from SysID
             .withKV(0.115)  // velocity gain (V per rot/s) — from SysID; ~1/kRPM*60
-            .withKA(0.01)   // acceleration gain (V per rot/s²) — usually small for flywheel
+            .withKA(0.01)   // acceleration gain (V per rot/s²)
             .withKP(0.15)   // proportional (V per rot/s error)
             .withKI(0.0)
             .withKD(0.0);
