@@ -24,8 +24,7 @@ import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Feeder;
 import frc.robot.subsystems.Intake;
 import frc.robot.Constants.OI;
-import frc.robot.commands.AutoShoot;
-import frc.robot.commands.TeleopShoot;
+import frc.robot.commands.Shoot;
 import frc.robot.commands.WheelRadiusCharacterization;
 import frc.robot.Constants.Drive;
 
@@ -38,8 +37,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import com.pathplanner.lib.auto.NamedCommands;
 
 public class RobotContainer {
-        private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
-        private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
+        private final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
+        private final double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
 
         private final SlewRateLimiter xSlewLimiter = new SlewRateLimiter(OI.slewRate);
         private final SlewRateLimiter ySlewLimiter = new SlewRateLimiter(OI.slewRate);
@@ -52,7 +51,7 @@ public class RobotContainer {
         private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
         // private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
         private final SendableChooser<Command> autoChooser;
-        private final Telemetry logger = new Telemetry();
+        // private final Telemetry logger = new Telemetry();
 
         private final CommandXboxController xboxController = new CommandXboxController(OI.driverControllerPort);
 
@@ -84,16 +83,24 @@ public class RobotContainer {
                 // );
                 NamedCommands.registerCommand(
                         "ShootFullHopper", 
-                        new AutoShoot(null,null,null,10)
+                        new Shoot(null,null,null,true,10)
                 );
                 // NamedCommands.registerCommand(
                 //         "Run Intake", 
                 //         Commands.run(() -> intake.runIntake(), intake)
                 //                 .finallyDo(() -> intake.stopIntake())
                 // );
+                // NamedCommands.registerCommand(
+                //         "Toggle Intake On", 
+                //         Commands.run(() -> intake.runIntake(), intake)
+                // );
+                // NamedCommands.registerCommand(
+                //         "Toggle Intake Off", 
+                //         Commands.run(() -> intake.stopIntake(), intake)
+                // );
                 NamedCommands.registerCommand(
-                        "ShootDe[pt]", 
-                        new AutoShoot(null,null,null,5)
+                        "ShootDepot", 
+                        new Shoot(null,null,null,true,5)
                 );
                 configureBindings();
                 autoChooser = AutoBuilder.buildAutoChooser();
@@ -125,7 +132,7 @@ public class RobotContainer {
                 xboxController.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
                 // shoot fuel while held
-                xboxController.rightTrigger().whileTrue(new TeleopShoot(null, null, drivetrain));
+                xboxController.rightTrigger().whileTrue(new Shoot(null, null, drivetrain));
 
                 // the following bindings only do anything if drive.comp is false(not in a
                 // competition setting). that boolean has to be manually set
@@ -157,7 +164,7 @@ public class RobotContainer {
                         // xboxController.povRight().and(xboxController.x())
                         //         .whileTrue(shooter.sysIdQuasistatic(Direction.kReverse));
                 }
-                if(Drive.log) drivetrain.registerTelemetry(logger::telemeterize);
+                // if(Drive.log) drivetrain.registerTelemetry(logger::telemeterize);
         }
 
         public Command getAutonomousCommand() {

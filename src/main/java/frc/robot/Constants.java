@@ -120,6 +120,25 @@ public final class Constants {
             rpmTable.put(4.0,  4600.0);
             rpmTable.put(5.0,  5500.0); //max possible distance is 4.6 m
         }
+        /** Feeder output current (A) below which we consider the feeder unloaded. */
+        public static final double kEmptyCurrentThreshold = 3.0;
+        /**
+         * How long (s) feeder current must stay below kEmptyCurrentThreshold
+         * before we declare the hopper empty.
+         */
+        public static final double kEmptySettleTime = 0.5;
+
+        /**
+         * How many seconds BEFORE expectedShootTimeSecs we begin listening for
+         * an empty-hopper signal.
+         */
+        public static final double kEarlyWindowSecs = 3.0;
+
+        /**
+         * How many seconds AFTER expectedShootTimeSecs we keep waiting before
+         * giving up via hard timeout.
+         */
+        public static final double kLateWindowSecs = 2.0;
     }
     public static final class kIntake {
         public static final int intakeMotorID = -1;

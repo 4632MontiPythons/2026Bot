@@ -17,21 +17,33 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "Toggle Intake On"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Left Shooting - Depot"
           }
         },
         {
-          "type": "wait",
+          "type": "named",
           "data": {
-            "waitTime": 0.1
+            "name": "Spin Up Shooter"
           }
         },
         {
           "type": "path",
           "data": {
             "pathName": "Depot - Left Shooting"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Toggle Intake Off"
           }
         },
         {
