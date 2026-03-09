@@ -21,6 +21,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.Constants.OI;
+import frc.robot.commands.AutoShoot;
+import frc.robot.commands.DeployIntake;
+import frc.robot.commands.IntakeOn;
 import frc.robot.commands.WheelRadiusCharacterization;
 import frc.robot.Constants.Drive;
 
@@ -63,6 +66,18 @@ public class RobotContainer {
                 NamedCommands.registerCommand(
                         "WheelRadiusCharacterization", 
                         new WheelRadiusCharacterization(drivetrain)
+                );
+                NamedCommands.registerCommand(
+                        "Deploy Intake", 
+                        new DeployIntake(null)
+                );
+                NamedCommands.registerCommand(
+                        "ShootFullHopper", 
+                        new AutoShoot(null,null,null,10)
+                );
+                NamedCommands.registerCommand(
+                        "Run Intake", 
+                        new IntakeOn(null)
                 );
                 configureBindings();
                 autoChooser = AutoBuilder.buildAutoChooser();

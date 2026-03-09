@@ -5,27 +5,28 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "sequential",
           "data": {
-            "pathName": "Left Start to Left Neutral"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Deploy Intake"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Left Start - Intake Neutral - Left Shooting"
+                }
+              }
+            ]
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "IntakeAuto"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Left Neutral to Left Shooting"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Left Shooting to Left Climb"
+            "name": "ShootFullHopper"
           }
         }
       ]

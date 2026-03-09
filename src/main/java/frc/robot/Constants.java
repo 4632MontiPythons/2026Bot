@@ -99,9 +99,9 @@ public final class Constants {
         public static final int shooterMotorID = -1;
         // Hub coordinates in meters (X, Y)
         public static final Translation2d kRedGoal = new Translation2d(
-            Units.inchesToMeters(469.11), Units.inchesToMeters(158.84));
+            11.915394, 4.034536);
         public static final Translation2d kBlueGoal = new Translation2d(
-            Units.inchesToMeters(182.11), Units.inchesToMeters(158.84));
+            4.625594, 4.034536);
 
         public static final double redXBoundary = Units.inchesToMeters(470);
         public static final double blueXBoundary = Units.inchesToMeters(180);

@@ -50,22 +50,21 @@ public class TunerConstants {
 
     // The stator current at which the wheels start to slip;
     // This needs to be tuned to your individual robot
-    private static final Current kSlipCurrent = Amps.of(120);
+    private static final Current kSlipCurrent = Amps.of(80);
 
     // Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
     // Some configs will be overwritten; check the `with*InitialConfigs()` API documentation.
     private static final TalonFXConfiguration driveInitialConfigs = new TalonFXConfiguration().withCurrentLimits(
         new CurrentLimitsConfigs()
-            .withSupplyCurrentLimit(70.0)         // Peak supply from battery, can only be sustained for a few seconds w/ 40A breakers.
-            .withSupplyCurrentLowerLimit(45.0)    // Sustained supply limit, using 40A so this should be able to last minutes
-            .withSupplyCurrentLowerTime(1.0)      // Allow 1 second of 70A before dropping to protect breakers from resetting
+            .withSupplyCurrentLimit(55.0)         // Peak supply from battery,
+            .withSupplyCurrentLowerLimit(40.0)    // Sustained supply limit, using 40A
+            .withSupplyCurrentLowerTime(1.0)
             .withSupplyCurrentLimitEnable(true)
             
             .withStatorCurrentLimit(kSlipCurrent)        // Matches kSlipCurrent for max torque
             .withStatorCurrentLimitEnable(true)
     );
-    private static final TalonFXConfiguration steerInitialConfigs = new TalonFXConfiguration()
-        .withCurrentLimits(
+    private static final TalonFXConfiguration steerInitialConfigs = new TalonFXConfiguration().withCurrentLimits(
             new CurrentLimitsConfigs()
                 // Swerve azimuth does not require much torque output, so we can set a relatively low
                 // stator current limit to help avoid brownouts without impacting performance.
