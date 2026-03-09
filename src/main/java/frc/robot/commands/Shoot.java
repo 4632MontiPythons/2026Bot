@@ -1,5 +1,6 @@
 package frc.robot.commands;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -7,15 +8,17 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.kShooter;
-import frc.robot.MatchInfo;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Feeder;
 import frc.robot.subsystems.Shooter;
+import frc.robot.util.Elastic;
 
 /**
  * Shoot — aims at the goal, spins up the shooter, and feeds game pieces.
  *
  * In teleop mode (isAuto = false): runs until interrupted (button released).
+ * Aborts early if the robot is outside its alliance shooting boundary or
+ * it is not the robot's active shift (teleop only).
  *
  * In auto mode (isAuto = true): self-terminates when the hopper is empty
  * or a hard timeout fires. Empty detection is gated by a time window to
@@ -49,11 +52,15 @@ public class Shoot extends Command {
     private final SwerveRequest.SwerveDriveBrake m_brake = new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.FieldCentric m_fieldCentric = new SwerveRequest.FieldCentric();
 
+    /** Set in initialize(); used for boundary check throughout the command. */
+    private Translation2d m_initRobotPos;
+
+    /** Set in initialize(); false triggers early exit in teleop. */
+    private boolean m_preflightPassed = false;
+
     // ── Constructors ──────────────────────────────────────────────────────────
 
-    /**
-     * Teleop constructor — runs until interrupted.
-     */
+    /** Teleop constructor — runs until interrupted. */
     public Shoot(Shooter shooter, Feeder feeder, CommandSwerveDrivetrain drivetrain) {
         this(shooter, feeder, drivetrain, false, 0.0);
     }
@@ -94,18 +101,61 @@ public class Shoot extends Command {
         m_emptyTimer.reset();
         m_emptyTimerRunning = false;
         m_thetaController.reset();
+        m_initRobotPos = m_drivetrain.getState().Pose.getTranslation();
+        m_preflightPassed = m_isAuto || checkPreflight(m_initRobotPos);
+    }
+
+    /**
+     * Validates boundary and shift conditions at the start of a teleop shoot.
+     * Posts a Elastic error notification and returns false if any check fails.
+     */
+    private boolean checkPreflight(Translation2d robotPos) {
+        Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+        double x = robotPos.getX();
+
+        // Boundary check
+        boolean inBoundary = (alliance == Alliance.Red)
+            ? x >= kShooter.redXBoundary
+            : x <= kShooter.blueXBoundary;
+
+        if (!inBoundary) {
+            Elastic.sendNotification(new Elastic.Notification()
+                .withLevel(Elastic.NotificationLevel.ERROR)
+                .withTitle("Shoot Blocked")
+                .withDescription("Robot is outside the shooting boundary.")
+            );
+            return false;
+        }
+
+        // Shift check
+        String gameData = DriverStation.getGameSpecificMessage();
+        if (gameData != null && !gameData.isEmpty()) {
+            char ownAllianceChar = (alliance == Alliance.Red) ? 'R' : 'B';
+            boolean ownAllianceInactive = (ownAllianceChar == gameData.charAt(0));
+            if (ownAllianceInactive) {
+                Elastic.sendNotification(new Elastic.Notification()
+                    .withLevel(Elastic.NotificationLevel.ERROR)
+                    .withTitle("Shoot Blocked")
+                    .withDescription("Cannot shoot during inactive shift.")
+                );
+                return false;
+            }
+        }
+
+        return true;
     }
 
     @Override
     public void execute() {
+        if (!m_preflightPassed) return;
+
         // ── 1. Aim at goal ────────────────────────────────────────────────────
-        Translation2d robotPos = m_drivetrain.getState().Pose.getTranslation();
-        Alliance alliance = MatchInfo.getInstance().getOwnAlliance().orElse(Alliance.Blue);
+        Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
         Translation2d target = (alliance == Alliance.Red) ? kShooter.kRedGoal : kShooter.kBlueGoal;
 
         double targetAngle = Math.atan2(
-            target.getY() - robotPos.getY(),
-            target.getX() - robotPos.getX()
+            target.getY() - m_initRobotPos.getY(),
+            target.getX() - m_initRobotPos.getX()
         );
 
         double rotationOutput = m_thetaController.calculate(
@@ -124,8 +174,8 @@ public class Shoot extends Command {
             );
         }
 
-        // ── 2. Set shooter speed  ────────────────────────────────────────────────
-        m_shooter.setShootingDistance(robotPos.getDistance(target));
+        // ── 2. Set shooter speed ──────────────────────────────────────────────
+        m_shooter.setShootingDistance(m_initRobotPos.getDistance(target));
 
         // ── 3. Feed once aimed and up to speed ────────────────────────────────
         if (m_shooter.atTargetRPM() && m_thetaController.atSetpoint()) {
@@ -158,7 +208,8 @@ public class Shoot extends Command {
 
     @Override
     public boolean isFinished() {
-        if (!m_isAuto) return false; // in teleop only finish when button released
+        if (!m_preflightPassed) return true;
+        if (!m_isAuto) return false;
 
         boolean hopperEmpty = m_emptyTimerRunning && m_emptyTimer.hasElapsed(kShooter.kEmptySettleTime);
         boolean timedOut    = m_commandTimer.get() >= (m_expectedShootTimeSecs + kShooter.kLateWindowSecs);

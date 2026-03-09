@@ -103,8 +103,8 @@ public final class Constants {
         public static final Translation2d kBlueGoal = new Translation2d(
             4.625594, 4.034536);
 
-        public static final double redXBoundary = Units.inchesToMeters(470);
-        public static final double blueXBoundary = Units.inchesToMeters(180);
+        public static final double redXBoundary = 11.3;
+        public static final double blueXBoundary = 5.3;
         public static final double rpmTolerance = 100; //will be ready to shoot if +/- 100 rpm of target
         public static final double angleTolerance_Rads = Units.degreesToRadians(1); 
         public static final double angleTolerance_RadsPerSec = Units.degreesToRadians(5); //to make sure its not oscillating, dont be "ready" until 

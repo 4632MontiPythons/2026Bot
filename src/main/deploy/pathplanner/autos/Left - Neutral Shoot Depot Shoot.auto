@@ -17,12 +17,6 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "Toggle Intake On"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "Left Shooting - Depot"
@@ -38,12 +32,6 @@
           "type": "path",
           "data": {
             "pathName": "Depot - Left Shooting"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Toggle Intake Off"
           }
         },
         {

@@ -98,6 +98,10 @@ public class RobotContainer {
                 //         "Toggle Intake Off", 
                 //         Commands.run(() -> intake.stopIntake(), intake)
                 // );
+                // NamedCommands.registerCommand(
+                //         "Spin Up Shooter", 
+                //         Commands.run(() -> shooter.setShootingDistance(3.25)
+                // );
                 NamedCommands.registerCommand(
                         "ShootDepot", 
                         new Shoot(null,null,null,true,5)
