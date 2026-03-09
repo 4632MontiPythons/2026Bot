@@ -24,6 +24,7 @@ import frc.robot.Constants.OI;
 import frc.robot.commands.AutoShoot;
 import frc.robot.commands.DeployIntake;
 import frc.robot.commands.IntakeOn;
+import frc.robot.commands.TeleopShoot;
 import frc.robot.commands.WheelRadiusCharacterization;
 import frc.robot.Constants.Drive;
 
@@ -36,7 +37,7 @@ import com.pathplanner.lib.auto.NamedCommands;
 public class RobotContainer {
         private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
         private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
-        // initilaize slew rate limiters
+
         private final SlewRateLimiter xSlewLimiter = new SlewRateLimiter(OI.slewRate);
         private final SlewRateLimiter ySlewLimiter = new SlewRateLimiter(OI.slewRate);
 
@@ -46,20 +47,19 @@ public class RobotContainer {
                         .withRotationalDeadband(MaxAngularRate * OI.deadband) // Add a deadband
                         .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control
         private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
-        private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
+        // private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
         private final SendableChooser<Command> autoChooser;
         private final Telemetry logger = new Telemetry();
 
         private final CommandXboxController xboxController = new CommandXboxController(OI.driverControllerPort);
+
         public final CommandSwerveDrivetrain drivetrain = new CommandSwerveDrivetrain(
-                        TunerConstants.DrivetrainConstants,
-                        0, // odometry update frequency (0 = use default)
-                        VecBuilder.fill(Drive.odometryXYStdDevs, Drive.odometryXYStdDevs, Drive.odometryYawStdDev),
-                        VecBuilder.fill(999, 999, 999), // this is the *default* vision std dev. These values are never used because we always dynamically set
-                        TunerConstants.FrontLeft,
-                        TunerConstants.FrontRight,
-                        TunerConstants.BackLeft,
-                        TunerConstants.BackRight);
+                TunerConstants.DrivetrainConstants,
+                0, // odometry update frequency (0 = use default)
+                VecBuilder.fill(Drive.odometryXYStdDevs, Drive.odometryXYStdDevs, Drive.odometryYawStdDev),
+                VecBuilder.fill(999, 999, 999), // this is the *default* vision std dev. These values are never used because we always dynamically set
+                TunerConstants.FrontLeft, TunerConstants.FrontRight, TunerConstants.BackLeft,TunerConstants.BackRight
+                );
 
         public RobotContainer() {
                 //register named commands for pathplanner
@@ -86,8 +86,7 @@ public class RobotContainer {
 
         private void configureBindings() {
 
-                // Drivetrain default command; runs when nothing else is using drivetrain
-                // subsystem.
+                //default command; runs when nothing else is using drivetrain
                 drivetrain.setDefaultCommand(
                                 drivetrain.applyRequest(() -> drive
                                                 .withVelocityX(xSlewLimiter.calculate(-xboxController.getLeftY())
@@ -97,28 +96,23 @@ public class RobotContainer {
                                                 .withRotationalRate(-xboxController.getRightX()
                                                                 * MaxAngularRate)));
 
-                // Idle while the robot is disabled. This ensures the configured
-                // neutral mode is applied to the drive motors while disabled.
+                // Idle while the robot is disabled
                 final var idle = new SwerveRequest.Idle();
                 RobotModeTriggers.disabled().whileTrue(
                                 drivetrain.applyRequest(() -> idle).ignoringDisable(true));
 
                 xboxController.a().whileTrue(drivetrain.applyRequest(() -> brake));
-                xboxController.b().whileTrue(drivetrain.applyRequest(() -> point
-                                .withModuleDirection(new Rotation2d(-xboxController.getLeftY(),
-                                                -xboxController.getLeftX()))));
+                // xboxController.b().whileTrue(drivetrain.applyRequest(() -> point
+                //                 .withModuleDirection(new Rotation2d(-xboxController.getLeftY(),-xboxController.getLeftX()))));
 
                 // reset the field-centric heading on left bumper press(LB)
                 xboxController.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-                // shoot fuel while held; don't have a shooter yet, so currently just point
-                // towards hub,
-                // translation (deadband + slew + scaling) is handled here and passed into the
-                // command
-
+                // shoot fuel while held
+                xboxController.rightTrigger().whileTrue(new TeleopShoot(null, null, drivetrain));
 
                 // the following bindings only do anything if drive.comp is false(not in a
-                // competition settnig. that boolean has to be manually set)
+                // competition setting). that boolean has to be manually set
                 if (!Drive.comp) {
                         // Run SysId routines when holding back/start and X/Y.
                         // Note that each routine should be run exactly once in a single log.
@@ -137,11 +131,8 @@ public class RobotContainer {
                                         new InstantCommand(() -> drivetrain.resetPose(
                                                         new Pose2d((492.88 + 13.5) * 0.0254, (158.84) * 0.0254,
                                                                         Rotation2d.fromDegrees(180)))));
-                        // run wheel characterization
-                        xboxController.leftTrigger()
-                                        .onTrue(new WheelRadiusCharacterization(drivetrain));
                 }
-                drivetrain.registerTelemetry(logger::telemeterize);
+                if(Drive.log) drivetrain.registerTelemetry(logger::telemeterize);
         }
 
         public Command getAutonomousCommand() {

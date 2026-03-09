@@ -93,7 +93,7 @@ public final class Constants {
     public static final class OI {
         public static final double deadband = 0.10; //percentage of max speed/rotational rate. e.g. 10% deadband should be 0.10
         public static final int driverControllerPort = 0;
-        public static final double slewRate = 7.5; //limits change to (100*k)% per second, meaning would take 1/k seconds to go from requesting 0 to requesting full throttle
+        public static final double slewRate = 10; //would take 1/k seconds to go from requesting 0 to requesting full throttle and 2/k seconds to go from forward to backward
     }
     public static final class kShooter {
         public static final int shooterMotorID = -1;
@@ -106,7 +106,8 @@ public final class Constants {
         public static final double redXBoundary = Units.inchesToMeters(470);
         public static final double blueXBoundary = Units.inchesToMeters(180);
         public static final double rpmTolerance = 100; //will be ready to shoot if +/- 100 rpm of target
-
+        public static final double angleTolerance_Rads = Units.degreesToRadians(1); 
+        public static final double angleTolerance_RadsPerSec = Units.degreesToRadians(5); //to make sure its not oscillating, dont be "ready" until 
         public static final InterpolatingDoubleTreeMap rpmTable = new InterpolatingDoubleTreeMap();
         static {
             // Distance (m) → Shooter RPM, placeholders

@@ -1,0 +1,11 @@
+Controller 1, main:
+Joysticks             - driving
+Left Bumper           - reset field-centric heading (hopefully shouldnt need to be used at comp)
+Right Trigger         - Shoot while holding(locks driving)
+Left Trigger          - Intake On while holding
+Y                     - Deploy/Retract Intake (toggles) shouldnt be used often, will be deployed during auto. for avoiding defense penalties and climbing
+
+Controller 2, debug & manual alternative:
+Left Joystick         - Manual Feeder velocity (to resolve jams if needed)
+Right Joystick        - Manual Intake velocity (to resolve jams if needed)
+Left and Right Bumper - Calibrate Position to directly in front of and facing our alliance Hub

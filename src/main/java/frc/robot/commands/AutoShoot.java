@@ -101,10 +101,10 @@ public class AutoShoot extends Command {
         m_expectedShootTimeSecs = expectedShootTimeSecs;
 
         m_thetaController.enableContinuousInput(-Math.PI, Math.PI);
+        m_thetaController.setTolerance(kShooter.angleTolerance_Rads,kShooter.angleTolerance_RadsPerSec);
         addRequirements(shooter, feeder, drivetrain);
     }
 
-    // ── Command lifecycle ─────────────────────────────────────────────────────
 
     @Override
     public void initialize() {

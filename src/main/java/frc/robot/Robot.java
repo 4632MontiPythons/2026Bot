@@ -6,6 +6,7 @@ package frc.robot;
 
 import frc.robot.Constants.Drive;
 
+import com.ctre.phoenix6.SignalLogger;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -29,6 +30,7 @@ public class Robot extends TimedRobot {
 	@Override
 	public void robotInit() {
 		SmartDashboard.putData(CommandScheduler.getInstance());
+		SignalLogger.enableAutoLogging(false);
 		if (Drive.comp)
 			Elastic.selectTab("Prematch");
 	}
