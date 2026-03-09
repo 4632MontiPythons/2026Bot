@@ -117,8 +117,8 @@ public final class Constants {
             rpmTable.put(2.5,  3600.0);
             rpmTable.put(3.0,  3900.0);
             rpmTable.put(3.5,  4200.0);
-            rpmTable.put(4.0,  4500.0);
-            rpmTable.put(5.0,  5000.0); //max possible distance is 4.6 m
+            rpmTable.put(4.0,  4600.0);
+            rpmTable.put(5.0,  5500.0); //max possible distance is 4.6 m
         }
     }
     public static final class kIntake {

@@ -73,6 +73,11 @@ public class Feeder extends SubsystemBase {
         m_state = FeedState.FEEDING;
         setMotor(0.0);
     }
+    public void pause() {
+        // stops motor but preserves jam recovery state
+        m_feedRequested = false;
+        setMotor(0.0);
+    }
 
     /** @return output current drawn by the feeder motor in amps */
     public double getOutputCurrent() {
@@ -136,7 +141,7 @@ public class Feeder extends SubsystemBase {
         }
 
         // ── Dashboard ──────────────────────────────────────────────────────────
-        SmartDashboard.putNumber("Feeder/Speed",         m_currentSpeed);
+        SmartDashboard.putNumber("Feeder/SetSpeed",         m_currentSpeed);
         SmartDashboard.putNumber("Feeder/OutputCurrent", getOutputCurrent());
         SmartDashboard.putString("Feeder/State",         m_state.toString());
 

@@ -12,7 +12,10 @@ import frc.robot.MatchInfo;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Feeder;
 import frc.robot.subsystems.Shooter;
-
+/** 
+ * Shoots while button is held. Orients to correct angle and brakes. 
+ * Runs feeder when at correct angle and rpm.
+ */
 public class TeleopShoot extends Command {
     private final Shooter m_shooter;
     private final Feeder m_feeder;
@@ -33,7 +36,6 @@ public class TeleopShoot extends Command {
         m_thetaController.enableContinuousInput(-Math.PI, Math.PI);
         addRequirements(shooter, feeder, drivetrain);
     }
-
     @Override
     public void execute() {
         Translation2d robotPos = m_drivetrain.getState().Pose.getTranslation();
@@ -65,7 +67,7 @@ public class TeleopShoot extends Command {
         if (m_shooter.atTargetRPM() && m_thetaController.atSetpoint()) {
             m_feeder.feed();
         } else {
-            m_feeder.stop();
+            m_feeder.pause();
         }
     }
 

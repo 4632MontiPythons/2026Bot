@@ -13,17 +13,17 @@ import frc.robot.subsystems.Feeder;
 import frc.robot.subsystems.Shooter;
 
 /**
- * AutoShoot — drains a full hopper (60–100 game pieces) into the shooter.
+ * AutoShoot — drains a certain amount of fuel into the shooter.
  *
- * "Done" detection: the feeder output current drops below kEmptyCurrentThreshold
+ * isFinished check: the feeder output current drops below kEmptyCurrentThreshold
  * and stays there for kEmptySettleTime seconds, indicating nothing is left to feed.
  *
- * Two guard rails prevent premature exit:
+ * Two guard rails prevent early finishing:
  *   1. Empty detection is only considered valid after
  *      (expectedShootTimeSecs - kEarlyWindowSecs) have elapsed, so brief
  *      gaps between game pieces early in the run don't fool us.
  *   2. A hard timeout fires at (expectedShootTimeSecs + kLateWindowSecs)
- *      regardless, so we don't hang forever if the sensor reads wrong.
+ *      regardles
  */
 public class AutoShoot extends Command {
 
@@ -42,7 +42,7 @@ public class AutoShoot extends Command {
      * between consecutive game pieces, short enough to end promptly.
      * Start around 0.3s and tune up if you get false empties mid-hopper.
      */
-    private static final double kEmptySettleTime = 0.3;
+    private static final double kEmptySettleTime = 0.5;
 
     /**
      * How many seconds BEFORE expectedShootTimeSecs we begin listening for
@@ -149,7 +149,7 @@ public class AutoShoot extends Command {
         if (m_shooter.atTargetRPM() && m_thetaController.atSetpoint()) {
             m_feeder.feed();
         } else {
-            m_feeder.stop();
+            m_feeder.pause();
         }
 
         // ── 4. Empty-hopper detection (gated by time window) ──────────────────

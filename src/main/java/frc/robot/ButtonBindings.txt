@@ -1,11 +1,23 @@
 Controller 1, main:
-Joysticks             - driving
-Left Bumper           - reset field-centric heading (hopefully shouldnt need to be used at comp)
-Right Trigger         - Shoot while holding(locks driving)
-Left Trigger          - Intake On while holding
-Y                     - Deploy/Retract Intake (toggles) shouldnt be used often, will be deployed during auto. for avoiding defense penalties and climbing
+    Joysticks             - driving
+    Left Bumper           - reset field-centric heading (hopefully shouldnt need to be used at comp)
+    Right Trigger         - Shoot while holding(locks driving)
+    Left Trigger          - Intake On while holding
+    Y                     - Deploy/Retract Intake (toggles) shouldnt be used often, will be deployed during auto. for avoiding defense penalties and climbing
+    -Only not during competition for controller 1 ---
+        Drivetrain sysID: back is dynamic; start is quasistatic; y is forward; x is reverse
+        Shooter sysID: POV left is dynamic; POV right is quasistatic; y is forward; x is reverse
+
 
 Controller 2, debug & manual alternative:
-Left Joystick         - Manual Feeder velocity (to resolve jams if needed)
-Right Joystick        - Manual Intake velocity (to resolve jams if needed)
-Left and Right Bumper - Calibrate Position to directly in front of and facing our alliance Hub
+    Left Joystick         - Manual Feeder velocity (to resolve jams if needed)
+    Right Joystick        - Manual Intake velocity (to resolve jams if needed)
+    Left and Right Bumper - Calibrate Position to directly in front of and facing our alliance Hub
+
+
+
+Named Commands for pathplanner:
+    RunIntake: Runs intake (as a zoned event in pathplanner)
+    Spin Up Shooter: Sets target shooting distance(and therefore rpm) as 3.25 m (where we shoot from in auto) is currently done 2 seconds before we need to shoot
+    ShootFullHopper: similar to teleop shoot button, except it has detection for when its finished.
+    ShootDepot: same as previous, expected time is lower

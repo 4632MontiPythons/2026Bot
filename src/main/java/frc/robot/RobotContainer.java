@@ -20,10 +20,11 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Shooter;
+import frc.robot.subsystems.Feeder;
+import frc.robot.subsystems.Intake;
 import frc.robot.Constants.OI;
 import frc.robot.commands.AutoShoot;
-import frc.robot.commands.DeployIntake;
-import frc.robot.commands.IntakeOn;
 import frc.robot.commands.TeleopShoot;
 import frc.robot.commands.WheelRadiusCharacterization;
 import frc.robot.Constants.Drive;
@@ -32,6 +33,8 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+
 import com.pathplanner.lib.auto.NamedCommands;
 
 public class RobotContainer {
@@ -60,6 +63,10 @@ public class RobotContainer {
                 VecBuilder.fill(999, 999, 999), // this is the *default* vision std dev. These values are never used because we always dynamically set
                 TunerConstants.FrontLeft, TunerConstants.FrontRight, TunerConstants.BackLeft,TunerConstants.BackRight
                 );
+        // private final Shooter shooter = new Shooter();
+        // private final Feeder feeder = new Feeder();
+        // private final Intake intake = new Intake();
+
 
         public RobotContainer() {
                 //register named commands for pathplanner
@@ -67,17 +74,26 @@ public class RobotContainer {
                         "WheelRadiusCharacterization", 
                         new WheelRadiusCharacterization(drivetrain)
                 );
-                NamedCommands.registerCommand(
-                        "Deploy Intake", 
-                        new DeployIntake(null)
-                );
+                // NamedCommands.registerCommand(
+                //         "Deploy Intake", 
+                //         Commands.runOnce(() -> intake.deploy(), intake)
+                // );
+                // NamedCommands.registerCommand(
+                //         "Retract Intake", 
+                //         Commands.runOnce(() -> intake.deploy(), intake)
+                // );
                 NamedCommands.registerCommand(
                         "ShootFullHopper", 
                         new AutoShoot(null,null,null,10)
                 );
+                // NamedCommands.registerCommand(
+                //         "Run Intake", 
+                //         Commands.run(() -> intake.runIntake(), intake)
+                //                 .finallyDo(() -> intake.stopIntake())
+                // );
                 NamedCommands.registerCommand(
-                        "Run Intake", 
-                        new IntakeOn(null)
+                        "ShootDe[pt]", 
+                        new AutoShoot(null,null,null,5)
                 );
                 configureBindings();
                 autoChooser = AutoBuilder.buildAutoChooser();
@@ -131,6 +147,15 @@ public class RobotContainer {
                                         new InstantCommand(() -> drivetrain.resetPose(
                                                         new Pose2d((492.88 + 13.5) * 0.0254, (158.84) * 0.0254,
                                                                         Rotation2d.fromDegrees(180)))));
+                        //uncomment when shooter ready
+                        // xboxController.povLeft().and(xboxController.y())
+                        //         .whileTrue(shooter.sysIdDynamic(Direction.kForward));
+                        // xboxController.povLeft().and(xboxController.x())
+                        //         .whileTrue(shooter.sysIdDynamic(Direction.kReverse));
+                        // xboxController.povRight().and(xboxController.y())
+                        //         .whileTrue(shooter.sysIdQuasistatic(Direction.kForward));
+                        // xboxController.povRight().and(xboxController.x())
+                        //         .whileTrue(shooter.sysIdQuasistatic(Direction.kReverse));
                 }
                 if(Drive.log) drivetrain.registerTelemetry(logger::telemeterize);
         }

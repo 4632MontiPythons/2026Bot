@@ -46,6 +46,10 @@ public class Intake extends SubsystemBase {
     public boolean isDeployed() {
         return deploySolenoidA.get() == Value.kForward;
     }
+    /** Toggles Intake Deployment  */
+    public void toggleIntake() {
+        if(isDeployed()) retract(); else deploy();
+    }
 
     // -- Motor --
 
