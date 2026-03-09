@@ -20,11 +20,11 @@
         "y": 5.935166666660773
       },
       "prevControl": {
-        "x": 1.597181950405127,
-        "y": 6.1349277777748314
+        "x": 0.20921540656205384,
+        "y": 5.904636233951498
       },
       "nextControl": null,
-      "isLocked": true,
+      "isLocked": false,
       "linkedName": "Depot"
     }
   ],
@@ -38,7 +38,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 3.0,
+    "maxVelocity": 4.0,
     "maxAcceleration": 10.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,

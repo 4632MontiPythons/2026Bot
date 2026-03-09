@@ -194,11 +194,11 @@ public class Shooter extends SubsystemBase {
         if (!Drive.comp) {
             SmartDashboard.putNumber("Shooter/TestRPM",
                     SmartDashboard.getNumber("Shooter/TestRPM", m_targetRpm));
-            double dashRpm = SmartDashboard.getNumber("Shooter/TestRPM", 0.0);
-            if (dashRpm > 0.0) {
-                setRPM(dashRpm);
-            } else {
-                stop();
+            
+            if (getCurrentCommand() == null) { // only override when no command is running
+                double dashRpm = SmartDashboard.getNumber("Shooter/TestRPM", 0.0);
+                if (dashRpm > 0.0) setRPM(dashRpm);
+                else stop();
             }
         }
     }

@@ -4,28 +4,28 @@
     {
       "anchor": {
         "x": 3.56,
-        "y": 7.625
+        "y": 0.44407200000000024
       },
       "prevControl": null,
       "nextControl": {
         "x": 7.390171184022824,
-        "y": 7.276134094151213
+        "y": 0.7929379058487873
       },
       "isLocked": true,
-      "linkedName": "Left Start"
+      "linkedName": "Right Start"
     },
     {
       "anchor": {
         "x": 7.985349500713266,
-        "y": 7.1855634807417985
+        "y": 0.8835085192582017
       },
       "prevControl": {
         "x": 7.441925820256775,
-        "y": 7.66429386590585
+        "y": 0.4047781340941503
       },
       "nextControl": {
         "x": 8.70405114968498,
-        "y": 6.5524215518857645
+        "y": 1.5166504481142358
       },
       "isLocked": false,
       "linkedName": null
@@ -33,15 +33,15 @@
     {
       "anchor": {
         "x": 7.5971897289586305,
-        "y": 3.0063766048502147
+        "y": 5.0626953951497855
       },
       "prevControl": {
         "x": 8.011735831610162,
-        "y": 2.6332851124638395
+        "y": 5.43578688753616
       },
       "nextControl": {
         "x": 7.3384165477888725,
-        "y": 3.239272467902995
+        "y": 4.829799532097005
       },
       "isLocked": false,
       "linkedName": null
@@ -49,15 +49,15 @@
     {
       "anchor": {
         "x": 7.5971897289586305,
-        "y": 6.685488888888889
+        "y": 1.3835831111111112
       },
       "prevControl": {
         "x": 7.778447327770997,
-        "y": 6.513309671580948
+        "y": 1.5557623284190525
       },
       "nextControl": {
         "x": 6.827822222222222,
-        "y": 7.416322222222221
+        "y": 0.6527497777777791
       },
       "isLocked": false,
       "linkedName": null
@@ -65,29 +65,29 @@
     {
       "anchor": {
         "x": 4.031166666666667,
-        "y": 7.338366666666666
+        "y": 0.7307053333333347
       },
       "prevControl": {
         "x": 5.668233333333334,
-        "y": 7.406577777777777
+        "y": 0.6624942222222234
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Left Trench Shooting"
+      "linkedName": "Right Trench Shooting"
     }
   ],
   "rotationTargets": [
     {
       "waypointRelativePos": 1.5458422174840059,
-      "rotationDegrees": 105.33683003820646
+      "rotationDegrees": -105.33683003820646
     },
     {
       "waypointRelativePos": 2.4200426439232454,
-      "rotationDegrees": -90.0
+      "rotationDegrees": 90.0
     },
     {
       "waypointRelativePos": 3.163485477178424,
-      "rotationDegrees": -80.0
+      "rotationDegrees": 80.0
     }
   ],
   "constraintZones": [],
@@ -122,13 +122,13 @@
   },
   "goalEndState": {
     "velocity": 0.0,
-    "rotation": -80.08999999999997
+    "rotation": 80.08999999999997
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }

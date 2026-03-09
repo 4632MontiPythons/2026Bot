@@ -4,6 +4,7 @@ Controller 1, main:
     Right Trigger         - Shoot while holding(locks driving)
     Left Trigger          - Intake On while holding
     Y                     - Deploy/Retract Intake (toggles) shouldnt be used often, will be deployed during auto. for avoiding defense penalties and climbing
+    Right Bumper          - Spin Up Shooter
     -Only not during competition for controller 1 ---
         Drivetrain sysID: back is dynamic; start is quasistatic; y is forward; x is reverse
         Shooter sysID: POV left is dynamic; POV right is quasistatic; y is forward; x is reverse

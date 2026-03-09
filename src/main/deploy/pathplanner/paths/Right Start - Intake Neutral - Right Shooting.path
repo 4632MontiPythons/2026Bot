@@ -4,28 +4,28 @@
     {
       "anchor": {
         "x": 3.56,
-        "y": 0.444072
+        "y": 0.44407200000000024
       },
       "prevControl": null,
       "nextControl": {
         "x": 7.390171184022824,
-        "y": 0.792937905848787
+        "y": 0.7929379058487873
       },
-      "isLocked": false,
+      "isLocked": true,
       "linkedName": "Right Start"
     },
     {
       "anchor": {
         "x": 7.985349500713266,
-        "y": 0.883508519258201
+        "y": 0.8835085192582017
       },
       "prevControl": {
         "x": 7.441925820256775,
-        "y": 0.40477813409415
+        "y": 0.4047781340941503
       },
       "nextControl": {
         "x": 8.70405114968498,
-        "y": 1.516650448114235
+        "y": 1.5166504481142358
       },
       "isLocked": false,
       "linkedName": null
@@ -33,7 +33,7 @@
     {
       "anchor": {
         "x": 7.5971897289586305,
-        "y": 5.062695395149785
+        "y": 5.0626953951497855
       },
       "prevControl": {
         "x": 8.011735831610162,
@@ -49,15 +49,15 @@
     {
       "anchor": {
         "x": 7.5971897289586305,
-        "y": 1.426932199714692
+        "y": 1.4269321997146927
       },
       "prevControl": {
         "x": 7.801491276656131,
-        "y": 1.571018554406613
+        "y": 1.5710185544066135
       },
       "nextControl": {
         "x": 6.368017118402282,
-        "y": 0.5600420427960059
+        "y": 0.560042042796006
       },
       "isLocked": false,
       "linkedName": null
@@ -65,15 +65,15 @@
     {
       "anchor": {
         "x": 4.634236804564908,
-        "y": 0.585919360912981
+        "y": 0.5859193609129809
       },
       "prevControl": {
         "x": 6.170197731625915,
-        "y": 0.685893149068651
+        "y": 0.6858931490686517
       },
       "nextControl": {
-        "x": 2.4476034236801936,
-        "y": 0.4435941112642279
+        "x": 2.447603423680194,
+        "y": 0.4435941112642281
       },
       "isLocked": false,
       "linkedName": null
@@ -81,14 +81,14 @@
     {
       "anchor": {
         "x": 2.5152861230329044,
-        "y": 1.977426792560801
+        "y": 1.5690720000000002
       },
       "prevControl": {
         "x": 2.589928673323822,
-        "y": 1.737460017118402
+        "y": 1.3291052245576012
       },
       "nextControl": null,
-      "isLocked": false,
+      "isLocked": true,
       "linkedName": "Right Shooting"
     }
   ],
@@ -103,12 +103,18 @@
     },
     {
       "waypointRelativePos": 4.049753473778571,
-      "rotationDegrees": 0.0
+      "rotationDegrees": -0.0
     }
   ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [
+    {
+      "name": "Deploy Intake",
+      "waypointRelativePos": 0.0,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
     {
       "name": "RunIntake",
       "waypointRelativePos": 0.22957461174883553,
@@ -117,13 +123,13 @@
     },
     {
       "name": "Spin Up Shooter",
-      "waypointRelativePos": 3.9950980392156894,
+      "waypointRelativePos": 3.806451612903225,
       "endWaypointRelativePos": null,
       "command": null
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 3.0,
+    "maxVelocity": 4.0,
     "maxAcceleration": 10.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,

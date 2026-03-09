@@ -98,8 +98,7 @@ public class Vision {
             m_drivetrain.addVisionMeasurement(
                 pose2d, 
                 estimatedPose.timestampSeconds, 
-                VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev),
-                vizName
+                VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev)
             );
         }
     }
@@ -121,8 +120,7 @@ public class Vision {
             m_drivetrain.addVisionMeasurement(
                 mt2Result.pose, 
                 mt2Result.timestampSeconds, 
-                VecBuilder.fill(xyStdDev, xyStdDev, Double.POSITIVE_INFINITY),
-                LL_camName + "_MT2"
+                VecBuilder.fill(xyStdDev, xyStdDev, Double.POSITIVE_INFINITY)
             );
 
             if (!Drive.comp && !kDisableVisionVizualization) m_field.getObject("LL_MT2_Pose").setPose(mt2Result.pose);
@@ -133,9 +131,7 @@ public class Vision {
             m_drivetrain.addVisionMeasurement(
                 mt1Result.pose,
                 mt1Result.timestampSeconds,
-                VecBuilder.fill(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, kYawStdDev),
-                LL_camName + "_MT1"
-            );
+                VecBuilder.fill(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, kYawStdDev)            );
         }
     }
 }

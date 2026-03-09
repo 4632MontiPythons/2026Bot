@@ -166,7 +166,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             },
             Drive.ppController,
             ppRobotConfig,
-            () -> DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Red, //as noted above, this will run when auto starts, so we don't have to be worried about being connected to FMS when booting bot
+            () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red, //as noted above, this will run when auto starts, so we don't have to be worried about being connected to FMS when booting bot
             this
         );
     }
@@ -253,7 +253,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      */
     
     public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds,
-    Matrix<N3, N1> visionMeasurementStdDevs, String cameraName) {
+    Matrix<N3, N1> visionMeasurementStdDevs) {
         super.addVisionMeasurement(visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds), visionMeasurementStdDevs);
     }
 }

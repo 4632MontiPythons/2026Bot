@@ -100,7 +100,7 @@ public class RobotContainer {
                 // );
                 // NamedCommands.registerCommand(
                 //         "Spin Up Shooter", 
-                //         Commands.run(() -> shooter.setShootingDistance(3.25)
+                //         Commands.run(() -> shooter.setShootingDistance(3.00)
                 // );
                 NamedCommands.registerCommand(
                         "ShootDepot", 
@@ -137,6 +137,9 @@ public class RobotContainer {
 
                 // shoot fuel while held
                 xboxController.rightTrigger().whileTrue(new Shoot(null, null, drivetrain));
+
+                // xboxController.rightBumper().whileTrue(Commands.run(() -> shooter.setShootingDistance(3.00)))
+                //         .finallyDo(shooter.stop);
 
                 // the following bindings only do anything if drive.comp is false(not in a
                 // competition setting). that boolean has to be manually set
