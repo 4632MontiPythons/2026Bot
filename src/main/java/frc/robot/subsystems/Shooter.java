@@ -14,67 +14,64 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.Drive;
 import frc.robot.Constants.kShooter;
 import static edu.wpi.first.units.Units.*;
 
-/* 
+/*
  * Shooter subsystem with velocity closed-loop control and SysID.
- * Something to note is that rpms are in motor shaft rpm, not flywheel rpm.
- * There is a 4:1 gear reduction between the motor and flywheel, so 4000 motor rpm = 1000 shooter rpm.
+ * RPM values throughout this class are MOTOR SHAFT RPM, not flywheel RPM.
+ * There is a 4:1 gear reduction (kGearRatio) between motor and flywheel,
+ * so 4000 motor RPM = 1000 flywheel RPM.
  */
 public class Shooter extends SubsystemBase {
 
     private final TalonFX m_motor;
 
     private final VelocityVoltage m_velocityRequest =
-            new VelocityVoltage(0).withSlot(0).withEnableFOC(false); // too poor lol
+            new VelocityVoltage(0).withSlot(0).withEnableFOC(false);
     private final NeutralOut m_stopRequest = new NeutralOut();
 
-    // ── Cached high-frequency signals (registered once, refreshed each loop) ──
+    // ── Cached high-frequency signals ────────────────────────────────────────
     private final StatusSignal<Angle>           m_posSignal;
     private final StatusSignal<AngularVelocity> m_velSignal;
     private final StatusSignal<Voltage>         m_voltSignal;
 
-    // ── Initial State ─────────────────────────────────────────────────────────
+    // ── State ─────────────────────────────────────────────────────────────────
     private double m_targetRpm = 0.0;
     private boolean m_isStopped = true;
 
     private final SysIdRoutine m_sysIdRoutine;
 
-    // ── Motor controller configuration ───────────────────────────────────────
+    // ── Motor config ──────────────────────────────────────────────────────────
     private static TalonFXConfiguration buildMotorConfig() {
         var cfg = new TalonFXConfiguration();
 
-        // --- Current limits ---
         cfg.CurrentLimits
-            // Supply (from battery) — protects breakers and stops brownouts
-            .withSupplyCurrentLimit(60.0)          // burst limit, sustained for 1 sec
-            .withSupplyCurrentLowerLimit(45.0)     // lower limit after 1 sec
-            .withSupplyCurrentLowerTime(1)         // allow burst for 1 s then drop to 45 A
+            .withSupplyCurrentLimit(60.0)
+            .withSupplyCurrentLowerLimit(45.0)
+            .withSupplyCurrentLowerTime(1)
             .withSupplyCurrentLimitEnable(true)
-            // Stator (in motor) — protects the motor itself
             .withStatorCurrentLimit(120.0)
             .withStatorCurrentLimitEnable(true);
 
         cfg.MotorOutput
-            .withNeutralMode(NeutralModeValue.Coast)  // shooter wheels should coast when idle
+            .withNeutralMode(NeutralModeValue.Coast)
             .withInverted(InvertedValue.CounterClockwise_Positive);
 
-        // Units: rotations/second for velocity, volts for kS/kV
-        // todo: Run SysID to get real kS and kV; these are placeholder values.
+        // todo: Run SysID to replace these placeholder gains.
         cfg.Slot0
-            .withKS(0.20)   // static friction (V) — from SysID
-            .withKV(0.115)  // velocity gain (V per rot/s) — from SysID; ~1/kRPM*60
-            .withKA(0.01)   // acceleration gain (V per rot/s²)
-            .withKP(0.15)   // proportional (V per rot/s error)
+            .withKS(0.20)
+            .withKV(0.115)
+            .withKA(0.01)
+            .withKP(0.15)
             .withKI(0.0)
             .withKD(0.0);
 
-        // Ramp up voltage to avoid stressing the flywheel and tripping current limits.
-        cfg.ClosedLoopRamps.withVoltageClosedLoopRampPeriod(0.05); // 50 ms ramp
+        cfg.ClosedLoopRamps.withVoltageClosedLoopRampPeriod(0.05);
         return cfg;
     }
 
@@ -83,28 +80,21 @@ public class Shooter extends SubsystemBase {
         m_motor = new TalonFX(kShooter.shooterMotorID, "SWERVE");
         m_motor.getConfigurator().apply(buildMotorConfig());
 
-        // Cache signals and register them at 250 Hz for low-jitter SysID logging.
-        // refreshAll() in the log lambda then just returns the latest latched value
-        // without a new CAN round-trip each call.
         m_posSignal  = m_motor.getPosition();
         m_velSignal  = m_motor.getVelocity();
         m_voltSignal = m_motor.getMotorVoltage();
         BaseStatusSignal.setUpdateFrequencyForAll(250,
                 m_posSignal, m_velSignal, m_voltSignal);
-        m_motor.optimizeBusUtilization(); // silence signals we didn't register
+        m_motor.optimizeBusUtilization();
 
-        // Always construct SysID routine; Drive.comp guard lives in the command
-        // accessors below so the final field is always assigned.
         m_sysIdRoutine = new SysIdRoutine(
             new SysIdRoutine.Config(
-                Volts.of(0.5).per(Second),  // ramp rate: 0.5 V/s
-                Volts.of(7.0),              // step voltage for kA
-                Seconds.of(12.5)            // timeout
+                Volts.of(0.5).per(Second),
+                Volts.of(7.0),
+                Seconds.of(12.5)
             ),
             new SysIdRoutine.Mechanism(
-                // Drive: apply raw voltage
                 volts -> m_motor.setVoltage(volts.in(Volts)),
-                // Log: refresh all three signals in one bus transaction, then record
                 log -> {
                     BaseStatusSignal.refreshAll(m_posSignal, m_velSignal, m_voltSignal);
                     log.motor("shooter-flywheel")
@@ -120,7 +110,7 @@ public class Shooter extends SubsystemBase {
     // ── Public API ────────────────────────────────────────────────────────────
 
     /**
-     * Set shooter speed by looking up RPM from the interpolating distance table.
+     * Set shooter speed by looking up motor shaft RPM from the interpolating distance table.
      * @param distanceMeters distance to target in meters
      */
     public void setShootingDistance(double distanceMeters) {
@@ -129,13 +119,12 @@ public class Shooter extends SubsystemBase {
     }
 
     /**
-     * Command a target shooter speed in RPM using onboard velocity closed-loop.
-     * @param rpm target rotations per minute
+     * Command a target motor shaft RPM using onboard velocity closed-loop.
+     * @param rpm target motor shaft rotations per minute
      */
     public void setRPM(double rpm) {
         m_targetRpm = rpm;
         m_isStopped = false;
-        // TalonFX velocity PID operates in rotations/second
         double rps = rpm / 60.0;
         m_motor.setControl(m_velocityRequest.withVelocity(rps));
     }
@@ -147,9 +136,8 @@ public class Shooter extends SubsystemBase {
         m_motor.setControl(m_stopRequest);
     }
 
-    /** @return current measured shooter speed in RPM */
+    /** @return current measured motor shaft speed in RPM */
     public double getMeasuredRPM() {
-        // Re-use the already-cached signal; no extra CAN traffic
         return m_velSignal.getValueAsDouble() * 60.0;
     }
 
@@ -158,27 +146,25 @@ public class Shooter extends SubsystemBase {
         return !m_isStopped && Math.abs(getMeasuredRPM() - m_targetRpm) < kShooter.rpmTolerance;
     }
 
-    /** @return the last commanded target RPM */
+    /** @return the last commanded target motor shaft RPM */
     public double getTargetRPM() { return m_targetRpm; }
 
     // ── SysID Commands ────────────────────────────────────────────────────────
 
     /**
-     * Quasistatic SysID test — slowly ramps voltage to measure kS and kV.
-     * Only available outside competition mode.
+     * Quasistatic SysID test. Only available outside competition mode.
      */
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
         if (!Drive.comp) return m_sysIdRoutine.quasistatic(direction);
-        return null;
+        return Commands.none();
     }
 
     /**
-     * Dynamic SysID test — applies a voltage step to measure kA.
-     * Only available outside competition mode.
+     * Dynamic SysID test. Only available outside competition mode.
      */
     public Command sysIdDynamic(SysIdRoutine.Direction direction) {
         if (!Drive.comp) return m_sysIdRoutine.dynamic(direction);
-        return null;
+        return Commands.none();
     }
 
     // ── Periodic ──────────────────────────────────────────────────────────────
@@ -190,15 +176,16 @@ public class Shooter extends SubsystemBase {
         SmartDashboard.putNumber("Shooter/TargetRPM",   m_targetRpm);
         SmartDashboard.putNumber("Shooter/MeasuredRPM", measuredRpm);
 
-        // ── Test mode: allow RPM override from dashboard ──────────────────────
-        if (!Drive.comp) {
+        // FIX: Test RPM override now only applies when no command is requiring the
+        // shooter, preventing periodic() from fighting the command scheduler.
+        if (!Drive.comp && getCurrentCommand() == null) {
             SmartDashboard.putNumber("Shooter/TestRPM",
                     SmartDashboard.getNumber("Shooter/TestRPM", m_targetRpm));
-            
-            if (getCurrentCommand() == null) { // only override when no command is running
-                double dashRpm = SmartDashboard.getNumber("Shooter/TestRPM", 0.0);
-                if (dashRpm > 0.0) setRPM(dashRpm);
-                else stop();
+            double dashRpm = SmartDashboard.getNumber("Shooter/TestRPM", 0.0);
+            if (dashRpm > 0.0) {
+                setRPM(dashRpm);
+            } else {
+                stop();
             }
         }
     }

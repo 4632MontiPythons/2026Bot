@@ -22,6 +22,11 @@ public class Feeder extends SubsystemBase {
     private FeedState m_state = FeedState.FEEDING;
     private final Timer m_jamTimer = new Timer();
 
+    private final Timer m_jamClearTimer = new Timer();
+    private boolean m_jamClearTimerRunning = false;
+    private int m_jamRetryCount = 0;
+    private boolean m_jammed = false; // latched fault: too many retries
+
     private double m_currentSpeed = 0.0;
     private boolean m_feedRequested = false;
 
@@ -43,9 +48,7 @@ public class Feeder extends SubsystemBase {
     /** Run the feeder at default feed speed. Jam recovery runs automatically. */
     public void feed() {
         m_feedRequested = true;
-        // Only push the motor directly if we're not mid-recovery;
-        // periodic() owns the output while jam handling is active.
-        if (m_state == FeedState.FEEDING) {
+        if (m_state == FeedState.FEEDING && !m_jammed) {
             setMotor(kFeeder.feedSpeed);
         }
     }
@@ -57,6 +60,8 @@ public class Feeder extends SubsystemBase {
     public void setSpeed(double speed) {
         m_feedRequested = false;
         m_state = FeedState.FEEDING;
+        m_jammed = false;
+        m_jamRetryCount = 0;
         setMotor(speed);
     }
 
@@ -64,6 +69,8 @@ public class Feeder extends SubsystemBase {
     public void reverse() {
         m_feedRequested = false;
         m_state = FeedState.FEEDING;
+        m_jammed = false;
+        m_jamRetryCount = 0;
         setMotor(kFeeder.reverseSpeed);
     }
 
@@ -71,10 +78,15 @@ public class Feeder extends SubsystemBase {
     public void stop() {
         m_feedRequested = false;
         m_state = FeedState.FEEDING;
+        m_jammed = false;
+        m_jamRetryCount = 0;
+        m_jamClearTimerRunning = false;
+        m_jamClearTimer.reset();
         setMotor(0.0);
     }
+
+    /** Stops motor but preserves jam recovery state. */
     public void pause() {
-        // stops motor but preserves jam recovery state
         m_feedRequested = false;
         setMotor(0.0);
     }
@@ -86,7 +98,15 @@ public class Feeder extends SubsystemBase {
 
     /** @return true if currently in jam recovery */
     public boolean isJammed() {
-        return m_state != FeedState.FEEDING;
+        return m_state != FeedState.FEEDING || m_jammed;
+    }
+
+    /**
+     * @return true if the feeder has exceeded max retry attempts and given up.
+     * Call stop() or setSpeed() to clear this fault.
+     */
+    public boolean isFaultLatched() {
+        return m_jammed;
     }
 
     // ── Internal helpers ───────────────────────────────────────────────────────
@@ -104,48 +124,69 @@ public class Feeder extends SubsystemBase {
     @Override
     public void periodic() {
 
-        // ── Jam recovery state machine (only active while feed is requested) ──
-        if (m_feedRequested) {
+        // ── Jam recovery state machine ─────────────────────────────────────────
+        if (m_feedRequested && !m_jammed) {
             switch (m_state) {
 
                 case FEEDING:
                     if (currentOverThreshold()) {
-                        // Jam detected — start reversing
                         m_state = FeedState.JAMMED_REVERSING;
                         m_jamTimer.restart();
+                        m_jamClearTimerRunning = false;
+                        m_jamClearTimer.reset();
                         setMotor(kFeeder.reverseSpeed);
                     }
                     break;
 
                 case JAMMED_REVERSING:
                     if (m_jamTimer.hasElapsed(kFeeder.reverseTimeSec)) {
-                        // Reverse done — try feeding again
-                        m_state = FeedState.JAMMED_RETRYING;
-                        m_jamTimer.restart();
-                        setMotor(kFeeder.feedSpeed);
+                        m_jamRetryCount++;
+                        // FIX: If we've exceeded max retries, latch a fault and stop.
+                        if (m_jamRetryCount > kFeeder.maxJamRetries) {
+                            m_jammed = true;
+                            setMotor(0.0);
+                        } else {
+                            m_state = FeedState.JAMMED_RETRYING;
+                            m_jamTimer.restart();
+                            setMotor(kFeeder.feedSpeed);
+                        }
                     }
                     break;
 
                 case JAMMED_RETRYING:
                     if (!currentOverThreshold()) {
-                        // Jam cleared — back to normal
-                        m_state = FeedState.FEEDING;
-                    } else if (m_jamTimer.hasElapsed(kFeeder.retryTimeSec)) {
-                        // Still jammed after retry — reverse again
-                        m_state = FeedState.JAMMED_REVERSING;
-                        m_jamTimer.restart();
-                        setMotor(kFeeder.reverseSpeed);
+                        // FIX: Require current to stay below threshold for jamClearSettleTime
+                        // before declaring jam cleared, preventing single-loop false clears.
+                        if (!m_jamClearTimerRunning) {
+                            m_jamClearTimer.restart();
+                            m_jamClearTimerRunning = true;
+                        } else if (m_jamClearTimer.hasElapsed(kFeeder.jamClearSettleTime)) {
+                            m_state = FeedState.FEEDING;
+                            m_jamClearTimerRunning = false;
+                            m_jamClearTimer.reset();
+                        }
+                    } else {
+                        // Current spiked back up — reset the clear timer
+                        m_jamClearTimerRunning = false;
+                        m_jamClearTimer.reset();
+
+                        if (m_jamTimer.hasElapsed(kFeeder.retryTimeSec)) {
+                            m_state = FeedState.JAMMED_REVERSING;
+                            m_jamTimer.restart();
+                            setMotor(kFeeder.reverseSpeed);
+                        }
                     }
                     break;
             }
         }
 
         // ── Dashboard ──────────────────────────────────────────────────────────
-        SmartDashboard.putNumber("Feeder/SetSpeed",         m_currentSpeed);
+        SmartDashboard.putNumber("Feeder/SetSpeed",      m_currentSpeed);
         SmartDashboard.putNumber("Feeder/OutputCurrent", getOutputCurrent());
-        SmartDashboard.putString("Feeder/State",         m_state.toString());
+        SmartDashboard.putString("Feeder/State",         m_jammed ? "FAULT_LATCHED" : m_state.toString());
+        SmartDashboard.putBoolean("Feeder/FaultLatched", m_jammed);
 
-        if (!Drive.comp) {
+        if (!Drive.comp && getCurrentCommand() == null) {
             SmartDashboard.putNumber("Feeder/TestSpeed",
                 SmartDashboard.getNumber("Feeder/TestSpeed", 0.0));
             double dashSpeed = SmartDashboard.getNumber("Feeder/TestSpeed", 0.0);

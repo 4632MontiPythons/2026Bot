@@ -14,7 +14,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import static frc.robot.Constants.kIntake;
 public class Intake extends SubsystemBase {
 
-    // -- Hardware --
+    // ── Hardware ───────────────────────────────────────────────────────────────
     private final SparkMax motor;
     private final DoubleSolenoid deploySolenoidA;
     private final DoubleSolenoid deploySolenoidB;
@@ -23,15 +23,19 @@ public class Intake extends SubsystemBase {
         motor = new SparkMax(kIntake.intakeMotorID, MotorType.kBrushed);
 
         SparkMaxConfig config = new SparkMaxConfig();
-        config.idleMode(IdleMode.kBrake);
+        config
+            .idleMode(IdleMode.kCoast)
+            .smartCurrentLimit(kIntake.motorCurrentLimit);
+
         motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
         deploySolenoidA = new DoubleSolenoid(
             PneumaticsModuleType.CTREPCM, kIntake.solenoidL_Forward, kIntake.solenoidL_Reverse);
         deploySolenoidB = new DoubleSolenoid(
             PneumaticsModuleType.CTREPCM, kIntake.solenoidR_Forward, kIntake.solenoidR_Reverse);
     }
 
-    // -- Deployment --
+    // ── Deployment ─────────────────────────────────────────────────────────────
 
     public void deploy() {
         deploySolenoidA.set(Value.kForward);
@@ -43,15 +47,19 @@ public class Intake extends SubsystemBase {
         deploySolenoidB.set(Value.kReverse);
     }
 
+    /**
+     * Returns whether the intake was last commanded to deploy.
+     */
     public boolean isDeployed() {
         return deploySolenoidA.get() == Value.kForward;
     }
-    /** Toggles Intake Deployment  */
+
+    /** Toggles intake deployment based on last commanded state. */
     public void toggleIntake() {
-        if(isDeployed()) retract(); else deploy();
+        if (isDeployed()) retract(); else deploy();
     }
 
-    // -- Motor --
+    // ── Motor ──────────────────────────────────────────────────────────────────
 
     public void runIntake() {
         motor.set(kIntake.intakeSpeed);
