@@ -11,7 +11,13 @@ import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.kIntake;
+
 import static frc.robot.Constants.kIntake;
+/**
+ * We assume it always starts retracted which makes sense cause otherwise we'd violate the robot perimeter.
+ * 
+  */
 public class Intake extends SubsystemBase {
 
     // ── Hardware ───────────────────────────────────────────────────────────────
@@ -29,9 +35,9 @@ public class Intake extends SubsystemBase {
 
         motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        deploySolenoidA = new DoubleSolenoid(
+        deploySolenoidA = new DoubleSolenoid(kIntake.PCM_CAN_ID,
             PneumaticsModuleType.CTREPCM, kIntake.solenoidL_Forward, kIntake.solenoidL_Reverse);
-        deploySolenoidB = new DoubleSolenoid(
+        deploySolenoidB = new DoubleSolenoid(kIntake.PCM_CAN_ID,
             PneumaticsModuleType.CTREPCM, kIntake.solenoidR_Forward, kIntake.solenoidR_Reverse);
     }
 

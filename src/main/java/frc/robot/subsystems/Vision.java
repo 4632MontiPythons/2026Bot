@@ -45,8 +45,6 @@ public class Vision {
     public void update() {
         var pigeon = m_drivetrain.getPigeon2();
         double yawRate = pigeon.getAngularVelocityZWorld().getValueAsDouble();
-        // FIX: Use Math.abs() so fast counter-clockwise rotation is also rejected,
-        // not just positive yaw rates.
         if (Math.abs(yawRate) > kMaxYawRate_DegPerSec) return;
         updateLimelight(
             pigeon.getYaw().getValueAsDouble(), 

@@ -4,7 +4,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.kShooter;
@@ -48,9 +48,9 @@ public class Shoot extends Command {
     private final Timer m_emptyTimer    = new Timer();
     private boolean m_emptyTimerRunning = false;
 
-    private final PIDController m_thetaController = new PIDController(5.0, 0, 0);
-    private final SwerveRequest.SwerveDriveBrake m_brake = new SwerveRequest.SwerveDriveBrake();
-    private final SwerveRequest.FieldCentric m_fieldCentric = new SwerveRequest.FieldCentric();
+    private final SwerveRequest.FieldCentricFacingAngle m_fieldCentricFacingAngle =
+        new SwerveRequest.FieldCentricFacingAngle()
+            .withHeadingPID(5.0, 0, 0);
 
     /** Set in initialize(); used for boundary check throughout the command. */
     private Translation2d m_initRobotPos;
@@ -88,8 +88,6 @@ public class Shoot extends Command {
         m_isAuto = isAuto;
         m_expectedShootTimeSecs = expectedShootTimeSecs;
 
-        m_thetaController.enableContinuousInput(-Math.PI, Math.PI);
-        m_thetaController.setTolerance(kShooter.angleTolerance_Rads, kShooter.angleTolerance_RadsPerSec);
         addRequirements(shooter, feeder, drivetrain);
     }
 
@@ -100,7 +98,6 @@ public class Shoot extends Command {
         m_commandTimer.restart();
         m_emptyTimer.reset();
         m_emptyTimerRunning = false;
-        m_thetaController.reset();
         m_initRobotPos = m_drivetrain.getState().Pose.getTranslation();
         m_preflightPassed = m_isAuto || checkPreflight(m_initRobotPos);
     }
@@ -158,27 +155,22 @@ public class Shoot extends Command {
             target.getX() - m_initRobotPos.getX()
         );
 
-        double rotationOutput = m_thetaController.calculate(
-            m_drivetrain.getState().Pose.getRotation().getRadians(),
-            targetAngle
+        m_drivetrain.setControl(
+            m_fieldCentricFacingAngle
+                .withVelocityX(0)
+                .withVelocityY(0)
+                .withTargetDirection(Rotation2d.fromRadians(targetAngle))
         );
-
-        if (m_thetaController.atSetpoint()) {
-            m_drivetrain.applyRequest(() -> m_brake);
-        } else {
-            m_drivetrain.setControl(
-                m_fieldCentric
-                    .withVelocityX(0)
-                    .withVelocityY(0)
-                    .withRotationalRate(rotationOutput)
-            );
-        }
 
         // ── 2. Set shooter speed ──────────────────────────────────────────────
         m_shooter.setShootingDistance(m_initRobotPos.getDistance(target));
 
         // ── 3. Feed once aimed and up to speed ────────────────────────────────
-        if (m_shooter.atTargetRPM() && m_thetaController.atSetpoint()) {
+        boolean atAngle = Math.abs(
+            m_drivetrain.getState().Pose.getRotation().getRadians() - targetAngle
+        ) < kShooter.angleTolerance_Rads;
+
+        if (m_shooter.atTargetRPM() && atAngle) {
             m_feeder.feed();
         } else {
             m_feeder.pause();

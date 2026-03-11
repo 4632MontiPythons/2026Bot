@@ -123,6 +123,7 @@ public final class Constants {
         public static final int solenoidR_Reverse = -1;
         public static final double intakeSpeed = 0.5;
         public static final int motorCurrentLimit = 30;
+        public static final int PCM_CAN_ID = -1;
     }
 
     public static final class kFeeder {
