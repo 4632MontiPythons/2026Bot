@@ -22,3 +22,105 @@ Named Commands for pathplanner:
     Spin Up Shooter: Sets target shooting distance(and therefore rpm) as 3.25 m (where we shoot from in auto) is currently done 2 seconds before we need to shoot
     ShootFullHopper: similar to teleop shoot button, except it has detection for when its finished.
     ShootDepot: same as previous, expected time is lower
+
+    ﻿﻿ talon fx 8 ("SWERVE") Apply Config ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿﻿﻿ERROR ﻿﻿ 1 ﻿﻿ Unhandled exception instantiating robot java.util.Objects java.lang.NullPointerException: Parameter requirement in method addRequirements was null when it should not have been!  Check the stacktrace to find the responsible line of code - usually, it is the first line of user-written code indicated in the stacktrace.  Make sure all objects passed to the method in question were properly initialized - note that this may not be obvious if it is being called under dynamically-changing conditions!  Please do not seek additional technical assistance without doing this first! ﻿﻿ java.base/java.util.Objects.requireNonNull(Unknown Source) ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿﻿﻿ERROR ﻿﻿ 1 ﻿﻿ The robot program quit unexpectedly. This is usually due to a code error.
+  The above stacktrace can help determine where the error occurred.
+  See https://wpilib.org/stacktrace for more information.
+ ﻿﻿ edu.wpi.first.wpilibj.RobotBase.runRobot(RobotBase.java:400) ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿﻿﻿ERROR ﻿﻿ 1 ﻿﻿ Could not instantiate robot java.util.Objects! ﻿﻿ edu.wpi.first.wpilibj.RobotBase.runRobot(RobotBase.java:406) ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿ ********** Robot program starting ********** ﻿
+﻿﻿﻿﻿﻿﻿ NT: Listening on NT3 port 1735, NT4 port 5810 ﻿
+﻿﻿﻿﻿﻿﻿﻿﻿Warning ﻿﻿ 0 ﻿﻿ [phoenix] CANbus Connected: SWERVE (can0, 5CF9E39550374E53202020470D1710FF) ﻿﻿  ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿﻿﻿Warning ﻿﻿ 0 ﻿﻿ [phoenix] CANbus Network Up: SWERVE (can0, 5CF9E39550374E53202020470D1710FF) ﻿﻿  ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿﻿﻿ERROR ﻿﻿ -10024 ﻿﻿ Using a Pro only feature on an unlicensed device. The device may not behave as expected if it continues to operate while unlicensed. ﻿﻿ talon fx 4 ("SWERVE") Apply Config ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿ Talon ID 4 failed config with error: UsingProFeatureOnUnlicensedDevice ﻿
+﻿﻿﻿﻿﻿﻿﻿﻿ERROR ﻿﻿ -10024 ﻿﻿ Using a Pro only feature on an unlicensed device. The device may not behave as expected if it continues to operate while unlicensed. ﻿﻿ talon fx 6 ("SWERVE") Apply Config ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿ Talon ID 6 failed config with error: UsingProFeatureOnUnlicensedDevice ﻿
+﻿﻿﻿﻿﻿﻿﻿﻿ERROR ﻿﻿ -10024 ﻿﻿ Using a Pro only feature on an unlicensed device. The device may not behave as expected if it continues to operate while unlicensed. ﻿﻿ talon fx 2 ("SWERVE") Apply Config ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿ Talon ID 2 failed config with error: UsingProFeatureOnUnlicensedDevice ﻿
+﻿﻿﻿﻿﻿﻿﻿﻿ERROR ﻿﻿ -10024 ﻿﻿ Using a Pro only feature on an unlicensed device. The device may not behave as expected if it continues to operate while unlicensed. ﻿﻿ talon fx 8 ("SWERVE") Apply Config ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿ Talon ID 8 failed config with error: UsingProFeatureOnUnlicensedDevice ﻿
+﻿﻿﻿﻿﻿﻿﻿﻿ERROR ﻿﻿ 1 ﻿﻿ Unhandled exception instantiating robot java.util.Objects java.lang.NullPointerException: Parameter requirement in method addRequirements was null when it should not have been!  Check the stacktrace to find the responsible line of code - usually, it is the first line of user-written code indicated in the stacktrace.  Make sure all objects passed to the method in question were properly initialized - note that this may not be obvious if it is being called under dynamically-changing conditions!  Please do not seek additional technical assistance without doing this first! ﻿﻿ java.base/java.util.Objects.requireNonNull(Unknown Source) ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿ Error at java.base/java.util.Objects.requireNonNull(Unknown Source): Unhandled exception instantiating robot java.util.Objects java.lang.NullPointerException: Parameter requirement in method addRequirements was null when it should not have been!  Check the stacktrace to find the responsible line of code - usually, it is the first line of user-written code indicated in the stacktrace.  Make sure all objects passed to the method in question were properly initialized - note that this may not be obvious if it is being called under dynamically-changing conditions!  Please do not seek additional technical assistance without doing this first! ﻿
+﻿﻿﻿﻿﻿﻿ 	at java.base/java.util.Objects.requireNonNull(Unknown Source) ﻿
+﻿﻿﻿﻿﻿﻿﻿﻿ERROR ﻿﻿ 1 ﻿﻿ The robot program quit unexpectedly. This is usually due to a code error.
+  The above stacktrace can help determine where the error occurred.
+  See https://wpilib.org/stacktrace for more information.
+ ﻿﻿ edu.wpi.first.wpilibj.RobotBase.runRobot(RobotBase.java:400) ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿ 	at edu.wpi.first.util.ErrorMessages.requireNonNullParam(ErrorMessages.java:27) ﻿
+﻿﻿﻿﻿﻿﻿ 	at edu.wpi.first.wpilibj2.command.Command.addRequirements(Command.java:97) ﻿
+﻿﻿﻿﻿﻿﻿ 	at frc.robot.commands.Shoot.<init>(Shoot.java:208) ﻿
+﻿﻿﻿﻿﻿﻿ 	at frc.robot.RobotContainer.<init>(RobotContainer.java:81) ﻿
+﻿﻿﻿﻿﻿﻿﻿﻿ERROR ﻿﻿ 1 ﻿﻿ Could not instantiate robot java.util.Objects! ﻿﻿ edu.wpi.first.wpilibj.RobotBase.runRobot(RobotBase.java:406) ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿ 	at frc.robot.Robot.<init>(Robot.java:24) ﻿
+﻿﻿﻿﻿﻿﻿ 	at edu.wpi.first.wpilibj.RobotBase.runRobot(RobotBase.java:387) ﻿
+﻿﻿﻿﻿﻿﻿ 	at edu.wpi.first.wpilibj.RobotBase.startRobot(RobotBase.java:527) ﻿
+﻿﻿﻿﻿﻿﻿ 	at frc.robot.Main.main(Main.java:69) ﻿
+﻿﻿﻿﻿﻿﻿  ﻿
+﻿﻿﻿﻿﻿﻿ Error at edu.wpi.first.wpilibj.RobotBase.runRobot(RobotBase.java:400): The robot program quit unexpectedly. This is usually due to a code error. ﻿
+﻿﻿﻿﻿﻿﻿   The above stacktrace can help determine where the error occurred. ﻿
+﻿﻿﻿﻿﻿﻿   See https://wpilib.org/stacktrace for more information. ﻿
+﻿﻿﻿﻿﻿﻿  ﻿
+﻿﻿﻿﻿﻿﻿ Error at edu.wpi.first.wpilibj.RobotBase.runRobot(RobotBase.java:406): Could not instantiate robot java.util.Objects! ﻿
+﻿﻿﻿﻿﻿﻿ ********** Robot program starting ********** ﻿
+﻿﻿﻿﻿﻿﻿ NT: Listening on NT3 port 1735, NT4 port 5810 ﻿
+
+
+﻿﻿﻿﻿﻿﻿﻿﻿﻿ERROR ﻿﻿ 1 ﻿﻿ The robot program quit unexpectedly. This is usually due to a code error.
+  The above stacktrace can help determine where the error occurred.
+  See https://wpilib.org/stacktrace for more information.
+ ﻿﻿ edu.wpi.first.wpilibj.RobotBase.runRobot(RobotBase.java:400) ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿ 	at java.base/java.util.Objects.requireNonNull(Unknown Source) ﻿
+﻿﻿﻿﻿﻿﻿ 	at edu.wpi.first.util.ErrorMessages.requireNonNullParam(ErrorMessages.java:27) ﻿
+﻿﻿﻿﻿﻿﻿﻿﻿ERROR ﻿﻿ 1 ﻿﻿ Could not instantiate robot java.util.Objects! ﻿﻿ edu.wpi.first.wpilibj.RobotBase.runRobot(RobotBase.java:406) ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿ 	at edu.wpi.first.wpilibj2.command.Command.addRequirements(Command.java:97) ﻿
+﻿﻿﻿﻿﻿﻿ 	at frc.robot.commands.Shoot.<init>(Shoot.java:208) ﻿
+﻿﻿﻿﻿﻿﻿ 	at frc.robot.RobotContainer.<init>(RobotContainer.java:81) ﻿
+﻿﻿﻿﻿﻿﻿ 	at frc.robot.Robot.<init>(Robot.java:24) ﻿
+﻿﻿﻿﻿﻿﻿ 	at edu.wpi.first.wpilibj.RobotBase.runRobot(RobotBase.java:387) ﻿
+﻿﻿﻿﻿﻿﻿ 	at edu.wpi.first.wpilibj.RobotBase.startRobot(RobotBase.java:527) ﻿
+﻿﻿﻿﻿﻿﻿ 	at frc.robot.Main.main(Main.java:69) ﻿
+﻿﻿﻿﻿﻿﻿  ﻿
+﻿﻿﻿﻿﻿﻿ Error at edu.wpi.first.wpilibj.RobotBase.runRobot(RobotBase.java:400): The robot program quit unexpectedly. This is usually due to a code error. ﻿
+﻿﻿﻿﻿﻿﻿   The above stacktrace can help determine where the error occurred. ﻿
+﻿﻿﻿﻿﻿﻿   See https://wpilib.org/stacktrace for more information. ﻿
+﻿﻿﻿﻿﻿﻿  ﻿
+﻿﻿﻿﻿﻿﻿ Error at edu.wpi.first.wpilibj.RobotBase.runRobot(RobotBase.java:406): Could not instantiate robot java.util.Objects! ﻿
+﻿﻿﻿﻿﻿﻿ ********** Robot program starting ********** ﻿
+﻿﻿﻿﻿﻿﻿ NT: Listening on NT3 port 1735, NT4 port 5810 ﻿
+﻿﻿﻿﻿﻿﻿﻿﻿Warning ﻿﻿ 0 ﻿﻿ [phoenix] CANbus Connected: SWERVE (can0, 5CF9E39550374E53202020470D1710FF) ﻿﻿  ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿﻿﻿Warning ﻿﻿ 0 ﻿﻿ [phoenix] CANbus Network Up: SWERVE (can0, 5CF9E39550374E53202020470D1710FF) ﻿﻿  ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿﻿﻿ERROR ﻿﻿ -10024 ﻿﻿ Using a Pro only feature on an unlicensed device. The device may not behave as expected if it continues to operate while unlicensed. ﻿﻿ talon fx 4 ("SWERVE") Apply Config ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿ Talon ID 4 failed config with error: UsingProFeatureOnUnlicensedDevice ﻿
+﻿﻿﻿﻿﻿﻿﻿﻿ERROR ﻿﻿ -10024 ﻿﻿ Using a Pro only feature on an unlicensed device. The device may not behave as expected if it continues to operate while unlicensed. ﻿﻿ talon fx 6 ("SWERVE") Apply Config ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿ Talon ID 6 failed config with error: UsingProFeatureOnUnlicensedDevice ﻿
+﻿﻿﻿﻿﻿﻿﻿﻿ERROR ﻿﻿ -10024 ﻿﻿ Using a Pro only feature on an unlicensed device. The device may not behave as expected if it continues to operate while unlicensed. ﻿﻿ talon fx 2 ("SWERVE") Apply Config ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿ Talon ID 2 failed config with error: UsingProFeatureOnUnlicensedDevice ﻿
+﻿﻿﻿﻿﻿﻿﻿﻿ERROR ﻿﻿ -10024 ﻿﻿ Using a Pro only feature on an unlicensed device. The device may not behave as expected if it continues to operate while unlicensed. ﻿﻿ talon fx 8 ("SWERVE") Apply Config ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿ Talon ID 8 failed config with error: UsingProFeatureOnUnlicensedDevice ﻿
+﻿﻿﻿﻿﻿﻿﻿﻿ERROR ﻿﻿ 1 ﻿﻿ Unhandled exception instantiating robot java.util.Objects java.lang.NullPointerException: Parameter requirement in method addRequirements was null when it should not have been!  Check the stacktrace to find the responsible line of code - usually, it is the first line of user-written code indicated in the stacktrace.  Make sure all objects passed to the method in question were properly initialized - note that this may not be obvious if it is being called under dynamically-changing conditions!  Please do not seek additional technical assistance without doing this first! ﻿﻿ java.base/java.util.Objects.requireNonNull(Unknown Source) ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿ Error at java.base/java.util.Objects.requireNonNull(Unknown Source): Unhandled exception instantiating robot java.util.Objects java.lang.NullPointerException: Parameter requirement in method addRequirements was null when it should not have been!  Check the stacktrace to find the responsible line of code - usually, it is the first line of user-written code indicated in the stacktrace.  Make sure all objects passed to the method in question were properly initialized - note that this may not be obvious if it is being called under dynamically-changing conditions!  Please do not seek additional technical assistance without doing this first! ﻿
+﻿﻿﻿﻿﻿﻿ 	at java.base/java.util.Objects.requireNonNull(Unknown Source) ﻿
+﻿﻿﻿﻿﻿﻿﻿﻿ERROR ﻿﻿ 1 ﻿﻿ The robot program quit unexpectedly. This is usually due to a code error.
+  The above stacktrace can help determine where the error occurred.
+  See https://wpilib.org/stacktrace for more information.
+ ﻿﻿ edu.wpi.first.wpilibj.RobotBase.runRobot(RobotBase.java:400) ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿ 	at edu.wpi.first.util.ErrorMessages.requireNonNullParam(ErrorMessages.java:27) ﻿
+﻿﻿﻿﻿﻿﻿﻿﻿ERROR ﻿﻿ 1 ﻿﻿ Could not instantiate robot java.util.Objects! ﻿﻿ edu.wpi.first.wpilibj.RobotBase.runRobot(RobotBase.java:406) ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿ 	at edu.wpi.first.wpilibj2.command.Command.addRequirements(Command.java:97) ﻿
+﻿﻿﻿﻿﻿﻿ 	at frc.robot.commands.Shoot.<init>(Shoot.java:208) ﻿
+﻿﻿﻿﻿﻿﻿ 	at frc.robot.RobotContainer.<init>(RobotContainer.java:81) ﻿
+﻿﻿﻿﻿﻿﻿ 	at frc.robot.Robot.<init>(Robot.java:24) ﻿
+﻿﻿﻿﻿﻿﻿ 	at edu.wpi.first.wpilibj.RobotBase.runRobot(RobotBase.java:387) ﻿
+﻿﻿﻿﻿﻿﻿ 	at edu.wpi.first.wpilibj.RobotBase.startRobot(RobotBase.java:527) ﻿
+﻿﻿﻿﻿﻿﻿ 	at frc.robot.Main.main(Main.java:69) ﻿
+﻿﻿﻿﻿﻿﻿  ﻿
+﻿﻿﻿﻿﻿﻿ Error at edu.wpi.first.wpilibj.RobotBase.runRobot(RobotBase.java:400): The robot program quit unexpectedly. This is usually due to a code error. ﻿
+﻿﻿﻿﻿﻿﻿   The above stacktrace can help determine where the error occurred. ﻿
+﻿﻿﻿﻿﻿﻿   See https://wpilib.org/stacktrace for more information. ﻿
+﻿﻿﻿﻿﻿﻿  ﻿
+﻿﻿﻿﻿﻿﻿ Error at edu.wpi.first.wpilibj.RobotBase.runRobot(RobotBase.java:406): Could not instantiate robot java.util.Objects! ﻿
+﻿﻿﻿﻿﻿﻿﻿﻿Warning ﻿﻿ 44004 ﻿﻿ FRC: The Driver Station has lost communication with the robot. ﻿﻿ Driver Station ﻿﻿﻿
+﻿﻿﻿﻿﻿﻿ 0 files downloaded to C:\Users\Public\Documents\FRC\Log Files\WPILogs ﻿

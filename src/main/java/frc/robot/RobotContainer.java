@@ -62,7 +62,7 @@ public class RobotContainer {
                 );
         // private final Shooter shooter = new Shooter();
         // private final Feeder feeder = new Feeder();
-        // private final Intake intake = new Intake();
+        private final Intake intake = new Intake();
 
 
         public RobotContainer() {
@@ -129,6 +129,8 @@ public class RobotContainer {
                 // reset the field-centric heading on left bumper press(LB)
                 xboxController.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
+                xboxController.b().onTrue(Commands.run(() -> intake.deploy(), intake));
+                xboxController.y().onTrue(Commands.run(() -> intake.retract(), intake));
                 // shoot fuel while held
                 xboxController.rightTrigger().whileTrue(new Shoot(null, null, drivetrain));
 
