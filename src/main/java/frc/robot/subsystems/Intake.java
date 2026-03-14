@@ -1,11 +1,11 @@
 package frc.robot.subsystems;
 
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-import com.revrobotics.spark.SparkBase.PersistMode;
-import com.revrobotics.spark.SparkBase.ResetMode;
+// import com.revrobotics.spark.SparkMax;
+// import com.revrobotics.spark.SparkLowLevel.MotorType;
+// import com.revrobotics.spark.config.SparkMaxConfig;
+// import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+// import com.revrobotics.spark.SparkBase.PersistMode;
+// import com.revrobotics.spark.SparkBase.ResetMode;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
@@ -27,11 +27,11 @@ public class Intake extends SubsystemBase {
     public Intake() {
         // motor = new SparkMax(kIntake.intakeMotorID, MotorType.kBrushed);
 
-        SparkMaxConfig config = new SparkMaxConfig();
-        config
-            .idleMode(IdleMode.kCoast)
-            .smartCurrentLimit(kIntake.motorCurrentLimit);
-
+        // SparkMaxConfig config = new SparkMaxConfig();
+        // config
+        //     .idleMode(IdleMode.kCoast)
+        //     .smartCurrentLimit(kIntake.motorCurrentLimit);
+        // config.smartCurrentLimit(30);
         // motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         deploySolenoidA = new DoubleSolenoid(kIntake.PCM_CAN_ID,

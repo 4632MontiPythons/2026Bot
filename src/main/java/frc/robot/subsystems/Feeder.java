@@ -26,6 +26,7 @@ public class Feeder extends SubsystemBase {
             .idleMode(IdleMode.kBrake)
             .inverted(kFeeder.inverted)
             .openLoopRampRate(0.1);
+        config.smartCurrentLimit(25);
 
         m_motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }

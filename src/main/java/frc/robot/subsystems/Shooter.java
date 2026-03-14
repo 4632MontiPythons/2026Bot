@@ -128,10 +128,9 @@ public class Shooter extends SubsystemBase {
     public void setRPM(double rpm) {
         m_targetRpm = Math.min(rpm, kShooter.kMaxMotorRPM);
         m_isStopped = false;
-        double rps = rpm / 60.0;
-        m_motor.setControl(m_velocityRequest.withVelocity(rps));
+        m_motor.setControl(m_velocityRequest.withVelocity(m_targetRpm / 60.0)); // use clamped value
     }
-
+    
     /** Stop the shooter and coast. */
     public void stop() {
         m_targetRpm = 0.0;

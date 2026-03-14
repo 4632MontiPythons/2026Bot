@@ -76,12 +76,12 @@ public class RobotContainer {
                 // );
                 // NamedCommands.registerCommand(
                 //         "Retract Intake", 
-                //         Commands.runOnce(() -> intake.deploy(), intake)
+                //         Commands.runOnce(() -> intake.retract(), intake)
                 // );
-                NamedCommands.registerCommand(
-                        "ShootFullHopper", 
-                        new Shoot(null,null,null,true,10)
-                );
+                // NamedCommands.registerCommand(
+                //         "ShootFullHopper", 
+                //         new Shoot(shooter, feeder, drivetrain, true, 11)
+                // );
                 // NamedCommands.registerCommand(
                 //         "Run Intake", 
                 //         Commands.run(() -> intake.runIntake(), intake)
@@ -99,10 +99,10 @@ public class RobotContainer {
                 //         "Spin Up Shooter",
                 //         Commands.run(() -> shooter.setShootingDistance(3.00), shooter)
                 // );
-                NamedCommands.registerCommand(
-                        "ShootDepot",
-                        new Shoot(null, null, null, true, 5)
-                );
+                // NamedCommands.registerCommand(
+                //         "ShootDepot",
+                //         new Shoot(shooter, feeder, drivetrain, true, 6)
+                // );
                 
                 configureBindings();
                 autoChooser = AutoBuilder.buildAutoChooser();
@@ -132,8 +132,11 @@ public class RobotContainer {
                 xboxController.b().onTrue(Commands.run(() -> intake.deploy(), intake));
                 xboxController.y().onTrue(Commands.run(() -> intake.retract(), intake));
                 // shoot fuel while held
-                xboxController.rightTrigger().whileTrue(new Shoot(null, null, drivetrain));
-
+//              xboxController.rightTrigger().whileTrue(new Shoot(
+//                      shooter, feeder, drivetrain,
+//                      () -> -xboxController.getLeftY() * MaxSpeed,
+//                      () -> -xboxController.getLeftX() * MaxSpeed
+//              ));
                 if (!Drive.comp) {
                         xboxController.back().and(xboxController.y())
                                         .whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
