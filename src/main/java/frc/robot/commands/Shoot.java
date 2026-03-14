@@ -18,7 +18,7 @@ import frc.robot.util.Elastic;
  *
  * In teleop mode (isAuto = false): runs until interrupted (button released).
  * Aborts early if the robot is outside its alliance shooting boundary or
- * it is not the robot's active shift (teleop only).
+ * the alliance hub is currently inactive (teleop only).
  *
  * In auto mode (isAuto = true): self-terminates when the hopper is empty
  * or a hard timeout fires. Empty detection is gated by a time window to
@@ -26,8 +26,105 @@ import frc.robot.util.Elastic;
  *
  *   Empty detection window opens at:  (expectedShootTimeSecs - kEarlyWindowSecs)
  *   Hard timeout fires at:            (expectedShootTimeSecs + kLateWindowSecs)
+ *
+ * ── Shift schedule ────────────────────────────────────────────────────────────
+ * Game data (sent ~3 s after auto ends) encodes which alliance's hub is FIRST
+ * inactive, determining which of two shift schedules applies for the match.
+ *
+ * All times are match-timer countdown values (seconds remaining).
+ *
+ *   RED_FIRST_INACTIVE schedule (gameData.charAt(0) == 'R'):
+ *     Shift 1 (2:10–1:45)  Red INACTIVE, Blue active
+ *     Shift 2 (1:45–1:20)  Red active,   Blue INACTIVE
+ *     Shift 3 (1:20–0:55)  Red INACTIVE, Blue active
+ *     Shift 4 (0:55–0:30)  Red active,   Blue INACTIVE
+ *
+ *   BLUE_FIRST_INACTIVE schedule (gameData.charAt(0) == 'B'):
+ *     Shift 1 (2:10–1:45)  Red active,   Blue INACTIVE
+ *     Shift 2 (1:45–1:20)  Red INACTIVE, Blue active
+ *     Shift 3 (1:20–0:55)  Red active,   Blue INACTIVE
+ *     Shift 4 (0:55–0:30)  Red INACTIVE, Blue active
+ *
+ * Outside these windows (AUTO, TRANSITION, END GAME) both hubs are active.
  */
 public class Shoot extends Command {
+
+    // ── Shift schedule ────────────────────────────────────────────────────────
+
+    /**
+     * A single shift window: time range (countdown seconds) and which alliance
+     * hub is INACTIVE during that window.
+     */
+    private static final class ShiftWindow {
+        final double high;      // countdown seconds at window START (higher value)
+        final double low;       // countdown seconds at window END   (lower value)
+        final Alliance inactive;
+
+        ShiftWindow(double high, double low, Alliance inactive) {
+            this.high     = high;
+            this.low      = low;
+            this.inactive = inactive;
+        }
+    }
+
+    /**
+     * Shift schedule when Red is the FIRST inactive alliance.
+     * gameData.charAt(0) == 'R'
+     */
+    private static final ShiftWindow[] SCHEDULE_RED_FIRST = {
+        new ShiftWindow(130.0, 105.0, Alliance.Red),   // Shift 1
+        new ShiftWindow(105.0,  80.0, Alliance.Blue),  // Shift 2
+        new ShiftWindow( 80.0,  55.0, Alliance.Red),   // Shift 3
+        new ShiftWindow( 55.0,  30.0, Alliance.Blue),  // Shift 4
+    };
+
+    /**
+     * Shift schedule when Blue is the FIRST inactive alliance.
+     * gameData.charAt(0) == 'B'
+     */
+    private static final ShiftWindow[] SCHEDULE_BLUE_FIRST = {
+        new ShiftWindow(130.0, 105.0, Alliance.Blue),  // Shift 1
+        new ShiftWindow(105.0,  80.0, Alliance.Red),   // Shift 2
+        new ShiftWindow( 80.0,  55.0, Alliance.Blue),  // Shift 3
+        new ShiftWindow( 55.0,  30.0, Alliance.Red),   // Shift 4
+    };
+
+    /**
+     * Returns true if the given alliance's hub is currently INACTIVE.
+     *
+     * Before game data arrives (empty string) or outside all shift windows
+     * (AUTO, TRANSITION, END GAME) both hubs are active → returns false.
+     *
+     * @param alliance the alliance to check
+     */
+    private static boolean isHubInactive(Alliance alliance) {
+        String gameData = DriverStation.getGameSpecificMessage();
+
+        // Game data not yet available — both hubs active
+        if (gameData == null || gameData.isEmpty()) return false;
+
+        ShiftWindow[] schedule;
+        char firstInactive = gameData.charAt(0);
+        if (firstInactive == 'R') {
+            schedule = SCHEDULE_RED_FIRST;
+        } else if (firstInactive == 'B') {
+            schedule = SCHEDULE_BLUE_FIRST;
+        } else {
+            // Unexpected FMS value — assume active
+            return false;
+        }
+
+        double matchTime = DriverStation.getMatchTime();
+
+        for (ShiftWindow window : schedule) {
+            if (matchTime <= window.high && matchTime > window.low) {
+                return window.inactive == alliance;
+            }
+        }
+
+        // Outside all shift windows (AUTO, TRANSITION, END GAME) → both active
+        return false;
+    }
 
     // ── Dependencies ──────────────────────────────────────────────────────────
 
@@ -51,9 +148,14 @@ public class Shoot extends Command {
     private final SwerveRequest.FieldCentricFacingAngle m_fieldCentricFacingAngle =
         new SwerveRequest.FieldCentricFacingAngle()
             .withHeadingPID(5.0, 0, 0);
+    private final SwerveRequest.SwerveDriveBrake m_brake = new SwerveRequest.SwerveDriveBrake();
 
-    /** Set in initialize(); used for boundary check throughout the command. */
-    private Translation2d m_initRobotPos;
+    /**
+     * Alliance and goal cached at initialize() — neither changes mid-match.
+     * Caching avoids repeated DriverStation calls every execute() tick.
+     */
+    private Alliance m_alliance;
+    private Translation2d m_goalPos;
 
     /** Set in initialize(); false triggers early exit in teleop. */
     private boolean m_preflightPassed = false;
@@ -98,20 +200,29 @@ public class Shoot extends Command {
         m_commandTimer.restart();
         m_emptyTimer.reset();
         m_emptyTimerRunning = false;
-        m_initRobotPos = m_drivetrain.getState().Pose.getTranslation();
-        m_preflightPassed = m_isAuto || checkPreflight(m_initRobotPos);
+
+        // Cache alliance and goal once — these don't change mid-match
+        m_alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+        m_goalPos  = (m_alliance == Alliance.Red) ? kShooter.kRedGoal : kShooter.kBlueGoal;
+
+        // Set shooter distance once from the starting position.
+        // In auto the robot should be stationary at shoot time;
+        // in teleop the driver is expected to be in position before pressing.
+        Translation2d initPos = m_drivetrain.getState().Pose.getTranslation();
+        m_shooter.setShootingDistance(initPos.getDistance(m_goalPos));
+
+        // Teleop only: validate boundary and shift before committing
+        m_preflightPassed = m_isAuto || checkPreflight(initPos);
     }
 
     /**
      * Validates boundary and shift conditions at the start of a teleop shoot.
-     * Posts a Elastic error notification and returns false if any check fails.
+     * Posts an Elastic error notification and returns false if any check fails.
      */
     private boolean checkPreflight(Translation2d robotPos) {
-        Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
-        double x = robotPos.getX();
-
         // Boundary check
-        boolean inBoundary = (alliance == Alliance.Red)
+        double x = robotPos.getX();
+        boolean inBoundary = (m_alliance == Alliance.Red)
             ? x >= kShooter.redXBoundary
             : x <= kShooter.blueXBoundary;
 
@@ -124,19 +235,14 @@ public class Shoot extends Command {
             return false;
         }
 
-        // Shift check
-        String gameData = DriverStation.getGameSpecificMessage();
-        if (gameData != null && !gameData.isEmpty()) {
-            char ownAllianceChar = (alliance == Alliance.Red) ? 'R' : 'B';
-            boolean ownAllianceInactive = (ownAllianceChar == gameData.charAt(0));
-            if (ownAllianceInactive) {
-                Elastic.sendNotification(new Elastic.Notification()
-                    .withLevel(Elastic.NotificationLevel.ERROR)
-                    .withTitle("Shoot Blocked")
-                    .withDescription("Cannot shoot during inactive shift.")
-                );
-                return false;
-            }
+        // Shift check — uses live match timer against the full shift schedule
+        if (isHubInactive(m_alliance)) {
+            Elastic.sendNotification(new Elastic.Notification()
+                .withLevel(Elastic.NotificationLevel.ERROR)
+                .withTitle("Shoot Blocked")
+                .withDescription("Cannot shoot during inactive shift.")
+            );
+            return false;
         }
 
         return true;
@@ -144,39 +250,46 @@ public class Shoot extends Command {
 
     @Override
     public void execute() {
+        // Teleop: abort immediately if preflight failed
         if (!m_preflightPassed) return;
 
-        // ── 1. Aim at goal ────────────────────────────────────────────────────
-        Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
-        Translation2d target = (alliance == Alliance.Red) ? kShooter.kRedGoal : kShooter.kBlueGoal;
+        // ── 1. Aim at goal using CURRENT pose ─────────────────────────────────
+        // Re-computed each tick so the heading target stays accurate as the
+        // robot moves (most relevant in auto).
+        Translation2d currentPos = m_drivetrain.getState().Pose.getTranslation();
 
         double targetAngle = Math.atan2(
-            target.getY() - m_initRobotPos.getY(),
-            target.getX() - m_initRobotPos.getX()
+            m_goalPos.getY() - currentPos.getY(),
+            m_goalPos.getX() - currentPos.getX()
         );
 
-        m_drivetrain.setControl(
-            m_fieldCentricFacingAngle
-                .withVelocityX(0)
-                .withVelocityY(0)
-                .withTargetDirection(Rotation2d.fromRadians(targetAngle))
-        );
-
-        // ── 2. Set shooter speed ──────────────────────────────────────────────
-        m_shooter.setShootingDistance(m_initRobotPos.getDistance(target));
-
-        // ── 3. Feed once aimed and up to speed ────────────────────────────────
+        // Use Rotation2d subtraction for a wrap-safe angle error (handles the
+        // ±π boundary correctly, e.g. 179° vs -179° gives ~0 not ~360°).
         boolean atAngle = Math.abs(
-            m_drivetrain.getState().Pose.getRotation().getRadians() - targetAngle
+            m_drivetrain.getState().Pose.getRotation()
+                .minus(Rotation2d.fromRadians(targetAngle))
+                .getRadians()
         ) < kShooter.angleTolerance_Rads;
 
+        if (atAngle) {
+            m_drivetrain.setControl(m_brake);
+        } else {
+            m_drivetrain.setControl(
+                m_fieldCentricFacingAngle
+                    .withVelocityX(0)
+                    .withVelocityY(0)
+                    .withTargetDirection(Rotation2d.fromRadians(targetAngle))
+            );
+        }
+
+        // ── 2. Feed once aimed and up to speed ────────────────────────────────
         if (m_shooter.atTargetRPM() && atAngle) {
             m_feeder.feed();
         } else {
             m_feeder.pause();
         }
 
-        // ── 4. Empty-hopper detection (auto only, gated by time window) ────────
+        // ── 3. Empty-hopper detection (auto only, gated by time window) ────────
         if (m_isAuto) {
             double elapsed = m_commandTimer.get();
             boolean inDetectionWindow = elapsed >= (m_expectedShootTimeSecs - kShooter.kEarlyWindowSecs);
@@ -201,6 +314,8 @@ public class Shoot extends Command {
     @Override
     public boolean isFinished() {
         if (!m_preflightPassed) return true;
+
+        // Teleop: run until interrupted (button released) — never self-terminate.
         if (!m_isAuto) return false;
 
         boolean hopperEmpty = m_emptyTimerRunning && m_emptyTimer.hasElapsed(kShooter.kEmptySettleTime);
