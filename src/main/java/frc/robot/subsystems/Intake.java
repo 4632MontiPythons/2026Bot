@@ -21,36 +21,33 @@ import static frc.robot.Constants.kIntake;
 public class Intake extends SubsystemBase {
 
     // ── Hardware ───────────────────────────────────────────────────────────────
-    private final SparkMax motor;
+    // private final SparkMax motor;
     private final DoubleSolenoid deploySolenoidA;
-    private final DoubleSolenoid deploySolenoidB;
 
     public Intake() {
-        motor = new SparkMax(kIntake.intakeMotorID, MotorType.kBrushed);
+        // motor = new SparkMax(kIntake.intakeMotorID, MotorType.kBrushed);
 
         SparkMaxConfig config = new SparkMaxConfig();
         config
             .idleMode(IdleMode.kCoast)
             .smartCurrentLimit(kIntake.motorCurrentLimit);
 
-        motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        // motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         deploySolenoidA = new DoubleSolenoid(kIntake.PCM_CAN_ID,
             PneumaticsModuleType.CTREPCM, kIntake.solenoidL_Forward, kIntake.solenoidL_Reverse);
-        deploySolenoidB = new DoubleSolenoid(kIntake.PCM_CAN_ID,
-            PneumaticsModuleType.CTREPCM, kIntake.solenoidR_Forward, kIntake.solenoidR_Reverse);
     }
 
     // ── Deployment ─────────────────────────────────────────────────────────────
 
     public void deploy() {
         deploySolenoidA.set(Value.kForward);
-        deploySolenoidB.set(Value.kForward);
+        // deploySolenoidB.set(Value.kForward);
     }
 
     public void retract() {
         deploySolenoidA.set(Value.kReverse);
-        deploySolenoidB.set(Value.kReverse);
+        // deploySolenoidB.set(Value.kReverse);
     }
 
     /**
@@ -68,11 +65,11 @@ public class Intake extends SubsystemBase {
     // ── Motor ──────────────────────────────────────────────────────────────────
 
     public void runIntake() {
-        motor.set(kIntake.intakeSpeed);
+        // motor.set(kIntake.intakeSpeed);
     }
 
     public void stopIntake() {
-        motor.set(0.0);
+        // motor.set(0.0);
     }
 
     @Override
