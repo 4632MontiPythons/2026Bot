@@ -109,6 +109,8 @@ public final class Constants {
             rpmTable.put(4.0, 4600.0);
             rpmTable.put(5.0, 5500.0);
         }
+        /** stop slightly before hub will be inactive, waste of time because fuel wont reach in time */
+        public static final double kTimeToScore = 1.0; 
 
         // ── Auto empty detection ───────────────────────────────────────────────
         // A shot is detected when stator current exceeds kShotCurrentThreshold
@@ -120,6 +122,7 @@ public final class Constants {
         public static final double kEmptySettleTime_OutWindow = 1.5; // seconds — outside expected window
         public static final double kEarlyWindowSecs = 3.0;
         public static final double kLateWindowSecs  = 2.0;
+        public static final int kShotSampleCount = 3;
     }
 
     public static final class kIntake {

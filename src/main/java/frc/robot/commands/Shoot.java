@@ -16,7 +16,8 @@ import frc.robot.util.Elastic;
 /**
  * Shoot — aims at the goal, spins up the shooter, and feeds game pieces.
  *
- * In teleop mode (isAuto = false): runs until interrupted (button released).
+ * In teleop mode (isAuto = false): runs until interrupted (button released),
+ * or self-terminates when the hub is imminently going inactive.
  * Aborts early if the robot is outside its alliance shooting boundary or
  * the alliance hub is currently inactive (teleop only).
  *
@@ -25,8 +26,10 @@ import frc.robot.util.Elastic;
  *
  * ── Empty detection ───────────────────────────────────────────────────────────
  * Empty is detected by watching the Kraken's stator current. When a game piece
- * loads the flywheel, stator current spikes above kShotCurrentThreshold. Once
- * at least one shot has been detected (m_shotEverDetected), if current stays
+ * loads the flywheel, stator current spikes above kShotCurrentThreshold.
+ * To avoid acting on a single noisy reading, kShotSampleCount consecutive
+ * above-threshold samples are required before a shot is confirmed. Once at
+ * least one shot has been detected (m_shotEverDetected), if current stays
  * below the threshold continuously for the settle window we call the hopper
  * empty. Detection is gated on atTargetRPM() to ignore the spinup current spike.
  *
@@ -137,6 +140,42 @@ public class Shoot extends Command {
         return false;
     }
 
+    /**
+     * Returns true if the given alliance's hub will become inactive within
+     * {@code bufferSecs} seconds, or is already inactive now.
+     * Used in teleop to stop feeding before in-flight fuel would reach a dead hub.
+     */
+    private static boolean isHubImminentlyInactive(Alliance alliance, double bufferSecs) {
+        String gameData = DriverStation.getGameSpecificMessage();
+        if (gameData == null || gameData.isEmpty()) return false;
+
+        ShiftWindow[] schedule;
+        char firstInactive = gameData.charAt(0);
+        if (firstInactive == 'R') {
+            schedule = SCHEDULE_RED_FIRST;
+        } else if (firstInactive == 'B') {
+            schedule = SCHEDULE_BLUE_FIRST;
+        } else {
+            return false;
+        }
+
+        double matchTime = DriverStation.getMatchTime();
+
+        for (ShiftWindow window : schedule) {
+            if (matchTime <= window.high && matchTime > window.low) {
+                // Inside a window — hub is already inactive right now
+                return window.inactive == alliance;
+            }
+            // Check if we're about to enter a window where this alliance goes inactive
+            if (window.inactive == alliance
+                    && matchTime > window.high
+                    && matchTime <= window.high + bufferSecs) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // ── Dependencies ──────────────────────────────────────────────────────────
 
     private final Shooter m_shooter;
@@ -158,11 +197,19 @@ public class Shoot extends Command {
     private double  m_emptySettleTime   = kShooter.kEmptySettleTime_OutWindow;
 
     /**
-     * Latches true the first time a shot current spike is detected.
-     * Prevents early exit if no game pieces were ever fed (bad auto path, etc.)
-     * — in that case the command falls through to the hard timeout instead.
+     * Latches true the first time a confirmed shot is detected (kShotSampleCount
+     * consecutive above-threshold current samples).
+     * Prevents early exit if no game pieces were ever fed — in that case the
+     * command falls through to the hard timeout instead.
      */
     private boolean m_shotEverDetected = false;
+
+    /**
+     * Rolling count of consecutive execute() ticks where stator current has
+     * exceeded kShotCurrentThreshold. Resets to 0 whenever current drops below
+     * the threshold. A shot is confirmed once this reaches kShotSampleCount.
+     */
+    private int m_shotSampleCount = 0;
 
     private final SwerveRequest.FieldCentricFacingAngle m_fieldCentricFacingAngle =
         new SwerveRequest.FieldCentricFacingAngle()
@@ -177,7 +224,7 @@ public class Shoot extends Command {
 
     // ── Constructors ──────────────────────────────────────────────────────────
 
-    /** Teleop constructor — runs until interrupted. */
+    /** Teleop constructor — runs until interrupted or hub goes imminently inactive. */
     public Shoot(Shooter shooter, Feeder feeder, CommandSwerveDrivetrain drivetrain) {
         this(shooter, feeder, drivetrain, false, 0.0);
     }
@@ -217,9 +264,14 @@ public class Shoot extends Command {
         m_emptyTimerRunning = false;
         m_emptySettleTime   = kShooter.kEmptySettleTime_OutWindow;
         m_shotEverDetected  = false;
+        m_shotSampleCount   = 0;
 
-        // Cache alliance and goal once — these don't change mid-match
-        m_alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+        // Cache alliance and goal once — these don't change mid-match.
+        // If the FMS alliance is unavailable, fall back to the closest hub
+        // rather than silently defaulting to a hard-coded alliance.
+        m_alliance = DriverStation.getAlliance().orElseGet(() -> closestAlliance(
+            m_drivetrain.getState().Pose.getTranslation()
+        ));
         m_goalPos  = (m_alliance == Alliance.Red) ? kShooter.kRedGoal : kShooter.kBlueGoal;
 
         // Set shooter distance once from the starting position.
@@ -230,6 +282,17 @@ public class Shoot extends Command {
 
         // Teleop only: validate boundary and shift before committing
         m_preflightPassed = m_isAuto || checkPreflight(initPos);
+    }
+
+    /**
+     * Returns whichever alliance's hub the robot is currently closer to.
+     * Used as a fallback when the FMS has not yet reported alliance color,
+     * e.g. during practice matches or early in the connection sequence.
+     */
+    private static Alliance closestAlliance(Translation2d robotPos) {
+        double distRed  = robotPos.getDistance(kShooter.kRedGoal);
+        double distBlue = robotPos.getDistance(kShooter.kBlueGoal);
+        return (distRed <= distBlue) ? Alliance.Red : Alliance.Blue;
     }
 
     /**
@@ -252,7 +315,7 @@ public class Shoot extends Command {
             return false;
         }
 
-        // Shift check — uses live match timer against the full shift schedule
+        // Shift check
         if (isHubInactive(m_alliance)) {
             Elastic.sendNotification(new Elastic.Notification()
                 .withLevel(Elastic.NotificationLevel.ERROR)
@@ -309,12 +372,18 @@ public class Shoot extends Command {
         // ── 3. Empty-hopper detection (auto only) ──────────────────────────────
         // Watches Kraken stator current for shot detection. A game piece loading
         // the flywheel causes a clear current spike above kShotCurrentThreshold.
+        //
+        // Confirmation requires kShotSampleCount consecutive above-threshold
+        // readings (currently 3) to avoid acting on a single transient. The
+        // sample counter resets to 0 whenever current drops below the threshold,
+        // so any gap in readings restarts the confirmation window.
+        //
         // Detection is gated on atTargetRPM() to ignore the spinup current spike.
         //
-        // Once at least one shot has been detected, if current stays below the
+        // Once at least one shot is confirmed, if current stays below the
         // threshold for the settle window we call the hopper empty.
         //
-        // If no shots are ever detected (bad auto, empty hopper from the start),
+        // If no shots are ever confirmed (bad auto, empty hopper from the start),
         // m_shotEverDetected stays false and we fall through to the hard timeout.
         if (m_isAuto) {
             double elapsed = m_commandTimer.get();
@@ -325,23 +394,29 @@ public class Shoot extends Command {
 
             // Only watch current once the flywheel is at speed — avoids treating
             // the spinup current spike as a shot detection event.
-            boolean shotNow = m_shooter.atTargetRPM()
-                && m_shooter.getStatorCurrent() > kShooter.kShotCurrentThreshold;
+            if (m_shooter.atTargetRPM()) {
+                if (m_shooter.getStatorCurrent() > kShooter.kShotCurrentThreshold) {
+                    m_shotSampleCount++;
+                } else {
+                    m_shotSampleCount = 0;
+                }
+            }
 
-            if (shotNow) {
-                // Game piece is actively loading the flywheel
-                m_shotEverDetected = true;
+            boolean shotConfirmed = m_shotSampleCount >= kShooter.kShotSampleCount;
+
+            if (shotConfirmed) {
+                // Confirmed game piece loading — reset empty timer
+                m_shotEverDetected  = true;
+                m_shotSampleCount   = 0;   // reset so next piece needs its own confirmation
                 m_emptyTimer.reset();
                 m_emptyTimerRunning = false;
             } else if (m_shotEverDetected) {
-                // No shot currently, but at least one has happened — run empty timer
+                // No shot currently confirmed, but at least one has happened — run empty timer
                 if (!m_emptyTimerRunning) {
                     m_emptyTimer.restart();
                     m_emptyTimerRunning = true;
                 }
             }
-            // !m_shotEverDetected && !shotNow: still waiting for first game piece,
-            // do nothing — hard timeout will handle the no-fuel case.
         }
     }
 
@@ -349,8 +424,10 @@ public class Shoot extends Command {
     public boolean isFinished() {
         if (!m_preflightPassed) return true;
 
-        // Teleop: run until interrupted (button released) — never self-terminate.
-        if (!m_isAuto) return false;
+        // Teleop: self-terminate when the hub is imminently going inactive;
+        if (!m_isAuto) {
+            return isHubImminentlyInactive(m_alliance, kShooter.kTimeToScore);
+        }
 
         boolean hopperEmpty = m_shotEverDetected
             && m_emptyTimerRunning
