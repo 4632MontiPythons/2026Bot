@@ -87,6 +87,7 @@ public final class Constants {
 
     public static final class kShooter {
         public static final int shooterMotorID = -1;
+        public static final double kMaxMotorRPM = 5800.0;
 
         public static final Translation2d kRedGoal = new Translation2d(11.915394, 4.034536);
         public static final Translation2d kBlueGoal = new Translation2d(4.625594, 4.034536);
@@ -109,10 +110,16 @@ public final class Constants {
             rpmTable.put(5.0, 5500.0);
         }
 
-        public static final double kEmptyCurrentThreshold = 3.0;
-        public static final double kEmptySettleTime = 0.5;
+        // ── Auto empty detection ───────────────────────────────────────────────
+        // A shot is detected when stator current exceeds kShotCurrentThreshold
+        // while atTargetRPM() is true (gated to ignore the spinup spike).
+        // Tune kShotCurrentThreshold by logging Shooter/StatorCurrent during a
+        // real auto run — set it between idle draw and the shot spike floor.
+        public static final double kShotCurrentThreshold   = 15.0;  // amps — PLACEHOLDER, tune from logs
+        public static final double kEmptySettleTime_InWindow  = 0.7; // seconds — inside expected window
+        public static final double kEmptySettleTime_OutWindow = 1.5; // seconds — outside expected window
         public static final double kEarlyWindowSecs = 3.0;
-        public static final double kLateWindowSecs = 2.0;
+        public static final double kLateWindowSecs  = 2.0;
     }
 
     public static final class kIntake {
@@ -130,11 +137,6 @@ public final class Constants {
         public static final int feederMotorID = -1;
         public static final boolean inverted = false;
         public static final double feedSpeed = 0.5;
-        public static final double reverseSpeed = -0.4; // negative = reverse direction
-        public static final double jamCurrentThreshold = 35.0;
-        public static final double reverseTimeSec = 0.3;
-        public static final double retryTimeSec = 0.5;
-        public static final double jamClearSettleTime = 0.1;
-        public static final int maxJamRetries = 3;
+        public static final double reverseSpeed = -0.4;
     }
 }

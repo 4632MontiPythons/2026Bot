@@ -11,6 +11,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -39,6 +40,7 @@ public class Shooter extends SubsystemBase {
     private final StatusSignal<Angle>           m_posSignal;
     private final StatusSignal<AngularVelocity> m_velSignal;
     private final StatusSignal<Voltage>         m_voltSignal;
+    private final StatusSignal<Current>         m_currentSignal;
 
     // ── State ─────────────────────────────────────────────────────────────────
     private double m_targetRpm = 0.0;
@@ -80,11 +82,12 @@ public class Shooter extends SubsystemBase {
         m_motor = new TalonFX(kShooter.shooterMotorID, "SWERVE");
         m_motor.getConfigurator().apply(buildMotorConfig());
 
-        m_posSignal  = m_motor.getPosition();
-        m_velSignal  = m_motor.getVelocity();
-        m_voltSignal = m_motor.getMotorVoltage();
+        m_posSignal     = m_motor.getPosition();
+        m_velSignal     = m_motor.getVelocity();
+        m_voltSignal    = m_motor.getMotorVoltage();
+        m_currentSignal = m_motor.getStatorCurrent();
         BaseStatusSignal.setUpdateFrequencyForAll(250,
-                m_posSignal, m_velSignal, m_voltSignal);
+                m_posSignal, m_velSignal, m_voltSignal, m_currentSignal);
         m_motor.optimizeBusUtilization();
 
         m_sysIdRoutine = new SysIdRoutine(
@@ -96,7 +99,7 @@ public class Shooter extends SubsystemBase {
             new SysIdRoutine.Mechanism(
                 volts -> m_motor.setVoltage(volts.in(Volts)),
                 log -> {
-                    BaseStatusSignal.refreshAll(m_posSignal, m_velSignal, m_voltSignal);
+                    BaseStatusSignal.refreshAll(m_posSignal, m_velSignal, m_voltSignal, m_currentSignal);
                     log.motor("shooter-flywheel")
                         .voltage(Volts.of(m_voltSignal.getValueAsDouble()))
                         .angularPosition(Rotations.of(m_posSignal.getValueAsDouble()))
@@ -123,7 +126,7 @@ public class Shooter extends SubsystemBase {
      * @param rpm target motor shaft rotations per minute
      */
     public void setRPM(double rpm) {
-        m_targetRpm = rpm;
+        m_targetRpm = Math.min(rpm, kShooter.kMaxMotorRPM);
         m_isStopped = false;
         double rps = rpm / 60.0;
         m_motor.setControl(m_velocityRequest.withVelocity(rps));
@@ -149,6 +152,11 @@ public class Shooter extends SubsystemBase {
     /** @return the last commanded target motor shaft RPM */
     public double getTargetRPM() { return m_targetRpm; }
 
+    /** @return stator current drawn by the shooter motor in amps */
+    public double getStatorCurrent() {
+        return m_currentSignal.getValueAsDouble();
+    }
+
     // ── SysID Commands ────────────────────────────────────────────────────────
 
     /**
@@ -170,14 +178,13 @@ public class Shooter extends SubsystemBase {
     // ── Periodic ──────────────────────────────────────────────────────────────
     @Override
     public void periodic() {
-        BaseStatusSignal.refreshAll(m_velSignal);
+        BaseStatusSignal.refreshAll(m_velSignal, m_currentSignal);
 
         double measuredRpm = getMeasuredRPM();
-        SmartDashboard.putNumber("Shooter/TargetRPM",   m_targetRpm);
-        SmartDashboard.putNumber("Shooter/MeasuredRPM", measuredRpm);
+        SmartDashboard.putNumber("Shooter/TargetRPM",     m_targetRpm);
+        SmartDashboard.putNumber("Shooter/MeasuredRPM",   measuredRpm);
+        SmartDashboard.putNumber("Shooter/StatorCurrent", getStatorCurrent());
 
-        // FIX: Test RPM override now only applies when no command is requiring the
-        // shooter, preventing periodic() from fighting the command scheduler.
         if (!Drive.comp && getCurrentCommand() == null) {
             SmartDashboard.putNumber("Shooter/TestRPM",
                     SmartDashboard.getNumber("Shooter/TestRPM", m_targetRpm));

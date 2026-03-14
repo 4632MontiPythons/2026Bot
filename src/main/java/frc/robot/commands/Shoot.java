@@ -21,11 +21,22 @@ import frc.robot.util.Elastic;
  * the alliance hub is currently inactive (teleop only).
  *
  * In auto mode (isAuto = true): self-terminates when the hopper is empty
- * or a hard timeout fires. Empty detection is gated by a time window to
- * prevent false positives early in the run.
+ * or a hard timeout fires.
  *
- *   Empty detection window opens at:  (expectedShootTimeSecs - kEarlyWindowSecs)
- *   Hard timeout fires at:            (expectedShootTimeSecs + kLateWindowSecs)
+ * ── Empty detection ───────────────────────────────────────────────────────────
+ * Empty is detected by watching the Kraken's stator current. When a game piece
+ * loads the flywheel, stator current spikes above kShotCurrentThreshold. Once
+ * at least one shot has been detected (m_shotEverDetected), if current stays
+ * below the threshold continuously for the settle window we call the hopper
+ * empty. Detection is gated on atTargetRPM() to ignore the spinup current spike.
+ *
+ * If no game pieces were ever fed (bad auto path, failed intake, etc.),
+ * m_shotEverDetected stays false and the command falls through to the hard timeout.
+ *
+ * Two settle windows apply:
+ *   Inside expected window  (elapsed >= expectedTime - kEarlyWindowSecs): kEmptySettleTime_InWindow
+ *   Outside expected window (before that gate opens):                     kEmptySettleTime_OutWindow
+ * Hard timeout fires at: (expectedShootTimeSecs + kLateWindowSecs)
  *
  * ── Shift schedule ────────────────────────────────────────────────────────────
  * Game data (sent ~3 s after auto ends) encodes which alliance's hub is FIRST
@@ -144,16 +155,20 @@ public class Shoot extends Command {
     private final Timer m_commandTimer  = new Timer();
     private final Timer m_emptyTimer    = new Timer();
     private boolean m_emptyTimerRunning = false;
+    private double  m_emptySettleTime   = kShooter.kEmptySettleTime_OutWindow;
+
+    /**
+     * Latches true the first time a shot current spike is detected.
+     * Prevents early exit if no game pieces were ever fed (bad auto path, etc.)
+     * — in that case the command falls through to the hard timeout instead.
+     */
+    private boolean m_shotEverDetected = false;
 
     private final SwerveRequest.FieldCentricFacingAngle m_fieldCentricFacingAngle =
         new SwerveRequest.FieldCentricFacingAngle()
             .withHeadingPID(5.0, 0, 0);
     private final SwerveRequest.SwerveDriveBrake m_brake = new SwerveRequest.SwerveDriveBrake();
 
-    /**
-     * Alliance and goal cached at initialize() — neither changes mid-match.
-     * Caching avoids repeated DriverStation calls every execute() tick.
-     */
     private Alliance m_alliance;
     private Translation2d m_goalPos;
 
@@ -200,6 +215,8 @@ public class Shoot extends Command {
         m_commandTimer.restart();
         m_emptyTimer.reset();
         m_emptyTimerRunning = false;
+        m_emptySettleTime   = kShooter.kEmptySettleTime_OutWindow;
+        m_shotEverDetected  = false;
 
         // Cache alliance and goal once — these don't change mid-match
         m_alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
@@ -286,28 +303,45 @@ public class Shoot extends Command {
         if (m_shooter.atTargetRPM() && atAngle) {
             m_feeder.feed();
         } else {
-            m_feeder.pause();
+            m_feeder.stop();
         }
 
-        // ── 3. Empty-hopper detection (auto only, gated by time window) ────────
+        // ── 3. Empty-hopper detection (auto only) ──────────────────────────────
+        // Watches Kraken stator current for shot detection. A game piece loading
+        // the flywheel causes a clear current spike above kShotCurrentThreshold.
+        // Detection is gated on atTargetRPM() to ignore the spinup current spike.
+        //
+        // Once at least one shot has been detected, if current stays below the
+        // threshold for the settle window we call the hopper empty.
+        //
+        // If no shots are ever detected (bad auto, empty hopper from the start),
+        // m_shotEverDetected stays false and we fall through to the hard timeout.
         if (m_isAuto) {
             double elapsed = m_commandTimer.get();
             boolean inDetectionWindow = elapsed >= (m_expectedShootTimeSecs - kShooter.kEarlyWindowSecs);
+            m_emptySettleTime = inDetectionWindow
+                ? kShooter.kEmptySettleTime_InWindow
+                : kShooter.kEmptySettleTime_OutWindow;
 
-            if (inDetectionWindow) {
-                if (m_feeder.getOutputCurrent() < kShooter.kEmptyCurrentThreshold) {
-                    if (!m_emptyTimerRunning) {
-                        m_emptyTimer.restart();
-                        m_emptyTimerRunning = true;
-                    }
-                } else {
-                    m_emptyTimer.reset();
-                    m_emptyTimerRunning = false;
-                }
-            } else {
+            // Only watch current once the flywheel is at speed — avoids treating
+            // the spinup current spike as a shot detection event.
+            boolean shotNow = m_shooter.atTargetRPM()
+                && m_shooter.getStatorCurrent() > kShooter.kShotCurrentThreshold;
+
+            if (shotNow) {
+                // Game piece is actively loading the flywheel
+                m_shotEverDetected = true;
                 m_emptyTimer.reset();
                 m_emptyTimerRunning = false;
+            } else if (m_shotEverDetected) {
+                // No shot currently, but at least one has happened — run empty timer
+                if (!m_emptyTimerRunning) {
+                    m_emptyTimer.restart();
+                    m_emptyTimerRunning = true;
+                }
             }
+            // !m_shotEverDetected && !shotNow: still waiting for first game piece,
+            // do nothing — hard timeout will handle the no-fuel case.
         }
     }
 
@@ -318,8 +352,11 @@ public class Shoot extends Command {
         // Teleop: run until interrupted (button released) — never self-terminate.
         if (!m_isAuto) return false;
 
-        boolean hopperEmpty = m_emptyTimerRunning && m_emptyTimer.hasElapsed(kShooter.kEmptySettleTime);
-        boolean timedOut    = m_commandTimer.get() >= (m_expectedShootTimeSecs + kShooter.kLateWindowSecs);
+        boolean hopperEmpty = m_shotEverDetected
+            && m_emptyTimerRunning
+            && m_emptyTimer.hasElapsed(m_emptySettleTime);
+        boolean timedOut = m_commandTimer.get()
+            >= (m_expectedShootTimeSecs + kShooter.kLateWindowSecs);
 
         return hopperEmpty || timedOut;
     }
