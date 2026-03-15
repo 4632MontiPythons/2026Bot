@@ -11,15 +11,33 @@ import frc.robot.Constants.kShooter;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Feeder;
 import frc.robot.subsystems.Shooter;
-import frc.robot.util.Elastic;
+import java.util.function.DoubleSupplier;
 
 /**
  * Shoot — aims at the goal, spins up the shooter, and feeds game pieces.
  *
+ * Supports SHOOT ON THE MOVE: joystick X/Y inputs are accepted and applied
+ * while aiming. Translation speed is capped at kShootOnMoveSpeedLimit (0.5 of
+ * MaxSpeed) so the robot stays controllable while the heading PID works.
+ *
+ * The facing-angle request includes an orbital feedforward term so the heading
+ * controller pre-leads the angle target when the robot is moving tangentially
+ * around the hub. Without it, the gyro-based heading PID would always lag
+ * behind the required angle as the robot sweeps around the goal.
+ *
+ * Orbital feedforward derivation:
+ *   The angle from robot to hub changes at rate:  dθ/dt = v_tangential / r
+ *   where v_tangential is the component of robot velocity perpendicular to the
+ *   robot→hub vector, and r is the distance to the hub.
+ *   We inject this as a rotational feedforward (rad/s) into the swerve request.
+ *
  * In teleop mode (isAuto = false): runs until interrupted (button released),
  * or self-terminates when the hub is imminently going inactive.
- * Aborts early if the robot is outside its alliance shooting boundary or
- * the alliance hub is currently inactive (teleop only).
+ * Feeding is gated each tick: if the robot is outside its alliance shooting
+ * boundary OR the alliance hub is currently inactive, the feeder is held and
+ * the drivetrain continues aiming so the robot is ready the moment conditions
+ * clear. The driver may therefore hold the shoot button before crossing into
+ * the alliance zone.
  *
  * In auto mode (isAuto = true): self-terminates when the hopper is empty
  * or a hard timeout fires.
@@ -104,6 +122,20 @@ public class Shoot extends Command {
     };
 
     /**
+     * Resolves the shift schedule from the current game-specific message.
+     * Returns null if game data is unavailable or contains an unexpected value,
+     * which callers treat as "both hubs active".
+     */
+    private static ShiftWindow[] resolveSchedule() {
+        String gameData = DriverStation.getGameSpecificMessage();
+        if (gameData == null || gameData.isEmpty()) return null;
+        char firstInactive = gameData.charAt(0);
+        if (firstInactive == 'R') return SCHEDULE_RED_FIRST;
+        if (firstInactive == 'B') return SCHEDULE_BLUE_FIRST;
+        return null; // Unexpected FMS value — assume active
+    }
+
+    /**
      * Returns true if the given alliance's hub is currently INACTIVE.
      *
      * Before game data arrives (empty string) or outside all shift windows
@@ -112,24 +144,10 @@ public class Shoot extends Command {
      * @param alliance the alliance to check
      */
     private static boolean isHubInactive(Alliance alliance) {
-        String gameData = DriverStation.getGameSpecificMessage();
-
-        // Game data not yet available — both hubs active
-        if (gameData == null || gameData.isEmpty()) return false;
-
-        ShiftWindow[] schedule;
-        char firstInactive = gameData.charAt(0);
-        if (firstInactive == 'R') {
-            schedule = SCHEDULE_RED_FIRST;
-        } else if (firstInactive == 'B') {
-            schedule = SCHEDULE_BLUE_FIRST;
-        } else {
-            // Unexpected FMS value — assume active
-            return false;
-        }
+        ShiftWindow[] schedule = resolveSchedule();
+        if (schedule == null) return false;
 
         double matchTime = DriverStation.getMatchTime();
-
         for (ShiftWindow window : schedule) {
             if (matchTime <= window.high && matchTime > window.low) {
                 return window.inactive == alliance;
@@ -146,21 +164,10 @@ public class Shoot extends Command {
      * Used in teleop to stop feeding before in-flight fuel would reach a dead hub.
      */
     private static boolean isHubImminentlyInactive(Alliance alliance, double bufferSecs) {
-        String gameData = DriverStation.getGameSpecificMessage();
-        if (gameData == null || gameData.isEmpty()) return false;
-
-        ShiftWindow[] schedule;
-        char firstInactive = gameData.charAt(0);
-        if (firstInactive == 'R') {
-            schedule = SCHEDULE_RED_FIRST;
-        } else if (firstInactive == 'B') {
-            schedule = SCHEDULE_BLUE_FIRST;
-        } else {
-            return false;
-        }
+        ShiftWindow[] schedule = resolveSchedule();
+        if (schedule == null) return false;
 
         double matchTime = DriverStation.getMatchTime();
-
         for (ShiftWindow window : schedule) {
             if (matchTime <= window.high && matchTime > window.low) {
                 // Inside a window — hub is already inactive right now
@@ -184,6 +191,19 @@ public class Shoot extends Command {
     private final boolean m_isAuto;
 
     /**
+     * Joystick velocity suppliers (meters per second, field-relative).
+     * Always {@code () -> 0.0} in auto so the robot holds its shoot position.
+     */
+    private final DoubleSupplier m_vxSupplier;
+    private final DoubleSupplier m_vySupplier;
+
+    /**
+     * Maximum robot speed while shoot-on-the-move is active (m/s).
+     * Set to 50 % of the robot's full MaxSpeed in RobotContainer.
+     */
+    private final double m_shootOnMoveSpeedLimit;
+
+    /**
      * Expected duration (seconds) to drain the full hopper.
      * Only used in auto mode; ignored in teleop.
      */
@@ -193,48 +213,83 @@ public class Shoot extends Command {
 
     private final Timer m_commandTimer  = new Timer();
     private final Timer m_emptyTimer    = new Timer();
-    private boolean m_emptyTimerRunning = false;
-    private double  m_emptySettleTime   = kShooter.kEmptySettleTime_OutWindow;
+    private boolean m_emptyTimerRunning;
+    private double  m_emptySettleTime;
 
     /**
      * Latches true the first time a confirmed shot is detected (kShotSampleCount
      * consecutive above-threshold current samples).
-     * Prevents early exit if no game pieces were ever fed — in that case the
-     * command falls through to the hard timeout instead.
      */
     private boolean m_shotEverDetected = false;
 
     /**
      * Rolling count of consecutive execute() ticks where stator current has
      * exceeded kShotCurrentThreshold. Resets to 0 whenever current drops below
-     * the threshold. A shot is confirmed once this reaches kShotSampleCount.
+     * the threshold.
      */
     private int m_shotSampleCount = 0;
 
-    private final SwerveRequest.FieldCentricFacingAngle m_fieldCentricFacingAngle =
-        new SwerveRequest.FieldCentricFacingAngle()
-            .withHeadingPID(5.0, 0, 0);
+    /**
+     * Plain field-centric request. We compute heading output ourselves (PID + orbital FF)
+     * so we can inject the feedforward term as withRotationalRate().
+     * FieldCentricFacingAngle manages rotation internally and does not expose that method.
+     */
+    private final SwerveRequest.FieldCentric m_fieldCentric =
+        new SwerveRequest.FieldCentric()
+            .withDriveRequestType(com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType.OpenLoopVoltage);
+
+    /**
+     * Heading PID: kP=5, kI=0, kD=0. Output units are rad/s, fed into withRotationalRate().
+     * Continuous input is enabled over [-π, π] for correct wrap-around behaviour.
+     */
+    private final edu.wpi.first.math.controller.PIDController m_headingPID =
+        new edu.wpi.first.math.controller.PIDController(5.0, 0.0, 0.0);
+
+    {
+        // Set once — continuous input over [-π, π] for correct wrap-around behaviour.
+        m_headingPID.enableContinuousInput(-Math.PI, Math.PI);
+    }
+
     private final SwerveRequest.SwerveDriveBrake m_brake = new SwerveRequest.SwerveDriveBrake();
 
     private Alliance m_alliance;
     private Translation2d m_goalPos;
 
-    /** Set in initialize(); false triggers early exit in teleop. */
-    private boolean m_preflightPassed = false;
-
     // ── Constructors ──────────────────────────────────────────────────────────
 
-    /** Teleop constructor — runs until interrupted or hub goes imminently inactive. */
-    public Shoot(Shooter shooter, Feeder feeder, CommandSwerveDrivetrain drivetrain) {
-        this(shooter, feeder, drivetrain, false, 0.0);
-    }
-
     /**
-     * Full constructor.
+     * Teleop constructor — shoot on the move.
      *
      * @param shooter               shooter subsystem
      * @param feeder                feeder subsystem
      * @param drivetrain            swerve drivetrain
+     * @param vxSupplier            field-relative X velocity from joystick (m/s)
+     * @param vySupplier            field-relative Y velocity from joystick (m/s)
+     * @param shootOnMoveSpeedLimit max translation speed while shooting (m/s);
+     *                              pass (MaxSpeed * 0.5) from RobotContainer
+     */
+    public Shoot(
+        Shooter shooter,
+        Feeder feeder,
+        CommandSwerveDrivetrain drivetrain,
+        DoubleSupplier vxSupplier,
+        DoubleSupplier vySupplier,
+        double shootOnMoveSpeedLimit
+    ) {
+        this(shooter, feeder, drivetrain, vxSupplier, vySupplier, shootOnMoveSpeedLimit, false, 0.0);
+    }
+
+    /**
+     * Full constructor — supports both teleop shoot-on-the-move and auto.
+     *
+     * @param shooter               shooter subsystem
+     * @param feeder                feeder subsystem
+     * @param drivetrain            swerve drivetrain
+     * @param vxSupplier            field-relative X velocity supplier (m/s);
+     *                              may be {@code () -> 0.0} for stationary auto
+     * @param vySupplier            field-relative Y velocity supplier (m/s);
+     *                              may be {@code () -> 0.0} for stationary auto
+     * @param shootOnMoveSpeedLimit max translation speed while shooting (m/s)
      * @param isAuto                if true, self-terminates when hopper is empty
      * @param expectedShootTimeSecs estimated seconds to drain the full hopper;
      *                              only used when isAuto is true
@@ -243,12 +298,18 @@ public class Shoot extends Command {
         Shooter shooter,
         Feeder feeder,
         CommandSwerveDrivetrain drivetrain,
+        DoubleSupplier vxSupplier,
+        DoubleSupplier vySupplier,
+        double shootOnMoveSpeedLimit,
         boolean isAuto,
         double expectedShootTimeSecs
     ) {
         m_shooter = shooter;
         m_feeder  = feeder;
         m_drivetrain = drivetrain;
+        m_vxSupplier = vxSupplier;
+        m_vySupplier = vySupplier;
+        m_shootOnMoveSpeedLimit = shootOnMoveSpeedLimit;
         m_isAuto = isAuto;
         m_expectedShootTimeSecs = expectedShootTimeSecs;
 
@@ -266,28 +327,21 @@ public class Shoot extends Command {
         m_shotEverDetected  = false;
         m_shotSampleCount   = 0;
 
+        m_headingPID.reset();
+
         // Cache alliance and goal once — these don't change mid-match.
-        // If the FMS alliance is unavailable, fall back to the closest hub
-        // rather than silently defaulting to a hard-coded alliance.
         m_alliance = DriverStation.getAlliance().orElseGet(() -> closestAlliance(
             m_drivetrain.getState().Pose.getTranslation()
         ));
         m_goalPos  = (m_alliance == Alliance.Red) ? kShooter.kRedGoal : kShooter.kBlueGoal;
 
         // Set shooter distance once from the starting position.
-        // In auto the robot should be stationary at shoot time;
-        // in teleop the driver is expected to be in position before pressing.
         Translation2d initPos = m_drivetrain.getState().Pose.getTranslation();
         m_shooter.setShootingDistance(initPos.getDistance(m_goalPos));
-
-        // Teleop only: validate boundary and shift before committing
-        m_preflightPassed = m_isAuto || checkPreflight(initPos);
     }
 
     /**
      * Returns whichever alliance's hub the robot is currently closer to.
-     * Used as a fallback when the FMS has not yet reported alliance color,
-     * e.g. during practice matches or early in the connection sequence.
      */
     private static Alliance closestAlliance(Translation2d robotPos) {
         double distRed  = robotPos.getDistance(kShooter.kRedGoal);
@@ -296,95 +350,129 @@ public class Shoot extends Command {
     }
 
     /**
-     * Validates boundary and shift conditions at the start of a teleop shoot.
-     * Posts an Elastic error notification and returns false if any check fails.
+     * Returns true if the robot is within its alliance's shooting boundary
+     * AND the alliance hub is currently active.
+     *
+     * Called every execute() tick in teleop so the driver can hold the shoot
+     * button before crossing into the alliance zone — the drivetrain will keep
+     * aiming and the shooter will keep spinning up, but feeding is suppressed
+     * until both conditions clear.
      */
-    private boolean checkPreflight(Translation2d robotPos) {
-        // Boundary check
+    private boolean isClearToFeed(Translation2d robotPos) {
         double x = robotPos.getX();
         boolean inBoundary = (m_alliance == Alliance.Red)
             ? x >= kShooter.redXBoundary
             : x <= kShooter.blueXBoundary;
-
-        if (!inBoundary) {
-            Elastic.sendNotification(new Elastic.Notification()
-                .withLevel(Elastic.NotificationLevel.ERROR)
-                .withTitle("Shoot Blocked")
-                .withDescription("Robot is outside the shooting boundary.")
-            );
-            return false;
-        }
-
-        // Shift check
-        if (isHubInactive(m_alliance)) {
-            Elastic.sendNotification(new Elastic.Notification()
-                .withLevel(Elastic.NotificationLevel.ERROR)
-                .withTitle("Shoot Blocked")
-                .withDescription("Cannot shoot during inactive shift.")
-            );
-            return false;
-        }
-
-        return true;
+        return inBoundary && !isHubInactive(m_alliance);
     }
 
     @Override
     public void execute() {
-        // Teleop: abort immediately if preflight failed
-        if (!m_preflightPassed) return;
+        // ── 1. Read and clamp joystick inputs ─────────────────────────────────
+        // Shoot-on-the-move is teleop-only. Auto always holds position — the
+        // path planner has already placed the robot at the shoot point and any
+        // joystick input would interfere with the fixed pose.
+        double vx = 0.0;
+        double vy = 0.0;
+        if (!m_isAuto) {
+            vx = m_vxSupplier.getAsDouble();
+            vy = m_vySupplier.getAsDouble();
 
-        // ── 1. Aim at goal using CURRENT pose ─────────────────────────────────
-        // Re-computed each tick so the heading target stays accurate as the
-        // robot moves (most relevant in auto).
+            // Clamp to speed limit while preserving the direction vector.
+            double speed = Math.hypot(vx, vy);
+            if (speed > m_shootOnMoveSpeedLimit && speed > 1e-6) {
+                double scale = m_shootOnMoveSpeedLimit / speed;
+                vx *= scale;
+                vy *= scale;
+            }
+        }
+
+        // ── 2. Aim at goal using CURRENT pose ─────────────────────────────────
         Translation2d currentPos = m_drivetrain.getState().Pose.getTranslation();
 
-        double targetAngle = Math.atan2(
-            m_goalPos.getY() - currentPos.getY(),
-            m_goalPos.getX() - currentPos.getX()
-        );
+        // Vector from robot to hub
+        double dx = m_goalPos.getX() - currentPos.getX();
+        double dy = m_goalPos.getY() - currentPos.getY();
+        double distToGoal = Math.hypot(dx, dy);
 
-        // Use Rotation2d subtraction for a wrap-safe angle error (handles the
-        // ±π boundary correctly, e.g. 179° vs -179° gives ~0 not ~360°).
+        double targetAngle = Math.atan2(dy, dx);
+
+        // ── 3. Orbital feedforward ─────────────────────────────────────────────
+        // As the robot moves, the required facing angle changes. The heading PID
+        // alone lags behind, especially when orbiting the hub.
+        //
+        // The rate of change of the robot→hub angle equals the tangential
+        // component of the robot's velocity divided by the distance to the hub:
+        //
+        //   dθ/dt  =  v_tangential / r
+        //
+        // Tangential velocity is the component of [vx, vy] perpendicular to the
+        // unit vector pointing from robot to hub:
+        //
+        //   unit_to_hub = (dx/r, dy/r)
+        //   tangential  = cross product (2D): (vx * dy/r  -  vy * dx/r)
+        //
+        // Positive result → angle increasing (CCW orbit) → feedforward is positive.
+        // We negate because "facing the hub" means the robot must rotate opposite
+        // to how the hub angle sweeps: if the hub angle increases CCW, the robot
+        // must rotate CW to keep facing it.
+        double orbitalFeedforwardRadPerSec = 0.0;
+        if (distToGoal > 0.1) {  // guard against division by near-zero
+            double unitX = dx / distToGoal;
+            double unitY = dy / distToGoal;
+            // tangential velocity = cross(v, unitToHub) in 2D = vx*unitY - vy*unitX
+            double vTangential = vx * unitY - vy * unitX;
+            // dθ/dt for the hub angle; negate so robot counter-tracks
+            orbitalFeedforwardRadPerSec = -(vTangential / distToGoal);
+        }
+
+        // Wrap-safe angle error for atAngle check
         boolean atAngle = Math.abs(
             m_drivetrain.getState().Pose.getRotation()
                 .minus(Rotation2d.fromRadians(targetAngle))
                 .getRadians()
         ) < kShooter.angleTolerance_Rads;
 
-        if (atAngle) {
+        // ── 4. Apply drivetrain request ────────────────────────────────────────
+        // Brake only when there is no requested translation and heading is settled.
+        // In auto vx/vy are always 0.0, so this naturally brakes once aimed.
+        boolean fullyStationary = Math.hypot(vx, vy) < 1e-6 && atAngle;
+
+        if (fullyStationary) {
             m_drivetrain.setControl(m_brake);
         } else {
+            // PID output (rad/s) drives heading toward targetAngle.
+            // Orbital feedforward pre-leads the target when orbiting the hub.
+            double currentHeading = m_drivetrain.getState().Pose.getRotation().getRadians();
+            double pidOutput = m_headingPID.calculate(currentHeading, targetAngle);
+            double rotationalRate = pidOutput + orbitalFeedforwardRadPerSec;
+
             m_drivetrain.setControl(
-                m_fieldCentricFacingAngle
-                    .withVelocityX(0)
-                    .withVelocityY(0)
-                    .withTargetDirection(Rotation2d.fromRadians(targetAngle))
+                m_fieldCentric
+                    .withVelocityX(vx)
+                    .withVelocityY(vy)
+                    .withRotationalRate(rotationalRate)
             );
         }
 
-        // ── 2. Feed once aimed and up to speed ────────────────────────────────
-        if (m_shooter.atTargetRPM() && atAngle) {
+        // Update shooting distance continuously while moving so the shooter
+        // adjusts its speed/angle for the current range to the hub.
+        m_shooter.setShootingDistance(distToGoal);
+
+        // ── 5. Feed once aimed, up to speed, and clear to shoot ───────────────
+        // In teleop, boundary and hub-active checks are evaluated every tick so
+        // the driver can hold the button before crossing into the alliance zone.
+        // The drivetrain and shooter keep running during the wait; only feeding
+        // is gated. Auto bypasses the positional/shift check entirely.
+        boolean clearToFeed = m_isAuto || isClearToFeed(currentPos);
+
+        if (clearToFeed && m_shooter.atTargetRPM() && atAngle) {
             m_feeder.feed();
         } else {
             m_feeder.stop();
         }
 
-        // ── 3. Empty-hopper detection (auto only) ──────────────────────────────
-        // Watches Kraken stator current for shot detection. A game piece loading
-        // the flywheel causes a clear current spike above kShotCurrentThreshold.
-        //
-        // Confirmation requires kShotSampleCount consecutive above-threshold
-        // readings (currently 3) to avoid acting on a single transient. The
-        // sample counter resets to 0 whenever current drops below the threshold,
-        // so any gap in readings restarts the confirmation window.
-        //
-        // Detection is gated on atTargetRPM() to ignore the spinup current spike.
-        //
-        // Once at least one shot is confirmed, if current stays below the
-        // threshold for the settle window we call the hopper empty.
-        //
-        // If no shots are ever confirmed (bad auto, empty hopper from the start),
-        // m_shotEverDetected stays false and we fall through to the hard timeout.
+        // ── 6. Empty-hopper detection (auto only) ─────────────────────────────
         if (m_isAuto) {
             double elapsed = m_commandTimer.get();
             boolean inDetectionWindow = elapsed >= (m_expectedShootTimeSecs - kShooter.kEarlyWindowSecs);
@@ -392,8 +480,6 @@ public class Shoot extends Command {
                 ? kShooter.kEmptySettleTime_InWindow
                 : kShooter.kEmptySettleTime_OutWindow;
 
-            // Only watch current once the flywheel is at speed — avoids treating
-            // the spinup current spike as a shot detection event.
             if (m_shooter.atTargetRPM()) {
                 if (m_shooter.getStatorCurrent() > kShooter.kShotCurrentThreshold) {
                     m_shotSampleCount++;
@@ -405,13 +491,11 @@ public class Shoot extends Command {
             boolean shotConfirmed = m_shotSampleCount >= kShooter.kShotSampleCount;
 
             if (shotConfirmed) {
-                // Confirmed game piece loading — reset empty timer
                 m_shotEverDetected  = true;
-                m_shotSampleCount   = 0;   // reset so next piece needs its own confirmation
+                m_shotSampleCount   = 0;
                 m_emptyTimer.reset();
                 m_emptyTimerRunning = false;
             } else if (m_shotEverDetected) {
-                // No shot currently confirmed, but at least one has happened — run empty timer
                 if (!m_emptyTimerRunning) {
                     m_emptyTimer.restart();
                     m_emptyTimerRunning = true;
@@ -422,9 +506,6 @@ public class Shoot extends Command {
 
     @Override
     public boolean isFinished() {
-        if (!m_preflightPassed) return true;
-
-        // Teleop: self-terminate when the hub is imminently going inactive;
         if (!m_isAuto) {
             return isHubImminentlyInactive(m_alliance, kShooter.kTimeToScore);
         }

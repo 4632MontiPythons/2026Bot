@@ -24,9 +24,11 @@ import static edu.wpi.first.units.Units.*;
 
 /*
  * Shooter subsystem with velocity closed-loop control and SysID.
- * RPM values throughout this class are MOTOR SHAFT RPM, not flywheel RPM.
- * There is a 4:1 gear reduction (kGearRatio) between motor and flywheel,
- * so 4000 motor RPM = 1000 flywheel RPM.
+ * KrakenX60 using VelocityVoltage. Debating keeping shooter spinning for whole match.
+ * Will depend on whether or not we add a flywheel, the voltage we need to keep it running and how our battery is looking.
+ * RPM values throughout this class are MOTOR SHAFT RPM, not shooter RPM.
+ * There is a 3.23:1 gear reduction (kGearRatio) between motor and shooter,
+ * so 3230 motor RPM = 1000 shooter RPM.
  */
 public class Shooter extends SubsystemBase {
 
@@ -53,7 +55,7 @@ public class Shooter extends SubsystemBase {
         var cfg = new TalonFXConfiguration();
 
         cfg.CurrentLimits
-            .withSupplyCurrentLimit(60.0)
+            .withSupplyCurrentLimit(55.0)
             .withSupplyCurrentLowerLimit(45.0)
             .withSupplyCurrentLowerTime(1)
             .withSupplyCurrentLimitEnable(true)
@@ -66,10 +68,10 @@ public class Shooter extends SubsystemBase {
 
         // todo: Run SysID to replace these placeholder gains.
         cfg.Slot0
-            .withKS(0.20)
-            .withKV(0.115)
-            .withKA(0.01)
-            .withKP(0.15)
+            .withKS(0.10)
+            .withKV(0.0586)
+            .withKA(0.001)
+            .withKP(0.35)
             .withKI(0.0)
             .withKD(0.0);
 
@@ -93,14 +95,14 @@ public class Shooter extends SubsystemBase {
         m_sysIdRoutine = new SysIdRoutine(
             new SysIdRoutine.Config(
                 Volts.of(0.5).per(Second),
-                Volts.of(7.0),
-                Seconds.of(12.5)
+                Volts.of(5.0),
+                Seconds.of(10)
             ),
             new SysIdRoutine.Mechanism(
                 volts -> m_motor.setVoltage(volts.in(Volts)),
                 log -> {
                     BaseStatusSignal.refreshAll(m_posSignal, m_velSignal, m_voltSignal, m_currentSignal);
-                    log.motor("shooter-flywheel")
+                    log.motor("shooter")
                         .voltage(Volts.of(m_voltSignal.getValueAsDouble()))
                         .angularPosition(Rotations.of(m_posSignal.getValueAsDouble()))
                         .angularVelocity(RotationsPerSecond.of(m_velSignal.getValueAsDouble()));

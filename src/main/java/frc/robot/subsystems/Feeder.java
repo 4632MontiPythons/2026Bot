@@ -11,7 +11,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.Drive;
 import frc.robot.Constants.kFeeder;
-
+/**
+ * Redline motor ran by spark max. Simple setup.
+ */
 public class Feeder extends SubsystemBase {
 
     private final SparkMax m_motor;

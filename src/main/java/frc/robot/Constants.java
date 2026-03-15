@@ -112,6 +112,9 @@ public final class Constants {
         /** stop slightly before hub will be inactive, waste of time because fuel wont reach in time */
         public static final double kTimeToScore = 1.0; 
 
+        /** Robot is limited to this fraction of MaxSpeed while shooting on the move. */
+        private static final double kMovementSpeedFraction = 0.5;
+
         // ── Auto empty detection ───────────────────────────────────────────────
         // A shot is detected when stator current exceeds kShotCurrentThreshold
         // while atTargetRPM() is true (gated to ignore the spinup spike).

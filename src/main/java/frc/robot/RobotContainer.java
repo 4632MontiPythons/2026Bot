@@ -79,8 +79,11 @@ public class RobotContainer {
                 //         Commands.runOnce(() -> intake.retract(), intake)
                 // );
                 // NamedCommands.registerCommand(
-                //         "ShootFullHopper", 
-                //         new Shoot(shooter, feeder, drivetrain, true, 11)
+                //         "ShootFullHopper",
+                //         new Shoot(shooter, feeder, drivetrain,
+                //                 () -> 0.0, () -> 0.0,      // stationary in auto
+                //                 MaxSpeed * kShootOnMoveSpeedFraction,
+                //                 true, 11)
                 // );
                 // NamedCommands.registerCommand(
                 //         "Run Intake", 
@@ -101,7 +104,10 @@ public class RobotContainer {
                 // );
                 // NamedCommands.registerCommand(
                 //         "ShootDepot",
-                //         new Shoot(shooter, feeder, drivetrain, true, 6)
+                //         new Shoot(shooter, feeder, drivetrain,
+                //                 () -> 0.0, () -> 0.0,
+                //                 MaxSpeed * kShootOnMoveSpeedFraction,
+                //                 true, 6)
                 // );
                 
                 configureBindings();
@@ -126,17 +132,24 @@ public class RobotContainer {
 
                 xboxController.a().whileTrue(drivetrain.applyRequest(() -> brake));
 
-                // reset the field-centric heading on left bumper press(LB)
+                // reset the field-centric heading on left bumper press (LB)
                 xboxController.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
                 xboxController.b().onTrue(Commands.run(() -> intake.deploy(), intake));
                 xboxController.y().onTrue(Commands.run(() -> intake.retract(), intake));
-                // shoot fuel while held
-//              xboxController.rightTrigger().whileTrue(new Shoot(
-//                      shooter, feeder, drivetrain,
-//                      () -> -xboxController.getLeftY() * MaxSpeed,
-//                      () -> -xboxController.getLeftX() * MaxSpeed
-//              ));
+
+                // ── Shoot on the move (right trigger held) ────────────────────────────
+                // Joystick inputs are read live each tick inside the command.
+                // Speed is capped at kShootOnMoveSpeedFraction of MaxSpeed.
+                // Uncomment when shooter/feeder are wired up.
+                //
+                // xboxController.rightTrigger().whileTrue(new Shoot(
+                //         shooter, feeder, drivetrain,
+                //         () -> xSlewLimiter.calculate(-xboxController.getLeftY()) * MaxSpeed,
+                //         () -> ySlewLimiter.calculate(-xboxController.getLeftX()) * MaxSpeed,
+                //         MaxSpeed * kShootOnMoveSpeedFraction
+                // ));
+
                 if (!Drive.comp) {
                         xboxController.back().and(xboxController.y())
                                         .whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
@@ -151,15 +164,6 @@ public class RobotContainer {
                                         new InstantCommand(() -> drivetrain.resetPose(
                                                         new Pose2d((492.88 + 13.5) * 0.0254, (158.84) * 0.0254,
                                                                         Rotation2d.fromDegrees(180)))));
-                        // uncomment when shooter ready
-                        // xboxController.povLeft().and(xboxController.y())
-                        //         .whileTrue(shooter.sysIdDynamic(Direction.kForward));
-                        // xboxController.povLeft().and(xboxController.x())
-                        //         .whileTrue(shooter.sysIdDynamic(Direction.kReverse));
-                        // xboxController.povRight().and(xboxController.y())
-                        //         .whileTrue(shooter.sysIdQuasistatic(Direction.kForward));
-                        // xboxController.povRight().and(xboxController.x())
-                        //         .whileTrue(shooter.sysIdQuasistatic(Direction.kReverse));
                 }
         }
 

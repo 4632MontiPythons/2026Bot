@@ -13,6 +13,11 @@
       }
     },
     {
+      "type": "event_trigger",
+      "t_ratio": 0.0,
+      "lib_key": "DeployIntake"
+    },
+    {
       "type": "translation",
       "x_meters": 5.559583224971541,
       "y_meters": 7.654063452161795,
@@ -23,6 +28,11 @@
       "x_meters": 6.869658383819137,
       "y_meters": 7.014590192095151,
       "intermediate_handoff_radius_meters": 0.3
+    },
+    {
+      "type": "event_trigger",
+      "t_ratio": 0.0,
+      "lib_key": "ToggleIntakeOn"
     },
     {
       "type": "waypoint",
@@ -47,6 +57,11 @@
         "rotation_radians": 0.0,
         "profiled_rotation": true
       }
+    },
+    {
+      "type": "event_trigger",
+      "t_ratio": 0.0,
+      "lib_key": "ToggleIntakeOff"
     },
     {
       "type": "translation",
