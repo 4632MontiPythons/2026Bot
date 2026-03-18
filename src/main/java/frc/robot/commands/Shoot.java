@@ -329,7 +329,7 @@ public class Shoot extends Command {
 
         m_headingPID.reset();
 
-        // Cache alliance and goal once — these don't change mid-match.
+        // Cache alliance and goal
         m_alliance = DriverStation.getAlliance().orElseGet(() -> closestAlliance(
             m_drivetrain.getState().Pose.getTranslation()
         ));

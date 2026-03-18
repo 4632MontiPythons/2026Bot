@@ -24,7 +24,7 @@ import static edu.wpi.first.units.Units.*;
 
 /*
  * Shooter subsystem with velocity closed-loop control and SysID.
- * KrakenX60 using VelocityVoltage. Debating keeping shooter spinning for whole match.
+ * KrakenX60 using VelocityVoltage. Debating keeping shooter warmed for whole match.
  * Will depend on whether or not we add a flywheel, the voltage we need to keep it running and how our battery is looking.
  * RPM values throughout this class are MOTOR SHAFT RPM, not shooter RPM.
  * There is a 3.23:1 gear reduction (kGearRatio) between motor and shooter,
@@ -70,7 +70,7 @@ public class Shooter extends SubsystemBase {
         cfg.Slot0
             .withKS(0.10)
             .withKV(0.0586)
-            .withKA(0.001)
+            .withKA(0.0025)
             .withKP(0.35)
             .withKI(0.0)
             .withKD(0.0);

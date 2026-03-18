@@ -35,6 +35,11 @@ public final class Constants {
         public static final double translationRampRate = 0.75;
         public static final double translationStep = 4;
         public static final double timeout = 7;
+
+        // Swallow (intake-locked) heading PID
+        public static final double swallowHeadingKp = 5.0;  // tune on robot
+        public static final double swallowHeadingKi = 0.0;
+        public static final double swallowHeadingKd = 0.2;
     }
 
     public static final class kVision {
