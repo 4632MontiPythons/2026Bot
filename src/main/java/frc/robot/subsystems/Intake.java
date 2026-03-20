@@ -1,18 +1,18 @@
 package frc.robot.subsystems;
 
-// import com.revrobotics.spark.SparkMax;
-// import com.revrobotics.spark.SparkLowLevel.MotorType;
-// import com.revrobotics.spark.config.SparkMaxConfig;
-// import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-// import com.revrobotics.spark.SparkBase.PersistMode;
-// import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.kIntake;
-
+import edu.wpi.first.wpilibj.Compressor;
 import static frc.robot.Constants.kIntake;
 /**
  * We assume it always starts retracted which makes sense cause otherwise we'd violate the robot perimeter.
@@ -23,15 +23,16 @@ public class Intake extends SubsystemBase {
     // ── Hardware ───────────────────────────────────────────────────────────────
     // private final SparkMax motor;
     private final DoubleSolenoid deploySolenoidA;
-
+    private final Compressor m_Compressor;
     public Intake() {
         // motor = new SparkMax(kIntake.intakeMotorID, MotorType.kBrushed);
+        m_Compressor = new Compressor(PneumaticsModuleType.CTREPCM);
+        m_Compressor.disable();
+        SparkMaxConfig config = new SparkMaxConfig();
+        config
+            .idleMode(IdleMode.kCoast)
+            .smartCurrentLimit(kIntake.motorCurrentLimit);
 
-        // SparkMaxConfig config = new SparkMaxConfig();
-        // config
-        //     .idleMode(IdleMode.kCoast)
-        //     .smartCurrentLimit(kIntake.motorCurrentLimit);
-        // config.smartCurrentLimit(30);
         // motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         deploySolenoidA = new DoubleSolenoid(kIntake.PCM_CAN_ID,
@@ -70,8 +71,15 @@ public class Intake extends SubsystemBase {
 
     public void stopIntake() {
         // motor.set(0.0);
+
+
+
+
+
     }
 
     @Override
-    public void periodic() {}
+    public void periodic() {
+        m_Compressor.disable();
+    }
 }
