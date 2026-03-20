@@ -137,7 +137,7 @@ public class RobotContainer {
 
                 xboxController.b().onTrue(Commands.run(() -> intake.deploy(), intake));
                 xboxController.y().onTrue(Commands.run(() -> intake.retract(), intake));
-
+                xboxController.rightBumper().whileTrue(Commands.run(() -> intake.runIntake(), intake));
                 // ── Shoot on the move (right trigger held) ────────────────────────────
                 // Joystick inputs are read live each tick inside the command.
                 // Speed is capped at kShootOnMoveSpeedFraction of MaxSpeed.

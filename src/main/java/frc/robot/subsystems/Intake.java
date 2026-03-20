@@ -21,11 +21,11 @@ import static frc.robot.Constants.kIntake;
 public class Intake extends SubsystemBase {
 
     // ── Hardware ───────────────────────────────────────────────────────────────
-    // private final SparkMax motor;
+    private final SparkMax motor;
     private final DoubleSolenoid deploySolenoidA;
     private final Compressor m_Compressor;
     public Intake() {
-        // motor = new SparkMax(kIntake.intakeMotorID, MotorType.kBrushed);
+        motor = new SparkMax(kIntake.intakeMotorID, MotorType.kBrushed);
         m_Compressor = new Compressor(PneumaticsModuleType.CTREPCM);
         m_Compressor.disable();
         SparkMaxConfig config = new SparkMaxConfig();
@@ -33,7 +33,7 @@ public class Intake extends SubsystemBase {
             .idleMode(IdleMode.kCoast)
             .smartCurrentLimit(kIntake.motorCurrentLimit);
 
-        // motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         deploySolenoidA = new DoubleSolenoid(kIntake.PCM_CAN_ID,
             PneumaticsModuleType.CTREPCM, kIntake.solenoidL_Forward, kIntake.solenoidL_Reverse);
@@ -66,13 +66,11 @@ public class Intake extends SubsystemBase {
     // ── Motor ──────────────────────────────────────────────────────────────────
 
     public void runIntake() {
-        // motor.set(kIntake.intakeSpeed);
+        motor.set(kIntake.intakeSpeed);
     }
 
     public void stopIntake() {
-        // motor.set(0.0);
-
-
+        motor.set(0.0);
 
 
 
