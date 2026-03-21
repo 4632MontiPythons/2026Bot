@@ -91,7 +91,7 @@ public final class Constants {
     }
 
     public static final class kShooter {
-        public static final int shooterMotorID = -1;
+        public static final int shooterMotorID = 15;
         public static final double kMaxMotorRPM = 5800.0;
 
         public static final Translation2d kRedGoal = new Translation2d(11.915394, 4.034536);
@@ -134,16 +134,16 @@ public final class Constants {
     }
 
     public static final class kIntake {
-        public static final int intakeMotorID = 100;
+        public static final int intakeMotorID = 10;
         public static final int solenoidL_Forward = 0;
         public static final int solenoidL_Reverse = 1;
-        public static final double intakeSpeed = 0.5;
+        public static final double intakeSpeed = 1;
         public static final int motorCurrentLimit = 30;
         public static final int PCM_CAN_ID = 21;
     }
 
     public static final class kFeeder {
-        public static final int feederMotorID = -1;
+        public static final int feederMotorID = 11;
         public static final boolean inverted = false;
         public static final double feedSpeed = 0.5;
         public static final double reverseSpeed = -0.4;

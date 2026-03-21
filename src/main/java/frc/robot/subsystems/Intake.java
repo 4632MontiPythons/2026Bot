@@ -23,11 +23,11 @@ public class Intake extends SubsystemBase {
     // ── Hardware ───────────────────────────────────────────────────────────────
     private final SparkMax motor;
     private final DoubleSolenoid deploySolenoidA;
-    private final Compressor m_Compressor;
+    // private final Compressor m_Compressor;
     public Intake() {
         motor = new SparkMax(kIntake.intakeMotorID, MotorType.kBrushed);
-        m_Compressor = new Compressor(PneumaticsModuleType.CTREPCM);
-        m_Compressor.disable();
+        // m_Compressor = new Compressor(kIntake.PCM_CAN_ID,PneumaticsModuleType.CTREPCM);
+        // m_Compressor.disable();
         SparkMaxConfig config = new SparkMaxConfig();
         config
             .idleMode(IdleMode.kCoast)
@@ -68,6 +68,9 @@ public class Intake extends SubsystemBase {
     public void runIntake() {
         motor.set(kIntake.intakeSpeed);
     }
+    public void reverseIntake(){
+        motor.set(-kIntake.intakeSpeed);
+    }
 
     public void stopIntake() {
         motor.set(0.0);
@@ -78,6 +81,6 @@ public class Intake extends SubsystemBase {
 
     @Override
     public void periodic() {
-        m_Compressor.disable();
+        // m_Compressor.disable();
     }
 }

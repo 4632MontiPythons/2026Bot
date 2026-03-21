@@ -60,9 +60,9 @@ public class RobotContainer {
                 VecBuilder.fill(999, 999, 999),
                 TunerConstants.FrontLeft, TunerConstants.FrontRight, TunerConstants.BackLeft, TunerConstants.BackRight
                 );
-        // private final Shooter shooter = new Shooter();
-        // private final Feeder feeder = new Feeder();
+        private final Shooter shooter = new Shooter();
         private final Intake intake = new Intake();
+        private final Feeder feeder = new Feeder();
 
 
         public RobotContainer() {
@@ -125,6 +125,7 @@ public class RobotContainer {
                                                                 * MaxSpeed)
                                                 .withRotationalRate(-xboxController.getRightX()
                                                                 * MaxAngularRate)));
+                
 
                 final var idle = new SwerveRequest.Idle();
                 RobotModeTriggers.disabled().whileTrue(
@@ -138,6 +139,10 @@ public class RobotContainer {
                 xboxController.b().onTrue(Commands.run(() -> intake.deploy(), intake));
                 xboxController.y().onTrue(Commands.run(() -> intake.retract(), intake));
                 xboxController.rightBumper().whileTrue(Commands.run(() -> intake.runIntake(), intake));
+                xboxController.x().onTrue(Commands.run(() -> shooter.test(), shooter));
+                xboxController.leftTrigger().whileTrue(Commands.run(() -> feeder.test(), feeder));
+                xboxController.rightTrigger().whileTrue(Commands.run(() -> intake.reverseIntake(), intake));
+
                 // ── Shoot on the move (right trigger held) ────────────────────────────
                 // Joystick inputs are read live each tick inside the command.
                 // Speed is capped at kShootOnMoveSpeedFraction of MaxSpeed.

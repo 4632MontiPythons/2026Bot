@@ -69,6 +69,9 @@ public class Feeder extends SubsystemBase {
         m_currentSpeed = speed;
         m_motor.set(speed);
     }
+    public void test(){
+        setMotor(-.50);
+    }
 
     // ── Periodic ───────────────────────────────────────────────────────────────
     @Override

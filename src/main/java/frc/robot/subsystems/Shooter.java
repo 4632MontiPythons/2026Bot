@@ -64,7 +64,7 @@ public class Shooter extends SubsystemBase {
 
         cfg.MotorOutput
             .withNeutralMode(NeutralModeValue.Coast)
-            .withInverted(InvertedValue.CounterClockwise_Positive);
+            .withInverted(InvertedValue.Clockwise_Positive);
 
         // todo: Run SysID to replace these placeholder gains.
         cfg.Slot0
@@ -156,6 +156,10 @@ public class Shooter extends SubsystemBase {
     /** @return stator current drawn by the shooter motor in amps */
     public double getStatorCurrent() {
         return m_currentSignal.getValueAsDouble();
+    }
+
+    public void test() {
+        setRPM(5500);
     }
 
     // ── SysID Commands ────────────────────────────────────────────────────────
