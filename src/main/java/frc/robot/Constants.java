@@ -6,11 +6,6 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
@@ -43,8 +38,6 @@ public final class Constants {
     }
 
     public static final class kVision {
-        public static final boolean USE_PHOTONVISION = false;
-        public static final boolean kDisableVisionVizualization = false;
 
         public static final double kYawRateCoefficent = (1.0 / 200.0);
         public static final double kTagDistCoefficent = 0.3;
@@ -135,8 +128,8 @@ public final class Constants {
 
     public static final class kIntake {
         public static final int intakeMotorID = 10;
-        public static final int solenoidL_Forward = 0;
-        public static final int solenoidL_Reverse = 1;
+        public static final int solenoid_Forward = 0;
+        public static final int solenoid_Reverse = 1;
         public static final double intakeSpeed = 1;
         public static final int motorCurrentLimit = 30;
         public static final int PCM_CAN_ID = 21;

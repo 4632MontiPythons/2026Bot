@@ -26,9 +26,9 @@ public class Vision {
         double yawRate = pigeon.getAngularVelocityZWorld().getValueAsDouble();
         if (Math.abs(yawRate) > kMaxYawRate_DegPerSec) return;
         updateLimelight(
-            pigeon.getYaw().getValueAsDouble(), 
-            yawRate, 
-            pigeon.getPitch().getValueAsDouble(), 
+            m_drivetrain.getState().Pose.getRotation().getDegrees(), // pose estimate yaw
+            yawRate,
+            pigeon.getPitch().getValueAsDouble(),
             pigeon.getRoll().getValueAsDouble()
         );
     }
@@ -54,7 +54,7 @@ public class Vision {
         }
             
 
-        if (mt1Result != null && mt1Result.tagCount >= kMinTagsForYaw && mt1Result.avgTagDist < kYawMaxTagDistance) {
+        if (mt1Result != null && mt1Result.tagCount >= kMinTagsForYaw && mt1Result.avgTagDist < kYawMaxTagDistance && Math.abs(yawRate) < kYawMaxYawRate_DegPerSec) {
             m_drivetrain.addVisionMeasurement(
                 mt1Result.pose,
                 mt1Result.timestampSeconds,

@@ -12,17 +12,17 @@ import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.kIntake;
-import edu.wpi.first.wpilibj.Compressor;
+
 import static frc.robot.Constants.kIntake;
 /**
- * We assume it always starts retracted which makes sense cause otherwise we'd violate the robot perimeter.
+ * It deploys immediately on auto enabled.
  * 
   */
 public class Intake extends SubsystemBase {
 
     // ── Hardware ───────────────────────────────────────────────────────────────
     private final SparkMax motor;
-    private final DoubleSolenoid deploySolenoidA;
+    private final DoubleSolenoid solenoid;
     public Intake() {
         motor = new SparkMax(kIntake.intakeMotorID, MotorType.kBrushed);
         SparkMaxConfig config = new SparkMaxConfig();
@@ -30,27 +30,26 @@ public class Intake extends SubsystemBase {
             .idleMode(IdleMode.kCoast)
             .smartCurrentLimit(kIntake.motorCurrentLimit);
 
-        motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
-        deploySolenoidA = new DoubleSolenoid(kIntake.PCM_CAN_ID,
-            PneumaticsModuleType.CTREPCM, kIntake.solenoidL_Forward, kIntake.solenoidL_Reverse);
+        motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+        solenoid = new DoubleSolenoid(kIntake.PCM_CAN_ID,
+            PneumaticsModuleType.CTREPCM, kIntake.solenoid_Forward, kIntake.solenoid_Reverse);
     }
 
     // ── Deployment ─────────────────────────────────────────────────────────────
 
     public void deploy() {
-        deploySolenoidA.set(Value.kForward);
+        solenoid.set(Value.kForward);
     }
 
     public void retract() {
-        deploySolenoidA.set(Value.kReverse);
+        solenoid.set(Value.kReverse);
     }
 
     /**
      * Returns whether the intake was last commanded to deploy.
      */
     public boolean isDeployed() {
-        return deploySolenoidA.get() == Value.kForward;
+        return solenoid.get() == Value.kForward;
     }
 
     /** Toggles intake deployment based on last commanded state. */

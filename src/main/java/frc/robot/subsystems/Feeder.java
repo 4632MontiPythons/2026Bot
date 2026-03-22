@@ -5,12 +5,9 @@ import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.util.StatusLogger;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.Drive;
 import frc.robot.Constants.kFeeder;
 /**
  * Redline motor ran by spark max. Simple setup.
@@ -21,7 +18,6 @@ public class Feeder extends SubsystemBase {
 
     // ── Constructor ────────────────────────────────────────────────────────────
     public Feeder() {
-        StatusLogger.disableAutoLogging();
         m_motor = new SparkMax(kFeeder.feederMotorID, MotorType.kBrushed);
         SparkMaxConfig config = new SparkMaxConfig();
         config
@@ -29,8 +25,9 @@ public class Feeder extends SubsystemBase {
             .inverted(kFeeder.inverted)
             .openLoopRampRate(0.1);
         config.smartCurrentLimit(25);
+        config.inverted(kFeeder.inverted);
 
-        m_motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        m_motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
     }
 
     // ── Public API ─────────────────────────────────────────────────────────────
@@ -65,7 +62,7 @@ public class Feeder extends SubsystemBase {
         m_motor.set(speed);
     }
     public void test(){
-        setMotor(-.50);
+        setMotor(.50);
     }
 
     // ── Periodic ───────────────────────────────────────────────────────────────

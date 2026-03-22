@@ -79,8 +79,8 @@ public class SwallowIntake extends Command {
     public void initialize() {
         intake.deploy();
         //reset slew limiters
-        xLimiter.reset(0);
-        yLimiter.reset(0);
+        xLimiter.reset(xSupplier.getAsDouble());
+        yLimiter.reset(ySupplier.getAsDouble());
     }
 
     @Override
@@ -112,7 +112,7 @@ public class SwallowIntake extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        
+        intake.stopIntake();
     }
 
     @Override
