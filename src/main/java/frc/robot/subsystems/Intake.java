@@ -32,7 +32,7 @@ public class Intake extends SubsystemBase {
 
         motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
         solenoid = new DoubleSolenoid(kIntake.PCM_CAN_ID,
-            PneumaticsModuleType.CTREPCM, kIntake.solenoid_Forward, kIntake.solenoid_Reverse);
+            PneumaticsModuleType.CTREPCM, kIntake.forwardChannel, kIntake.reverseChannel);
     }
 
     // ── Deployment ─────────────────────────────────────────────────────────────

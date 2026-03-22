@@ -38,7 +38,7 @@ public final class Constants {
     }
 
     public static final class kVision {
-
+        // yaw updated with mt1 - strict requirements. 
         public static final double kYawRateCoefficent = (1.0 / 200.0);
         public static final double kTagDistCoefficent = 0.3;
 
@@ -60,21 +60,8 @@ public final class Constants {
 
         public static final double LL_mt2baseStdDev = 0.05;
 
-        // public static final AprilTagFieldLayout kTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
-
-        // public static final String kPhotonCam1Name = "PV_Intake";
-        // public static final Transform3d kRobotToPhotonCam1 = new Transform3d(
-        //     new Translation3d(0.0, 0.2, 0.5),
-        //     new Rotation3d(0, Units.degreesToRadians(-30), 0)
-        // );
-
-        // public static final String kPhotonCam2Name = "PV_Left";
-        // public static final Transform3d kRobotToPhotonCam2 = new Transform3d(
-        //     new Translation3d(0.0, -0.2, 0.5),
-        //     new Rotation3d(0, Units.degreesToRadians(-30), 0)
-        // );
-
-        // public static final double PV_baseXYStdDev = 0.10;
+        public static final double kFieldLengthMeters = 16.54;
+        public static final double kFieldWidthMeters = 8.07;
     }
 
     public static final class OI {
@@ -128,8 +115,8 @@ public final class Constants {
 
     public static final class kIntake {
         public static final int intakeMotorID = 10;
-        public static final int solenoid_Forward = 0;
-        public static final int solenoid_Reverse = 1;
+        public static final int forwardChannel = 0;
+        public static final int reverseChannel = 1;
         public static final double intakeSpeed = 1;
         public static final int motorCurrentLimit = 30;
         public static final int PCM_CAN_ID = 21;
@@ -137,7 +124,7 @@ public final class Constants {
 
     public static final class kFeeder {
         public static final int feederMotorID = 11;
-        public static final boolean inverted = false;
+        public static final boolean inverted = true;
         public static final double feedSpeed = 0.5;
         public static final double reverseSpeed = -0.4;
     }

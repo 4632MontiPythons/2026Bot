@@ -58,7 +58,6 @@ public class SwallowIntake extends Command {
             Intake intake,
             DoubleSupplier xSupplier,
             DoubleSupplier ySupplier) {
-
         this.drivetrain = drivetrain;
         this.intake     = intake;
         this.xSupplier  = xSupplier;
@@ -77,7 +76,7 @@ public class SwallowIntake extends Command {
 
     @Override
     public void initialize() {
-        intake.deploy();
+        intake.deploy();//ensure its deployed
         //reset slew limiters
         xLimiter.reset(xSupplier.getAsDouble());
         yLimiter.reset(ySupplier.getAsDouble());
