@@ -27,13 +27,13 @@ import static edu.wpi.first.units.Units.*;
  * KrakenX60 using VelocityVoltage. Debating keeping shooter warmed for whole match.
  * Will depend on whether or not we add a flywheel, the voltage we need to keep it running and how our battery is looking.
  * RPM values throughout this class are MOTOR SHAFT RPM, not shooter RPM.
- * There is a 3.23:1 gear reduction (kGearRatio) between motor and shooter,
- * so 3230 motor RPM = 1000 shooter RPM.
+ * There is a 1:2 gear step up (kGearRatio) between motor and shooter,
+ * so 3000 motor RPM = 6000 shooter RPM.
  */
 public class Shooter extends SubsystemBase {
 
     private final TalonFX m_motor;
-
+    private double m_lastDashRpm = -1.0; 
     private final VelocityVoltage m_velocityRequest =
             new VelocityVoltage(0).withSlot(0).withEnableFOC(false);
     private final NeutralOut m_stopRequest = new NeutralOut();
@@ -55,11 +55,9 @@ public class Shooter extends SubsystemBase {
         var cfg = new TalonFXConfiguration();
 
         cfg.CurrentLimits
-            .withSupplyCurrentLimit(55.0)
-            .withSupplyCurrentLowerLimit(45.0)
-            .withSupplyCurrentLowerTime(1)
+            .withSupplyCurrentLimit(50.0)
             .withSupplyCurrentLimitEnable(true)
-            .withStatorCurrentLimit(120.0)
+            .withStatorCurrentLimit(100.0)
             .withStatorCurrentLimitEnable(true);
 
         cfg.MotorOutput
@@ -75,7 +73,7 @@ public class Shooter extends SubsystemBase {
             .withKI(0.0)
             .withKD(0.0);
 
-        cfg.ClosedLoopRamps.withVoltageClosedLoopRampPeriod(0.05);
+        cfg.ClosedLoopRamps.withVoltageClosedLoopRampPeriod(0.10);
         return cfg;
     }
 
@@ -110,6 +108,7 @@ public class Shooter extends SubsystemBase {
                 this
             )
         );
+        SmartDashboard.putNumber("Shooter/TestRPM", 0.0);
     }
 
     // ── Public API ────────────────────────────────────────────────────────────
@@ -186,7 +185,7 @@ public class Shooter extends SubsystemBase {
     // ── Periodic ──────────────────────────────────────────────────────────────
     @Override
     public void periodic() {
-        BaseStatusSignal.refreshAll(m_velSignal, m_currentSignal);
+        BaseStatusSignal.refreshAll(m_posSignal, m_velSignal, m_voltSignal, m_currentSignal);
 
         double measuredRpm = getMeasuredRPM();
         SmartDashboard.putNumber("Shooter/TargetRPM",     m_targetRpm);
@@ -194,13 +193,14 @@ public class Shooter extends SubsystemBase {
         SmartDashboard.putNumber("Shooter/StatorCurrent", getStatorCurrent());
 
         if (!Drive.comp && getCurrentCommand() == null) {
-            SmartDashboard.putNumber("Shooter/TestRPM",
-                    SmartDashboard.getNumber("Shooter/TestRPM", m_targetRpm));
             double dashRpm = SmartDashboard.getNumber("Shooter/TestRPM", 0.0);
-            if (dashRpm > 0.0) {
-                setRPM(dashRpm);
-            } else {
-                stop();
+            if (dashRpm != m_lastDashRpm) {
+                m_lastDashRpm = dashRpm;
+                if (dashRpm > 0.0) {
+                    setRPM(dashRpm);
+                } else {
+                    stop();
+                }
             }
         }
     }

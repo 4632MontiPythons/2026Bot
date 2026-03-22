@@ -37,7 +37,6 @@
         LimelightHelpers.SetRobotOrientation(LL_camName, yaw, yawRate, pitch, 0, roll, 0);
 
         var mt2Result = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(LL_camName);
-
         if (mt2Result == null || mt2Result.tagCount == 0) return;
         if (mt2Result.timestampSeconds <= lastTimestamp) return;
         lastTimestamp = mt2Result.timestampSeconds;

@@ -21,7 +21,6 @@ import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Feeder;
 import frc.robot.subsystems.Intake;
 import frc.robot.Constants.OI;
-import frc.robot.Constants.kShooter;
 import frc.robot.commands.Shoot;
 import frc.robot.commands.SwallowIntake;
 import frc.robot.commands.WheelRadiusCharacterization;
@@ -82,8 +81,7 @@ public class RobotContainer {
                         "ShootFullHopper",
                         new Shoot(shooter, feeder, drivetrain,
                                 () -> 0.0, () -> 0.0,      // stationary in auto
-                                MaxSpeed * kShooter.kShootOnMoveSpeedFraction,
-                                true, 11)
+                                true, 11) //TUNE
                 );
                 NamedCommands.registerCommand( //zoned event in pathplanner
                         "Run Intake", 
@@ -99,8 +97,7 @@ public class RobotContainer {
                         "ShootDepot",
                         new Shoot(shooter, feeder, drivetrain,
                                 () -> 0.0, () -> 0.0,
-                                MaxSpeed * kShooter.kShootOnMoveSpeedFraction,
-                                true, 6)
+                                true, 6) //TUNE
                 );
                 
                 configureBindings();
@@ -147,8 +144,7 @@ public class RobotContainer {
                 mainController.rightTrigger().whileTrue(new Shoot(
                         shooter, feeder, drivetrain,
                         () -> xSlewLimiter.calculate(-mainController.getLeftY()) * MaxSpeed,
-                        () -> ySlewLimiter.calculate(-mainController.getLeftX()) * MaxSpeed,
-                        MaxSpeed * kShooter.kShootOnMoveSpeedFraction
+                        () -> ySlewLimiter.calculate(-mainController.getLeftX()) * MaxSpeed
                 ));
 
 

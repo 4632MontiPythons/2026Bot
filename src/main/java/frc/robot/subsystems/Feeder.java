@@ -27,7 +27,7 @@ public class Feeder extends SubsystemBase {
         config.smartCurrentLimit(25);
         config.inverted(kFeeder.inverted);
 
-        m_motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+        m_motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     // ── Public API ─────────────────────────────────────────────────────────────
@@ -53,6 +53,9 @@ public class Feeder extends SubsystemBase {
     /** Stop the feeder. */
     public void stop() {
         setMotor(0.0);
+    }
+    public boolean isFeeding(){
+        return m_motor.get()>0.2;
     }
 
 

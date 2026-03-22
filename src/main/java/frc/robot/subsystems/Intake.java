@@ -29,7 +29,7 @@ public class Intake extends SubsystemBase {
             .idleMode(IdleMode.kCoast)
             .smartCurrentLimit(kIntake.motorCurrentLimit);
 
-        motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+        motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         solenoid = new DoubleSolenoid(kIntake.PCM_CAN_ID,
             PneumaticsModuleType.CTREPCM, kIntake.forwardChannel, kIntake.reverseChannel);
     }

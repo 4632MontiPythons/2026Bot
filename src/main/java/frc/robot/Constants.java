@@ -19,7 +19,6 @@ public final class Constants {
         public static final double odometryXYStdDevs = 0.03;
         public static final double odometryYawStdDev = Units.degreesToRadians(0.75);
         public static final boolean comp = false; //CHANGE THIS AT COMP
-        public static final boolean log = false; //off this year cause we cant fit a usb stick under the chassis
 
         public final static PPHolonomicDriveController ppController =
             new PPHolonomicDriveController(
@@ -32,21 +31,21 @@ public final class Constants {
         public static final double timeout = 7;
 
         // Swallow (intake-locked) heading PID
-        public static final double swallowHeadingKp = 5.0;  // tune on robot
-        public static final double swallowHeadingKi = 0.0;
+        public static final double swallowHeadingKp = 5.0;  //TUNE
+        public static final double swallowHeadingKi = 0.0; 
         public static final double swallowHeadingKd = 0.2;
     }
 
     public static final class kVision {
         // yaw updated with mt1 - strict requirements. 
         public static final double kYawRateCoefficent = (1.0 / 200.0);
-        public static final double kTagDistCoefficent = 0.3;
+        public static final double kTagDistCoefficent = 0.15;
 
         public static final double kMaxTagDistance_Meters = 4.0;
         public static final double kMaxYawRate_DegPerSec = 200;
         public static final double kMaxSingleTagPoseAmbiguity = 0.15;
         public static final int kMinTagsForYaw = 2;
-        public static final double kYawMaxTagDistance = 2.0;
+        public static final double kYawMaxTagDistance = 2.5;
         public static final double kYawMaxYawRate_DegPerSec = 50.0;
         public static final double kYawStdDev = Units.degreesToRadians(3);
 
@@ -73,19 +72,22 @@ public final class Constants {
     public static final class kShooter {
         public static final int shooterMotorID = 15;
         public static final double kMaxMotorRPM = 5800.0;
-        public static final double kWarmUpRPM = 2000;
+        public static final double kWarmUpRPM = 2000; //TUNE
         public static final Translation2d kRedGoal = new Translation2d(11.915394, 4.034536);
         public static final Translation2d kBlueGoal = new Translation2d(4.625594, 4.034536);
-
+        public static final double kGearRatio = 2;
+        public static final double kLaunchFraction = 0.7; //TUNE. for ToF 
+        public static final double kWheelRadius = 0.0762;
+        public static final double kLaunchAngleRads = Math.toRadians(60.0);
         public static final double redXBoundary = 11.3;
         public static final double blueXBoundary = 5.3;
-        public static final double rpmTolerance = 100;
-        public static final double angleTolerance_Rads = Units.degreesToRadians(1);
-        public static final double angleTolerance_RadsPerSec = Units.degreesToRadians(5);
+        public static final double rpmTolerance = 100; //TUNE?
+        public static final double angleTolerance_Rads = Units.degreesToRadians(2);
+        public static final Translation2d kShooterOffset = new Translation2d(0.34, 0.0);
 
         public static final InterpolatingDoubleTreeMap rpmTable = new InterpolatingDoubleTreeMap();
         static {
-            // Distance (m) → Motor shaft RPM (NOT flywheel RPM). Placeholders.
+            // Distance (m) → Motor shaft RPM (NOT flywheel RPM). Placeholders. //TUNE
             rpmTable.put(1.0, 2500.0);
             rpmTable.put(2.0, 3200.0);
             rpmTable.put(2.5, 3600.0);
@@ -94,22 +96,26 @@ public final class Constants {
             rpmTable.put(4.0, 4600.0);
             rpmTable.put(5.0, 5500.0);
         }
+        public static final InterpolatingDoubleTreeMap flightTimeTable = new InterpolatingDoubleTreeMap();
+        static {
+            // Distance (m) -> flight time (s)
+            //TUNE
+            flightTimeTable.put(1.5, 0.38);
+            flightTimeTable.put(2.0, 0.44);
+            flightTimeTable.put(2.5, 0.49);
+            flightTimeTable.put(3.0, 0.54);
+            flightTimeTable.put(3.5, 0.59);
+            flightTimeTable.put(4.0, 0.64);
+        }
+
         /** stop slightly before hub will be inactive, waste of time because fuel wont reach in time */
-        public static final double kTimeToScore = 1.0; 
+        public static final double kTimeToScore = 1.0; //TUNE
 
-        /** Robot is limited to this fraction of MaxSpeed while shooting on the move. */
-        public static final double kShootOnMoveSpeedFraction = 0.7;
-
-        // ── Auto empty detection ───────────────────────────────────────────────
-        // A shot is detected when stator current exceeds kShotCurrentThreshold
-        // while atTargetRPM() is true (gated to ignore the spinup spike).
-        // Tune kShotCurrentThreshold by logging Shooter/StatorCurrent during a
-        // real auto run — set it between idle draw and the shot spike floor.
-        public static final double kShotCurrentThreshold   = 15.0;  // amps — PLACEHOLDER, tune from logs
-        public static final double kEmptySettleTime_InWindow  = 0.7; // seconds — inside expected window
-        public static final double kEmptySettleTime_OutWindow = 1.5; // seconds — outside expected window
-        public static final double kEarlyWindowSecs = 3.0;
-        public static final double kLateWindowSecs  = 2.0;
+        public static final double kShotRpmDrop = 50; //TUNE
+        public static final double kEmptySettleTime_InWindow  = 0.7; // seconds — inside expected window //TUNE
+        public static final double kEmptySettleTime_OutWindow = 1.5; // seconds — outside expected window //TUNE
+        public static final double kEarlyWindowSecs = 3.0; //TUNE
+        public static final double kLateWindowSecs  = 2.0; //TUNE
         public static final int kShotSampleCount = 3;
     }
 
@@ -125,7 +131,7 @@ public final class Constants {
     public static final class kFeeder {
         public static final int feederMotorID = 11;
         public static final boolean inverted = true;
-        public static final double feedSpeed = 0.5;
-        public static final double reverseSpeed = -0.4;
+        public static final double feedSpeed = 0.5; //TUNE
+        public static final double reverseSpeed = -0.4; //TUNE
     }
 }
