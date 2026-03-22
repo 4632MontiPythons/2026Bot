@@ -123,8 +123,8 @@
     },
     {
       "name": "Spin Up Shooter",
-      "waypointRelativePos": 3.806451612903225,
-      "endWaypointRelativePos": null,
+      "waypointRelativePos": 3.5111411208642727,
+      "endWaypointRelativePos": 4.996623902768398,
       "command": null
     }
   ],

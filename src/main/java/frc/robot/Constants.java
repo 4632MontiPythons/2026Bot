@@ -58,30 +58,30 @@ public final class Constants {
         public static final double kYawStdDev = Units.degreesToRadians(3);
 
         public static final String LL_camName = "limelight";
-        public static final double camX = 0.0;
-        public static final double camY = 0.0;
-        public static final double camZ = 0.0;
+        public static final double camX = 0.2921;
+        public static final double camY = -.254;
+        public static final double camZ = 0.31242;
         public static final double camRoll = 0.0;
-        public static final double camPitch = 0.0;
+        public static final double camPitch = 15;
         public static final double camYaw = 0.0;
 
         public static final double LL_mt2baseStdDev = 0.05;
 
-        public static final AprilTagFieldLayout kTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
+        // public static final AprilTagFieldLayout kTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
 
-        public static final String kPhotonCam1Name = "PV_Intake";
-        public static final Transform3d kRobotToPhotonCam1 = new Transform3d(
-            new Translation3d(0.0, 0.2, 0.5),
-            new Rotation3d(0, Units.degreesToRadians(-30), 0)
-        );
+        // public static final String kPhotonCam1Name = "PV_Intake";
+        // public static final Transform3d kRobotToPhotonCam1 = new Transform3d(
+        //     new Translation3d(0.0, 0.2, 0.5),
+        //     new Rotation3d(0, Units.degreesToRadians(-30), 0)
+        // );
 
-        public static final String kPhotonCam2Name = "PV_Left";
-        public static final Transform3d kRobotToPhotonCam2 = new Transform3d(
-            new Translation3d(0.0, -0.2, 0.5),
-            new Rotation3d(0, Units.degreesToRadians(-30), 0)
-        );
+        // public static final String kPhotonCam2Name = "PV_Left";
+        // public static final Transform3d kRobotToPhotonCam2 = new Transform3d(
+        //     new Translation3d(0.0, -0.2, 0.5),
+        //     new Rotation3d(0, Units.degreesToRadians(-30), 0)
+        // );
 
-        public static final double PV_baseXYStdDev = 0.10;
+        // public static final double PV_baseXYStdDev = 0.10;
     }
 
     public static final class OI {
@@ -93,7 +93,7 @@ public final class Constants {
     public static final class kShooter {
         public static final int shooterMotorID = 15;
         public static final double kMaxMotorRPM = 5800.0;
-
+        public static final double kWarmUpRPM = 2000;
         public static final Translation2d kRedGoal = new Translation2d(11.915394, 4.034536);
         public static final Translation2d kBlueGoal = new Translation2d(4.625594, 4.034536);
 
@@ -118,7 +118,7 @@ public final class Constants {
         public static final double kTimeToScore = 1.0; 
 
         /** Robot is limited to this fraction of MaxSpeed while shooting on the move. */
-        private static final double kMovementSpeedFraction = 0.5;
+        public static final double kShootOnMoveSpeedFraction = 0.7;
 
         // ── Auto empty detection ───────────────────────────────────────────────
         // A shot is detected when stator current exceeds kShotCurrentThreshold

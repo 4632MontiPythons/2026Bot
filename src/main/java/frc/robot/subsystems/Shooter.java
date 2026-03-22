@@ -161,6 +161,9 @@ public class Shooter extends SubsystemBase {
     public void test() {
         setRPM(5500);
     }
+    public void warmUp() {
+        setRPM(kShooter.kWarmUpRPM);
+    }
 
     // ── SysID Commands ────────────────────────────────────────────────────────
 

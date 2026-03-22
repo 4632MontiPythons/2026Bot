@@ -24,7 +24,10 @@ import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Feeder;
 import frc.robot.subsystems.Intake;
 import frc.robot.Constants.OI;
+import frc.robot.Constants.kIntake;
+import frc.robot.Constants.kShooter;
 import frc.robot.commands.Shoot;
+import frc.robot.commands.SwallowIntake;
 import frc.robot.commands.WheelRadiusCharacterization;
 import frc.robot.Constants.Drive;
 
@@ -51,13 +54,14 @@ public class RobotContainer {
         private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
         private final SendableChooser<Command> autoChooser;
 
-        private final CommandXboxController xboxController = new CommandXboxController(OI.driverControllerPort);
+        private final CommandXboxController mainController = new CommandXboxController(OI.driverControllerPort);
+        private final CommandXboxController secondaryController = new CommandXboxController(OI.driverControllerPort + 1);
 
         public final CommandSwerveDrivetrain drivetrain = new CommandSwerveDrivetrain(
                 TunerConstants.DrivetrainConstants,
                 0,
                 VecBuilder.fill(Drive.odometryXYStdDevs, Drive.odometryXYStdDevs, Drive.odometryYawStdDev),
-                VecBuilder.fill(999, 999, 999),
+                VecBuilder.fill(999, 999, 999), //default standard deviation. always set dynamically. falls back to this if errors i guess
                 TunerConstants.FrontLeft, TunerConstants.FrontRight, TunerConstants.BackLeft, TunerConstants.BackRight
                 );
         private final Shooter shooter = new Shooter();
@@ -70,45 +74,38 @@ public class RobotContainer {
                         "WheelRadiusCharacterization",
                         new WheelRadiusCharacterization(drivetrain)
                 );
-                // NamedCommands.registerCommand(
-                //         "Deploy Intake", 
-                //         Commands.runOnce(() -> intake.deploy(), intake)
-                // );
-                // NamedCommands.registerCommand(
-                //         "Retract Intake", 
-                //         Commands.runOnce(() -> intake.retract(), intake)
-                // );
-                // NamedCommands.registerCommand(
-                //         "ShootFullHopper",
-                //         new Shoot(shooter, feeder, drivetrain,
-                //                 () -> 0.0, () -> 0.0,      // stationary in auto
-                //                 MaxSpeed * kShootOnMoveSpeedFraction,
-                //                 true, 11)
-                // );
-                // NamedCommands.registerCommand(
-                //         "Run Intake", 
-                //         Commands.run(() -> intake.runIntake(), intake)
-                //                 .finallyDo(() -> intake.stopIntake())
-                // );
-                // NamedCommands.registerCommand(
-                //         "Toggle Intake On",
-                //         Commands.run(() -> intake.runIntake(), intake)
-                // );
-                // NamedCommands.registerCommand(
-                //         "Toggle Intake Off",
-                //         Commands.run(() -> intake.stopIntake(), intake)
-                // );
-                // NamedCommands.registerCommand(
-                //         "Spin Up Shooter",
-                //         Commands.run(() -> shooter.setShootingDistance(3.00), shooter)
-                // );
-                // NamedCommands.registerCommand(
-                //         "ShootDepot",
-                //         new Shoot(shooter, feeder, drivetrain,
-                //                 () -> 0.0, () -> 0.0,
-                //                 MaxSpeed * kShootOnMoveSpeedFraction,
-                //                 true, 6)
-                // );
+                NamedCommands.registerCommand(
+                        "Deploy Intake", 
+                        Commands.runOnce(() -> intake.deploy(), intake)
+                );
+                NamedCommands.registerCommand(
+                        "Retract Intake", 
+                        Commands.runOnce(() -> intake.retract(), intake)
+                );
+                NamedCommands.registerCommand(
+                        "ShootFullHopper",
+                        new Shoot(shooter, feeder, drivetrain,
+                                () -> 0.0, () -> 0.0,      // stationary in auto
+                                MaxSpeed * kShooter.kShootOnMoveSpeedFraction,
+                                true, 11)
+                );
+                NamedCommands.registerCommand( //zoned event in pathplanner
+                        "Run Intake", 
+                        Commands.run(() -> intake.runIntake(), intake)
+                                .finallyDo(() -> intake.stopIntake())
+                );
+                NamedCommands.registerCommand(
+                "Spin Up Shooter", //zoned event in pathplanner
+                Commands.run(() -> shooter.warmUp(), shooter)
+                        .finallyDo(() -> shooter.stop())
+                );
+                NamedCommands.registerCommand(
+                        "ShootDepot",
+                        new Shoot(shooter, feeder, drivetrain,
+                                () -> 0.0, () -> 0.0,
+                                MaxSpeed * kShooter.kShootOnMoveSpeedFraction,
+                                true, 6)
+                );
                 
                 configureBindings();
                 autoChooser = AutoBuilder.buildAutoChooser();
@@ -116,59 +113,85 @@ public class RobotContainer {
         }
 
         private void configureBindings() {
+                RobotModeTriggers.autonomous().onTrue(Commands.runOnce(() -> intake.deploy(), intake));
+                //we always want to immediately deploy the intake. we do it anyway in the auto, but this is a safekeeping measure
 
+
+                // ── Default drive command ─────────────────────────────────────────────
                 drivetrain.setDefaultCommand(
                                 drivetrain.applyRequest(() -> drive
-                                                .withVelocityX(xSlewLimiter.calculate(-xboxController.getLeftY())
+                                                .withVelocityX(xSlewLimiter.calculate(-mainController.getLeftY())
                                                                 * MaxSpeed)
-                                                .withVelocityY(ySlewLimiter.calculate(-xboxController.getLeftX())
+                                                .withVelocityY(ySlewLimiter.calculate(-mainController.getLeftX())
                                                                 * MaxSpeed)
-                                                .withRotationalRate(-xboxController.getRightX()
+                                                .withRotationalRate(-mainController.getRightX()
                                                                 * MaxAngularRate)));
-                
 
                 final var idle = new SwerveRequest.Idle();
                 RobotModeTriggers.disabled().whileTrue(
                                 drivetrain.applyRequest(() -> idle).ignoringDisable(true));
 
-                xboxController.a().whileTrue(drivetrain.applyRequest(() -> brake));
+                // ── Main controller ───────────────────────────────────────────────────
+                // Reset field-centric heading (x)
+                mainController.x().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-                // reset the field-centric heading on left bumper press (LB)
-                xboxController.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+                // Toggle intake deployment
+                mainController.leftBumper().onTrue(Commands.runOnce(() -> intake.toggleIntake(), intake));
 
-                xboxController.b().onTrue(Commands.run(() -> intake.deploy(), intake));
-                xboxController.y().onTrue(Commands.run(() -> intake.retract(), intake));
-                xboxController.rightBumper().whileTrue(Commands.run(() -> intake.runIntake(), intake));
-                xboxController.x().onTrue(Commands.run(() -> shooter.test(), shooter));
-                xboxController.leftTrigger().whileTrue(Commands.run(() -> feeder.test(), feeder));
-                xboxController.rightTrigger().whileTrue(Commands.run(() -> intake.reverseIntake(), intake));
+                // SwallowIntake: intake faces direction of travel (left trigger held)
+                mainController.leftTrigger().whileTrue(new SwallowIntake(
+                        drivetrain, intake,
+                        () -> -mainController.getLeftY(),
+                        () -> -mainController.getLeftX()
+                ));
 
-                // ── Shoot on the move (right trigger held) ────────────────────────────
+                // Shoot on the move (right trigger held)
                 // Joystick inputs are read live each tick inside the command.
                 // Speed is capped at kShootOnMoveSpeedFraction of MaxSpeed.
-                // Uncomment when shooter/feeder are wired up.
-                //
-                // xboxController.rightTrigger().whileTrue(new Shoot(
-                //         shooter, feeder, drivetrain,
-                //         () -> xSlewLimiter.calculate(-xboxController.getLeftY()) * MaxSpeed,
-                //         () -> ySlewLimiter.calculate(-xboxController.getLeftX()) * MaxSpeed,
-                //         MaxSpeed * kShootOnMoveSpeedFraction
-                // ));
+                mainController.rightTrigger().whileTrue(new Shoot(
+                        shooter, feeder, drivetrain,
+                        () -> xSlewLimiter.calculate(-mainController.getLeftY()) * MaxSpeed,
+                        () -> ySlewLimiter.calculate(-mainController.getLeftX()) * MaxSpeed,
+                        MaxSpeed * kShooter.kShootOnMoveSpeedFraction
+                ));
 
+
+
+
+                // ── Secondary controller ──────────────────────────────────────────────
+                secondaryController.a().whileTrue(drivetrain.applyRequest(() -> brake));
+                secondaryController.rightBumper().whileTrue(Commands.run(() -> intake.runIntake(), intake).finallyDo(() -> intake.stopIntake()));
+                secondaryController.x().whileTrue(Commands.run(() -> shooter.test(), shooter).finallyDo(() -> shooter.stop()));
+                secondaryController.leftTrigger().whileTrue(Commands.run(() -> feeder.test(), feeder).finallyDo(() -> feeder.stop()));
+                secondaryController.rightTrigger().whileTrue(Commands.run(() -> intake.reverseIntake(), intake).finallyDo(() -> intake.stopIntake()));
+
+
+
+                secondaryController.leftBumper().whileTrue(
+                Commands.run(() -> shooter.warmUp(), shooter)
+                        .finallyDo(() -> shooter.stop())
+                );
+                // ── SysId routines (dev/practice bot only) ────────────────────────────
                 if (!Drive.comp) {
-                        xboxController.back().and(xboxController.y())
-                                        .whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-                        xboxController.back().and(xboxController.x())
-                                        .whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-                        xboxController.start().and(xboxController.y())
-                                        .whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-                        xboxController.start().and(xboxController.x())
-                                        .whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+                // ── Drivetrain SysID ──────────────────────────────────────────────
+                mainController.back().and(mainController.y())
+                                .whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+                mainController.back().and(mainController.x())
+                                .whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+                mainController.start().and(mainController.y())
+                                .whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+                mainController.start().and(mainController.x())
+                                .whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
-                        xboxController.rightBumper().onTrue(
-                                        new InstantCommand(() -> drivetrain.resetPose(
-                                                        new Pose2d((492.88 + 13.5) * 0.0254, (158.84) * 0.0254,
-                                                                        Rotation2d.fromDegrees(180)))));
+                // ── Shooter SysID ─────────────────────────────────────────────────
+                secondaryController.back().and(secondaryController.y())
+                                .whileTrue(shooter.sysIdDynamic(Direction.kForward));
+                secondaryController.back().and(secondaryController.x())
+                                .whileTrue(shooter.sysIdDynamic(Direction.kReverse));
+                secondaryController.start().and(secondaryController.y())
+                                .whileTrue(shooter.sysIdQuasistatic(Direction.kForward));
+                secondaryController.start().and(secondaryController.x())
+                                .whileTrue(shooter.sysIdQuasistatic(Direction.kReverse));
                 }
         }
 
