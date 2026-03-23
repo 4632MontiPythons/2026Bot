@@ -228,7 +228,7 @@ public class Funnel extends Command {
                 .getRadians());
 
         boolean atAngle = angleError < kShooter.angleTolerance_Rads;
-        double pidOutput = m_headingPID.calculate(currentHeading, Rotation2d.fromRadians(m_targetAngleRads).getRadians(););
+        double pidOutput = m_headingPID.calculate(currentHeading, Rotation2d.fromRadians(m_targetAngleRads).getRadians());
         m_drivetrain.setControl(
             m_fieldCentric
                 .withVelocityX(m_vxSupplier.getAsDouble())
