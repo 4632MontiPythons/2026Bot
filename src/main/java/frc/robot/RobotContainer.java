@@ -13,6 +13,7 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.generated.TunerConstants;
@@ -21,6 +22,7 @@ import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Feeder;
 import frc.robot.subsystems.Intake;
 import frc.robot.Constants.OI;
+import frc.robot.commands.Funnel;
 import frc.robot.commands.Shoot;
 import frc.robot.commands.SwallowIntake;
 import frc.robot.commands.WheelRadiusCharacterization;
@@ -30,6 +32,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 
 import com.pathplanner.lib.auto.NamedCommands;
@@ -37,6 +40,7 @@ import com.pathplanner.lib.auto.NamedCommands;
 public class RobotContainer {
         private final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
         private final double MaxAngularRate = Drive.maxAngularRateRadPerSec;
+        private boolean m_shootActive = false;
 
         private final SlewRateLimiter xSlewLimiter = new SlewRateLimiter(OI.slewRate);
         private final SlewRateLimiter ySlewLimiter = new SlewRateLimiter(OI.slewRate);
@@ -131,21 +135,37 @@ public class RobotContainer {
                 // Toggle intake deployment
                 mainController.leftBumper().onTrue(Commands.runOnce(() -> intake.toggleIntake(), intake));
 
-                // SwallowIntake: intake faces direction of travel (left trigger held)
-                mainController.leftTrigger().whileTrue(new SwallowIntake(
-                        drivetrain, intake,
-                        () -> -mainController.getLeftY(),
-                        () -> -mainController.getLeftX()
-                ));
-
+                Trigger shootingTrigger = new Trigger(() -> m_shootActive);
                 // Shoot on the move (right trigger held)
                 // Joystick inputs are read live each tick inside the command.
                 // Speed is capped at kShootOnMoveSpeedFraction of MaxSpeed.
                 mainController.rightTrigger().whileTrue(new Shoot(
                         shooter, feeder, drivetrain,
                         () -> xSlewLimiter.calculate(-mainController.getLeftY()) * MaxSpeed,
+                        () -> ySlewLimiter.calculate(-mainController.getLeftX()) * MaxSpeed)
+                        .beforeStarting(() -> m_shootActive = true)
+                        .finallyDo(interrupted -> m_shootActive = false)
+                );
+                mainController.rightBumper().whileTrue(new Funnel(
+                        shooter, drivetrain, feeder,
+                        () -> xSlewLimiter.calculate(-mainController.getLeftY()) * MaxSpeed,
                         () -> ySlewLimiter.calculate(-mainController.getLeftX()) * MaxSpeed
                 ));
+
+
+                // SwallowIntake: intake faces direction of travel (left trigger held)
+                mainController.leftTrigger()
+                .and(shootingTrigger.negate())
+                .whileTrue(new SwallowIntake(
+                        drivetrain, intake,
+                        () -> -mainController.getLeftY(),
+                        () -> -mainController.getLeftX()
+                ));
+                //when we're already shooting, prioritize that, and run basic intake without heading control
+                mainController.leftTrigger()
+                .and(shootingTrigger)
+                .whileTrue(Commands.run(() -> intake.runIntake(), intake)
+                        .finallyDo(() -> intake.stopIntake()));
 
 
 

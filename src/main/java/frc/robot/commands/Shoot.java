@@ -214,7 +214,6 @@ public class Shoot extends Command {
 
         double angleError = Math.abs(m_drivetrain.getState().Pose.getRotation()
                     .minus(Rotation2d.fromRadians(targetAngle)).getRadians());
-        //  Heading angle error
         boolean atAngle = angleError < kShooter.angleTolerance_Rads;
         boolean joystickStationary = Math.hypot(m_vxSupplier.getAsDouble(), m_vySupplier.getAsDouble()) < 1e-6;
         
