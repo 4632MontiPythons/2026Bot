@@ -91,7 +91,7 @@ public class Funnel extends Command {
      * TUNE: 5° is a reasonable starting point. Increase if balls are clipping
      * the hub, decrease if the shot arc is hitting the alliance boundary walls.
      */
-    private static final double kAngularClearanceRads = Math.toRadians(5.0);
+    private static final double kAngularClearanceRads = Math.toRadians(10.0);
 
     /**
      * The neutral zone is the strip of field between the two alliance boundaries.
@@ -110,6 +110,9 @@ public class Funnel extends Command {
     private final Feeder m_feeder;
     private final DoubleSupplier m_vxSupplier;
     private final DoubleSupplier m_vySupplier;
+    private boolean m_useLow;
+    private Translation2d m_hubCornerLow;
+    private Translation2d m_hubCornerHigh;
 
     // ── Runtime state ─────────────────────────────────────────────────────────
 
@@ -188,11 +191,11 @@ public class Funnel extends Command {
         // Compute the angle from the robot to each hub corner.
         // hubLeftY  = 3.3 → the "low"  corner (smaller Y, below center)
         // hubRightY = 4.9 → the "high" corner (larger  Y, above center)
-        Translation2d hubCornerLow  = new Translation2d(boundaryX, kShooter.hubLeftY);
-        Translation2d hubCornerHigh = new Translation2d(boundaryX, kShooter.hubRightY);
+        m_hubCornerLow  = new Translation2d(boundaryX, kShooter.hubLeftY);
+        m_hubCornerHigh = new Translation2d(boundaryX, kShooter.hubRightY);
 
-        double angleToCornerLow  = angleToPoint(robotPos, hubCornerLow);
-        double angleToCornerHigh = angleToPoint(robotPos, hubCornerHigh);
+        double angleToCornerLow  = angleToPoint(robotPos, m_hubCornerLow);
+        double angleToCornerHigh = angleToPoint(robotPos, m_hubCornerHigh);
 
         // Subtract clearance from the low-corner angle  → aim passes BELOW the hub.
         // Add    clearance to   the high-corner angle   → aim passes ABOVE the hub.
@@ -207,13 +210,10 @@ public class Funnel extends Command {
         double errorHigh = Math.abs(Rotation2d.fromRadians(currentHeading)
                                .minus(Rotation2d.fromRadians(angleHigh)).getRadians());
 
-        boolean useLow = errorLow <= errorHigh;
-        m_targetAngleRads = useLow ? angleLow : angleHigh;
+        m_useLow = errorLow <= errorHigh;
+        m_targetAngleRads = m_useLow ? angleLow : angleHigh;
 
-        // Set shooter RPM //TUNE
-        m_shooter.setShootingDistance(2);
-
-        SmartDashboard.putString("Funnel/ChosenSlot", useLow ? "Low (below hub)" : "High (above hub)");
+        SmartDashboard.putString("Funnel/ChosenSlot", m_useLow ? "Low (left of hub)" : "High (right of hub)");
         SmartDashboard.putNumber("Funnel/TargetAngleDeg", Math.toDegrees(m_targetAngleRads));
     }
 
@@ -228,15 +228,16 @@ public class Funnel extends Command {
                 .getRadians());
 
         boolean atAngle = angleError < kShooter.angleTolerance_Rads;
-
-        double pidOutput = m_headingPID.calculate(currentHeading, m_targetAngleRads);
+        double pidOutput = m_headingPID.calculate(currentHeading, Rotation2d.fromRadians(m_targetAngleRads).getRadians(););
         m_drivetrain.setControl(
             m_fieldCentric
                 .withVelocityX(m_vxSupplier.getAsDouble())
                 .withVelocityY(m_vySupplier.getAsDouble())
                 .withRotationalRate(pidOutput)
         );
-
+        // Set shooter RPM //TUNE
+        m_shooter.setShootingDistance(
+            0.6* robotPos.getDistance(m_useLow ? m_hubCornerLow : m_hubCornerHigh)); //not trying to get up into a hub, just over to other side
         boolean clearToFeed = isClearToFeed(robotPos);
 
         if (clearToFeed && m_shooter.atTargetRPM() && atAngle) {

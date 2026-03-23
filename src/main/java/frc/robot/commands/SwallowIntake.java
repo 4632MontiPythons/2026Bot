@@ -86,7 +86,7 @@ public class SwallowIntake extends Command {
     public void execute() {
         double rawX = xSupplier.getAsDouble();
         double rawY = ySupplier.getAsDouble();
-
+        intake.runIntake();
         // Only update target heading when the stick is outside the deadband
         // otherwise the robot would be unpredicatble when the driver centers the stick.
         Rotation2d targetHeading;
