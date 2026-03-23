@@ -14,7 +14,6 @@ import frc.robot.Constants.kShooter;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Feeder;
 import frc.robot.subsystems.Shooter;
-import frc.robot.util.HubSchedule;
 
 import java.util.function.DoubleSupplier;
 
@@ -64,22 +63,15 @@ import java.util.function.DoubleSupplier;
  * precision is not required and adding it would risk drifting the aim back into
  * the hub.
  *
- * When the joystick is stationary AND the robot is on-angle, the drivetrain
- * switches to a full brake request to hold position. It releases from brake if
- * the joystick moves or the angle error grows beyond 2× tolerance.
- *
  * ── Feed gating ───────────────────────────────────────────────────────────────
  *
  * Feeding is suppressed unless ALL of the following are true:
  *   1. Robot is within the neutral zone (between blueXBoundary and redXBoundary).
- *   2. The hub is currently active (HubSchedule.isHubInactive == false).
  *   3. Shooter is at target RPM.
  *   4. Heading error is within tolerance.
  *
  * ── Termination ───────────────────────────────────────────────────────────────
- *
- * Teleop only. Self-terminates when the hub is imminently going inactive
- * (within kTimeToScore seconds), same as the Shoot command. Otherwise runs
+ * runs
  * until the driver releases the button.
  */
 public class Funnel extends Command {
@@ -134,7 +126,7 @@ public class Funnel extends Command {
     /**
      * Heading PID drives the robot to face m_targetAngleRads.
      * Continuous input enabled so it wraps correctly across ±π.
-     * TUNE: gains copied from Shoot as a starting point.
+     * //TUNE: gains copied from Shoot as a starting point.
      */
     private final PIDController m_headingPID =
         new PIDController(5.0, 0.0, 0.1);
@@ -143,12 +135,6 @@ public class Funnel extends Command {
         new SwerveRequest.FieldCentric()
             .withDriveRequestType(
                 com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType.OpenLoopVoltage);
-
-    private final SwerveRequest.SwerveDriveBrake m_brake =
-        new SwerveRequest.SwerveDriveBrake();
-
-    /** True while the drivetrain is in brake mode (joystick still + on-angle). */
-    private boolean m_isBraking = false;
 
     // ── Constructor ───────────────────────────────────────────────────────────
 
@@ -181,7 +167,6 @@ public class Funnel extends Command {
     public void initialize() {
         m_headingPID.reset();
         m_headingPID.enableContinuousInput(-Math.PI, Math.PI);
-        m_isBraking = false;
 
         Translation2d robotPos      = m_drivetrain.getState().Pose.getTranslation();
         double        currentHeading = m_drivetrain.getState().Pose.getRotation().getRadians();
@@ -225,11 +210,8 @@ public class Funnel extends Command {
         boolean useLow = errorLow <= errorHigh;
         m_targetAngleRads = useLow ? angleLow : angleHigh;
 
-        // Set shooter RPM based on straight-line distance to the hub corner we're
-        // clearing. This is a reasonable proxy for shot distance since the aim
-        // angle only deviates slightly from pointing directly at the hub.
-        m_shooter.setShootingDistance(
-            robotPos.getDistance(useLow ? hubCornerLow : hubCornerHigh));
+        // Set shooter RPM //TUNE
+        m_shooter.setShootingDistance(2);
 
         SmartDashboard.putString("Funnel/ChosenSlot", useLow ? "Low (below hub)" : "High (above hub)");
         SmartDashboard.putNumber("Funnel/TargetAngleDeg", Math.toDegrees(m_targetAngleRads));
@@ -237,40 +219,24 @@ public class Funnel extends Command {
 
     @Override
     public void execute() {
-        Translation2d robotPos      = m_drivetrain.getState().Pose.getTranslation();
+        Translation2d robotPos       = m_drivetrain.getState().Pose.getTranslation();
         double        currentHeading = m_drivetrain.getState().Pose.getRotation().getRadians();
 
-        // Heading error against the fixed aim angle chosen at initialize().
         double angleError = Math.abs(
             Rotation2d.fromRadians(currentHeading)
                 .minus(Rotation2d.fromRadians(m_targetAngleRads))
                 .getRadians());
 
-        boolean atAngle            = angleError < kShooter.angleTolerance_Rads;
-        boolean joystickStationary = Math.hypot(
-            m_vxSupplier.getAsDouble(), m_vySupplier.getAsDouble()) < 1e-6;
+        boolean atAngle = angleError < kShooter.angleTolerance_Rads;
 
-        // Brake hysteresis: enter brake when still + on-angle, exit if driver
-        // moves or angle error grows beyond 2× tolerance (same logic as Shoot).
-        if (joystickStationary && atAngle) {
-            m_isBraking = true;
-        } else if (!joystickStationary || angleError > kShooter.angleTolerance_Rads * 2) {
-            m_isBraking = false;
-        }
+        double pidOutput = m_headingPID.calculate(currentHeading, m_targetAngleRads);
+        m_drivetrain.setControl(
+            m_fieldCentric
+                .withVelocityX(m_vxSupplier.getAsDouble())
+                .withVelocityY(m_vySupplier.getAsDouble())
+                .withRotationalRate(pidOutput)
+        );
 
-        if (m_isBraking) {
-            m_drivetrain.setControl(m_brake);
-        } else {
-            double pidOutput = m_headingPID.calculate(currentHeading, m_targetAngleRads);
-            m_drivetrain.setControl(
-                m_fieldCentric
-                    .withVelocityX(m_vxSupplier.getAsDouble())
-                    .withVelocityY(m_vySupplier.getAsDouble())
-                    .withRotationalRate(pidOutput)
-            );
-        }
-
-        // Gate feeding on all four conditions being met simultaneously.
         boolean clearToFeed = isClearToFeed(robotPos);
 
         if (clearToFeed && m_shooter.atTargetRPM() && atAngle) {
@@ -279,10 +245,9 @@ public class Funnel extends Command {
             m_feeder.stop();
         }
 
-        // Dashboard telemetry for tuning and match debugging.
         String status;
         if (!clearToFeed) {
-            status = HubSchedule.isHubInactive(m_alliance) ? "Hub Inactive" : "Out of Bounds";
+            status = "Not in Neutral Zone";
         } else if (!m_shooter.atTargetRPM()) {
             status = "RPM too low";
         } else if (!atAngle) {
@@ -290,15 +255,13 @@ public class Funnel extends Command {
         } else {
             status = "Firing";
         }
-        SmartDashboard.putString("Funnel/Status", status);
-        SmartDashboard.putNumber("Funnel/AngleErrorDeg", Math.toDegrees(angleError));
+        SmartDashboard.putString("Shooter/Status", status);
+        SmartDashboard.putNumber("Shooter/AngleError", Math.toDegrees(angleError));
     }
 
     @Override
     public boolean isFinished() {
-        // Teleop only: self-terminate when the hub is about to go inactive.
-        // kTimeToScore gives enough time for an in-flight ball to still score.
-        return HubSchedule.isHubImminentlyInactive(m_alliance, kShooter.kTimeToScore);
+        return false;
     }
 
     @Override
@@ -330,7 +293,7 @@ public class Funnel extends Command {
     private boolean isClearToFeed(Translation2d robotPos) {
         double x = robotPos.getX();
         boolean inNeutralZone = x >= kShooter.blueXBoundary && x <= kShooter.redXBoundary;
-        return inNeutralZone && !HubSchedule.isHubInactive(m_alliance);
+        return inNeutralZone;
     }
 
     /**

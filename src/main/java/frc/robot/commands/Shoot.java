@@ -268,6 +268,7 @@ public class Shoot extends Command {
             status = "Firing";
         }
         SmartDashboard.putString("Shooter/Status", status);
+        SmartDashboard.putNumber("Shooter/AngleError", Math.toDegrees(angleError));
     }
 
     @Override
