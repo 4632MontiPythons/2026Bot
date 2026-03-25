@@ -62,7 +62,7 @@ public class Shooter extends SubsystemBase {
 
         cfg.MotorOutput
             .withNeutralMode(NeutralModeValue.Coast)
-            .withInverted(InvertedValue.Clockwise_Positive);
+            .withInverted(InvertedValue.CounterClockwise_Positive);
 
         // todo: Run SysID to replace these placeholder gains.
         cfg.Slot0
@@ -73,7 +73,7 @@ public class Shooter extends SubsystemBase {
             .withKI(0.0)
             .withKD(0.0);
 
-        cfg.ClosedLoopRamps.withVoltageClosedLoopRampPeriod(0.10);
+        cfg.ClosedLoopRamps.withVoltageClosedLoopRampPeriod(15.00);
         return cfg;
     }
 
