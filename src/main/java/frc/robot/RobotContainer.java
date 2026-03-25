@@ -81,28 +81,28 @@ public class RobotContainer {
                         "Retract Intake", 
                         Commands.runOnce(() -> intake.retract(), intake)
                 );
-                NamedCommands.registerCommand(
-                        "ShootFullHopper",
-                        new Shoot(shooter, feeder, drivetrain,
-                                () -> 0.0, () -> 0.0,      // stationary in auto
-                                true, 11) //TUNE
-                );
+                // NamedCommands.registerCommand(
+                //         "ShootFullHopper",
+                //         new Shoot(shooter, feeder, drivetrain,
+                //                 () -> 0.0, () -> 0.0,      // stationary in auto
+                //                 true, 11) //TUNE
+                // );
                 NamedCommands.registerCommand( //zoned event in pathplanner
                         "Run Intake", 
                         Commands.run(() -> intake.runIntake(), intake)
                                 .finallyDo(() -> intake.stopIntake())
                 );
-                NamedCommands.registerCommand(
-                "Spin Up Shooter", //zoned event in pathplanner
-                Commands.run(() -> shooter.warmUp(), shooter)
-                        .finallyDo(() -> shooter.stop())
-                );
-                NamedCommands.registerCommand(
-                        "ShootDepot",
-                        new Shoot(shooter, feeder, drivetrain,
-                                () -> 0.0, () -> 0.0,
-                                true, 6) //TUNE
-                );
+                // NamedCommands.registerCommand(
+                // "Spin Up Shooter", //zoned event in pathplanner
+                // Commands.run(() -> shooter.warmUp(), shooter)
+                //         .finallyDo(() -> shooter.stop())
+                // );
+                // NamedCommands.registerCommand(
+                //         "ShootDepot",
+                //         new Shoot(shooter, feeder, drivetrain,
+                //                 () -> 0.0, () -> 0.0,
+                //                 true, 6) //TUNE
+                // );
                 
                 configureBindings();
                 autoChooser = AutoBuilder.buildAutoChooser();
@@ -154,16 +154,16 @@ public class RobotContainer {
 
 
                 // SwallowIntake: intake faces direction of travel (left trigger held)
-                mainController.leftTrigger()
-                .and(shootingTrigger.negate())
-                .whileTrue(new SwallowIntake(
-                        drivetrain, intake,
-                        () -> -mainController.getLeftY(),
-                        () -> -mainController.getLeftX()
-                ));
+                // mainController.leftTrigger()
+                // .and(shootingTrigger.negate())
+                // .whileTrue(new SwallowIntake(
+                //         drivetrain, intake,
+                //         () -> -mainController.getLeftY(),
+                //         () -> -mainController.getLeftX()
+                // ));
                 //when we're already shooting, prioritize that, and run basic intake without heading control
                 mainController.leftTrigger()
-                .and(shootingTrigger)
+                // .and(shootingTrigger)
                 .whileTrue(Commands.run(() -> intake.runIntake(), intake)
                         .finallyDo(() -> intake.stopIntake()));
 
