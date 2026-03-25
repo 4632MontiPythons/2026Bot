@@ -85,7 +85,7 @@ public final class Constants {
         public static final double hubRightY= 4.9;
         public static final double rpmTolerance = 100; //TUNE?
         public static final double angleTolerance_Rads = Units.degreesToRadians(2);
-        // public static final Translation2d kShooterOffset = new Translation2d(0.34, 0.0);
+        // public static final Translation2d kShooterOffset = new Translation2d(0.34, 0.0); not used anywhere
 
         public static final InterpolatingDoubleTreeMap rpmTable = new InterpolatingDoubleTreeMap();
         static {

@@ -221,7 +221,7 @@ public class Shoot extends Command {
 
         if (joystickStationary && angleError < kShooter.angleTolerance_Rads) {
             m_isBraking = true;
-        } else if(!joystickStationary || angleError < kShooter.angleTolerance_Rads *2) m_isBraking = false;
+        } else if(!joystickStationary || angleError > kShooter.angleTolerance_Rads *2) m_isBraking = false;
 
         if(m_isBraking) m_drivetrain.setControl(m_brake);
         else{

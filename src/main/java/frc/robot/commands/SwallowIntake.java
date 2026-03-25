@@ -3,7 +3,6 @@ package frc.robot.commands;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
-import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 
@@ -30,17 +29,13 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
  */
 public class SwallowIntake extends Command {
 
-    private static final double DEADBAND_SQUARED = OI.deadband * OI.deadband;
-
+    private static final double DEADBAND_SQUARED = 
+        (TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * OI.deadband) *
+        (TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * OI.deadband);
     private final CommandSwerveDrivetrain drivetrain;
     private final Intake intake;
     private final DoubleSupplier xSupplier;
     private final DoubleSupplier ySupplier;
-
-    private final double maxSpeed;
-
-    private final SlewRateLimiter xLimiter = new SlewRateLimiter(OI.slewRate);
-    private final SlewRateLimiter yLimiter = new SlewRateLimiter(OI.slewRate);
 
     private final SwerveRequest.FieldCentricFacingAngle driveRequest =
             new SwerveRequest.FieldCentricFacingAngle()
@@ -57,13 +52,12 @@ public class SwallowIntake extends Command {
             CommandSwerveDrivetrain drivetrain,
             Intake intake,
             DoubleSupplier xSupplier,
-            DoubleSupplier ySupplier) {
+            DoubleSupplier ySupplier
+            ) {
         this.drivetrain = drivetrain;
         this.intake     = intake;
         this.xSupplier  = xSupplier;
         this.ySupplier  = ySupplier;
-        this.maxSpeed   = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
-
         //PID the field angle
         driveRequest.HeadingController.setPID(
                 Drive.swallowHeadingKp,
@@ -77,9 +71,6 @@ public class SwallowIntake extends Command {
     @Override
     public void initialize() {
         intake.deploy();//ensure its deployed
-        //reset slew limiters
-        xLimiter.reset(xSupplier.getAsDouble());
-        yLimiter.reset(ySupplier.getAsDouble());
     }
 
     @Override
@@ -87,7 +78,7 @@ public class SwallowIntake extends Command {
         double rawX = xSupplier.getAsDouble();
         double rawY = ySupplier.getAsDouble();
         intake.runIntake();
-        // Only update target heading when the stick is outside the deadband
+        // Only update target heading when the velocity is outside the deadband
         // otherwise the robot would be unpredicatble when the driver centers the stick.
         Rotation2d targetHeading;
         if (rawX * rawX + rawY * rawY > DEADBAND_SQUARED) {
@@ -99,13 +90,10 @@ public class SwallowIntake extends Command {
             targetHeading = drivetrain.getState().Pose.getRotation();
         }
 
-        double vx = xLimiter.calculate(rawX) * maxSpeed;
-        double vy = yLimiter.calculate(rawY) * maxSpeed;
-
         drivetrain.setControl(
                 driveRequest
-                        .withVelocityX(vx)
-                        .withVelocityY(vy)
+                        .withVelocityX(rawX)
+                        .withVelocityY(rawY)
                         .withTargetDirection(targetHeading));
     }
 
