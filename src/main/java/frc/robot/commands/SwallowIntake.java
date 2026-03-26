@@ -4,6 +4,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -95,6 +96,13 @@ public class SwallowIntake extends Command {
                         .withVelocityX(rawX)
                         .withVelocityY(rawY)
                         .withTargetDirection(targetHeading));
+        if(!Drive.comp){
+            //drbug :>)
+            SmartDashboard.putNumber("SwallowTargetHeading", targetHeading.getDegrees());
+            SmartDashboard.putNumber("SwallowActualHeading", drivetrain.getState().Pose.getRotation().getDegrees());
+            SmartDashboard.putNumber("SwallowRawX", rawX);
+            SmartDashboard.putNumber("SwallowRawY", rawY);
+        }
     }
 
     @Override
