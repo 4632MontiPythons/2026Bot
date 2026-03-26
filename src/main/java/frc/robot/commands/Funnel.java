@@ -55,14 +55,6 @@ import java.util.function.DoubleSupplier;
  * is chosen. This is locked for the lifetime of the command to avoid the robot
  * oscillating between slots mid-shot.
  *
- * ── Heading control ───────────────────────────────────────────────────────────
- *
- * A PID controller drives the robot's heading toward the chosen fixed aim angle.
- * No orbital feedforward or velocity compensation is applied (unlike Shoot):
- * the aim window on either side of the hub is wide, so shoot-on-the-move
- * precision is not required and adding it would risk drifting the aim back into
- * the hub.
- *
  * ── Feed gating ───────────────────────────────────────────────────────────────
  *
  * Feeding is suppressed unless ALL of the following are true:
@@ -70,9 +62,7 @@ import java.util.function.DoubleSupplier;
  *   3. Shooter is at target RPM.
  *   4. Heading error is within tolerance.
  *
- * ── Termination ───────────────────────────────────────────────────────────────
- * runs
- * until the driver releases the button.
+ * runs until the driver releases the button.
  */
 public class Funnel extends Command {
 
@@ -87,11 +77,8 @@ public class Funnel extends Command {
      * robot distance: a robot 5m away gets more lateral margin than one 2m away
      * for the same angular buffer, which is the correct behavior (closer = more
      * dangerous to clip the hub, so aim farther in angle space).
-     *
-     * TUNE: 5° is a reasonable starting point. Increase if balls are clipping
-     * the hub, decrease if the shot arc is hitting the alliance boundary walls.
      */
-    private static final double kAngularClearanceRads = Math.toRadians(10.0);
+    private static final double kAngularClearanceRads = Math.toRadians(7.5);
 
     /**
      * The neutral zone is the strip of field between the two alliance boundaries.
@@ -302,7 +289,7 @@ public class Funnel extends Command {
      * Picks whichever alliance goal the robot is physically closer to.
      */
     private static Alliance closestAlliance(Translation2d robotPos) {
-        return (robotPos.getDistance(kShooter.kRedGoal) <= robotPos.getDistance(kShooter.kBlueGoal))
+        return (robotPos.getDistance(kShooter.kRedHub) <= robotPos.getDistance(kShooter.kBlueHub))
             ? Alliance.Red
             : Alliance.Blue;
     }

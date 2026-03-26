@@ -73,8 +73,8 @@ public final class Constants {
         public static final int shooterMotorID = 15;
         public static final double kMaxMotorRPM = 5800.0;
         public static final double kWarmUpRPM = 2000; //TUNE
-        public static final Translation2d kRedGoal = new Translation2d(11.915394, 4.034536);
-        public static final Translation2d kBlueGoal = new Translation2d(4.625594, 4.034536);
+        public static final Translation2d kRedHub = new Translation2d(11.915394, 4.034536);
+        public static final Translation2d kBlueHub = new Translation2d(4.625594, 4.034536);
         public static final double kGearRatio = 2;
         public static final double kLaunchFraction = 0.7; //TUNE. for ToF 
         public static final double kWheelRadius = 0.0762;
@@ -84,7 +84,7 @@ public final class Constants {
         public static final double hubLeftY= 3.3;
         public static final double hubRightY= 4.9;
         public static final double rpmTolerance = 100; //TUNE?
-        public static final double angleTolerance_Rads = Units.degreesToRadians(2);
+        public static final double angleTolerance_Rads = Units.degreesToRadians(3);
         // public static final Translation2d kShooterOffset = new Translation2d(0.34, 0.0); not used anywhere
 
         public static final InterpolatingDoubleTreeMap rpmTable = new InterpolatingDoubleTreeMap();
@@ -113,12 +113,6 @@ public final class Constants {
         /** stop slightly before hub will be inactive, waste of time because fuel wont reach in time */
         public static final double kTimeToScore = 1.0; //TUNE
 
-        public static final double kShotRpmDrop = 50; //TUNE
-        public static final double kEmptySettleTime_InWindow  = 0.7; // seconds — inside expected window //TUNE
-        public static final double kEmptySettleTime_OutWindow = 1.5; // seconds — outside expected window //TUNE
-        public static final double kEarlyWindowSecs = 3.0; //TUNE
-        public static final double kLateWindowSecs  = 2.0; //TUNE
-        public static final int kShotSampleCount = 3;
     }
 
     public static final class kIntake {

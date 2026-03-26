@@ -73,7 +73,7 @@ public class Shooter extends SubsystemBase {
             .withKI(0.0)
             .withKD(0.0);
 
-        cfg.ClosedLoopRamps.withVoltageClosedLoopRampPeriod(15.00);
+        // cfg.ClosedLoopRamps.withVoltageClosedLoopRampPeriod(15.00);
         return cfg;
     }
 
