@@ -21,7 +21,8 @@ import java.util.function.DoubleSupplier;
  * Aims at the goal, spins up the shooter, and feeds game pieces.
  *
  * Teleop: runs until interrupted (button released), or self-terminates when
- * the hub is imminently going inactive.
+ * the hub is imminently going inactive. The feed gate and self-termination both
+ * use the flight time table so behavior scales with distance.
  *
  * Auto: self-terminates after a fixed timeout (expectedShootTimeSecs)
  */
@@ -33,7 +34,6 @@ public class Shoot extends Command {
     private final Feeder m_feeder;
     private final CommandSwerveDrivetrain m_drivetrain;
     private final boolean m_isAuto;
-    private boolean m_isBraking = false;
 
     private final DoubleSupplier m_vxSupplier;
     private final DoubleSupplier m_vySupplier;
@@ -61,6 +61,14 @@ public class Shoot extends Command {
 
     private Alliance m_alliance;
     private Translation2d m_goalPos;
+
+    private boolean m_isBraking = false;
+
+    /**
+     * Set in execute(), consumed by isFinished().
+     * Avoids recomputing position/distance/flight time in a second code path.
+     */
+    private boolean m_shouldFinish = false;
 
     // ── Constructors ──────────────────────────────────────────────────────────
 
@@ -102,6 +110,8 @@ public class Shoot extends Command {
     public void initialize() {
         m_commandTimer.restart();
         m_headingPID.reset();
+        m_isBraking    = false;
+        m_shouldFinish = false;
 
         m_alliance = DriverStation.getAlliance().orElseGet(() ->
             closestAlliance(m_drivetrain.getState().Pose.getTranslation()));
@@ -113,30 +123,33 @@ public class Shoot extends Command {
 
     @Override
     public void execute() {
-        double vx = m_drivetrain.getState().Speeds.vxMetersPerSecond;
-        double vy = m_drivetrain.getState().Speeds.vyMetersPerSecond;
+        // ── Single state snapshot ────────────────────────────────────────────
+        // Grab once so all reads come from the same tick's data.
+        var state = m_drivetrain.getState();
+        double vx = state.Speeds.vxMetersPerSecond;
+        double vy = state.Speeds.vyMetersPerSecond;
+        Translation2d currentPos = state.Pose.getTranslation();
 
-        Translation2d currentPos = m_drivetrain.getState().Pose.getTranslation();
+        // ── Aiming solve ─────────────────────────────────────────────────────
         AimingSolver.Solution aim = AimingSolver.solve(currentPos, m_goalPos, vx, vy);
-
         double targetAngle   = aim.aimAngle;
         double shootDistance = aim.shootDistance;
 
-        // Orbital feedforward
-        double orbitalFeedforwardRadPerSec = 0.0;
-        if (shootDistance > 0.1) {
-            double unitX = Math.cos(targetAngle);
-            double unitY = Math.sin(targetAngle);
-            double vTangential = vx * unitY - vy * unitX;
-            orbitalFeedforwardRadPerSec = -(vTangential / shootDistance);
-        }
+    
 
-        double angleError = Math.abs(m_drivetrain.getState().Pose.getRotation()
-                    .minus(Rotation2d.fromRadians(targetAngle)).getRadians());
+        // ── Hub status ───────────────────────────────────────────────────
+        boolean hubShootWindowOpen = HubSchedule.isHubShootWindowOpen(m_alliance);
+
+
+
+        // ── Drive control ────────────────────────────────────────────────────
+        double angleError = Math.abs(state.Pose.getRotation()
+                .minus(Rotation2d.fromRadians(targetAngle)).getRadians());
         boolean atAngle = angleError < kShooter.angleTolerance_Rads;
-        boolean joystickStationary = Math.hypot(m_vxSupplier.getAsDouble(), m_vySupplier.getAsDouble()) < 1e-6;
+        boolean joystickStationary =
+                Math.hypot(m_vxSupplier.getAsDouble(), m_vySupplier.getAsDouble()) < 0.05; //TUNE
 
-        if (joystickStationary && angleError < kShooter.angleTolerance_Rads) {
+        if (joystickStationary && atAngle) {
             m_isBraking = true;
         } else if (!joystickStationary || angleError > kShooter.angleTolerance_Rads * 2) {
             m_isBraking = false;
@@ -145,21 +158,24 @@ public class Shoot extends Command {
         if (m_isBraking) {
             m_drivetrain.setControl(m_brake);
         } else {
-            double currentHeading = m_drivetrain.getState().Pose.getRotation().getRadians();
+            double currentHeading = state.Pose.getRotation().getRadians();
             double pidOutput      = m_headingPID.calculate(currentHeading, targetAngle);
-            double rotationalRate = pidOutput + orbitalFeedforwardRadPerSec;
 
             m_drivetrain.setControl(
                 m_fieldCentric
                     .withVelocityX(m_vxSupplier.getAsDouble())
                     .withVelocityY(m_vySupplier.getAsDouble())
-                    .withRotationalRate(rotationalRate)
+                    .withRotationalRate(pidOutput)
             );
         }
 
         m_shooter.setShootingDistance(shootDistance);
 
-        boolean clearToFeed = m_isAuto || isClearToFeed(currentPos);
+        // ── Feed gate ────────────────────────────────────────────────────────
+        boolean clearToFeed = m_isAuto
+            ? hubShootWindowOpen
+            : (isClearToFeed(currentPos) && hubShootWindowOpen);
+
 
         if (clearToFeed && m_shooter.atTargetRPM() && atAngle) {
             m_feeder.feed();
@@ -167,10 +183,23 @@ public class Shoot extends Command {
             m_feeder.stop();
         }
 
-        // Dashboard
+        // ── Finish flag (consumed by isFinished) ─────────────────────────────
+        if (m_isAuto) {
+            m_shouldFinish = m_commandTimer.get() >= m_expectedShootTimeSecs;
+        } else {
+            m_shouldFinish = !hubShootWindowOpen;
+        }
+
+
+
+        // ── Dashboard ────────────────────────────────────────────────────────
         String status;
         if (!clearToFeed) {
-            status = HubSchedule.isHubInactive(m_alliance) ? "Hub Inactive" : "Out of Bounds";
+            if (!hubShootWindowOpen) {
+                status = "Hub Inactive";
+            } else {
+                status = "Out of Bounds";
+            }
         } else if (!m_shooter.atTargetRPM()) {
             status = "RPM too low";
         } else if (!atAngle) {
@@ -178,17 +207,15 @@ public class Shoot extends Command {
         } else {
             status = "Firing";
         }
-        SmartDashboard.putString("Shooter/Status", status);
-        SmartDashboard.putNumber("Shooter/AngleError", Math.toDegrees(angleError));
+
+        SmartDashboard.putString("Shooter/Status",      status);
+        SmartDashboard.putNumber("Shooter/AngleError",  Math.toDegrees(angleError));
         SmartDashboard.putNumber("Shooter/ElapsedTime", m_commandTimer.get());
     }
 
     @Override
     public boolean isFinished() {
-        if (!m_isAuto) {
-            return HubSchedule.isHubImminentlyInactive(m_alliance, kShooter.kTimeToScore);
-        }
-        return m_commandTimer.get() >= (m_expectedShootTimeSecs);
+        return m_shouldFinish;
     }
 
     @Override
@@ -205,11 +232,13 @@ public class Shoot extends Command {
             : Alliance.Blue;
     }
 
+    /**
+     * @param hubInactive pre-computed
+     */
     private boolean isClearToFeed(Translation2d robotPos) {
         double x = robotPos.getX();
-        boolean inBoundary = (m_alliance == Alliance.Red)
+        return (m_alliance == Alliance.Red)
             ? x >= kShooter.redXBoundary
             : x <= kShooter.blueXBoundary;
-        return inBoundary && !HubSchedule.isHubInactive(m_alliance);
     }
 }

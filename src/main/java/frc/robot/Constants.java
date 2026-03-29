@@ -110,9 +110,6 @@ public final class Constants {
             flightTimeTable.put(4.0, 0.64);
         }
 
-        /** stop slightly before hub will be inactive, waste of time because fuel wont reach in time */
-        public static final double kTimeToScore = 1.0; //TUNE
-
     }
 
     public static final class kIntake {

@@ -2,49 +2,43 @@ package frc.robot.util;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-
 /**
- * Encodes the hub active/inactive shift schedule and answers queries about
- * whether a given alliance's hub is currently inactive or imminently going
- * inactive.
  *
- * Shift schedule -------------------------------------------------------
- * Game data encodes which alliance's hub is FIRST inactive. All times are
- * match-timer countdown values (seconds remaining).
+ * - Both hubs are ACTIVE during AUTO (0–20s), TRANSITION (130–140s), and ENDGAME (0–30s).
+ * - During TELEOP shifts (130s → 30s), exactly one hub is inactive at a time.
+ * - The alliance that wins AUTO (or is randomly selected) has their hub INACTIVE in SHIFT 1,
+ *   then hub activity alternates every shift (4 total shifts, 25s each).
+ * - FMS sends which alliance is inactive first via Game Specific Message:
+ *     'R' = Red inactive in SHIFT 1, 'B' = Blue inactive in SHIFT 1.
  *
- *   RED_FIRST_INACTIVE (gameData.charAt(0) == 'R'):
- *     Shift 1 (2:10–1:45)  Red INACTIVE, Blue active
- *     Shift 2 (1:45–1:20)  Red active,   Blue INACTIVE
- *     Shift 3 (1:20–0:55)  Red INACTIVE, Blue active
- *     Shift 4 (0:55–0:30)  Red active,   Blue INACTIVE
+ * Timing (matchTime counts down):
+ *   SHIFT 1: 130–105
+ *   SHIFT 2: 105–80
+ *   SHIFT 3:  80–55
+ *   SHIFT 4:  55–30
  *
- *   BLUE_FIRST_INACTIVE (gameData.charAt(0) == 'B'):
- *     Shift 1 (2:10–1:45)  Red active,   Blue INACTIVE
- *     Shift 2 (1:45–1:20)  Red INACTIVE, Blue active
- *     Shift 3 (1:20–0:55)  Red active,   Blue INACTIVE
- *     Shift 4 (0:55–0:30)  Red INACTIVE, Blue active
- *
- * Outside these windows (AUTO, TRANSITION, END GAME) both hubs are active.
+ * Notes:
+ * - isHubInactive(): strict FMS logic (only true during shifts).
+ * - isHubShootWindowOpen(): adds early/late margins(based on advice form this thread: https://www.chiefdelphi.com/t/2026-game-data-and-match-time/512330/5)
+ * - Outside shift windows (AUTO/TRANSITION/ENDGAME), hubs are treated as active.
  */
 public final class HubSchedule {
+    private HubSchedule() {}
 
-    private HubSchedule() {} // utility class — no instances
-
-    // ── Internal window record ─────────────────────────────────────────────
-
+    // Tuning knobs
+    private static final double SHOOT_EARLY_SECS = 2.0; // start shooting before active
+    private static final double SHOOT_LATE_SECS  = 1.9; //deal with rounding error because FMS sends it rounded to nearest integer, and we want both as 2 seconds
     private static final class ShiftWindow {
         final double high;
         final double low;
         final Alliance inactive;
 
         ShiftWindow(double high, double low, Alliance inactive) {
-            this.high     = high;
-            this.low      = low;
+            this.high = high;
+            this.low = low;
             this.inactive = inactive;
         }
     }
-
-    // ── Schedules ──────────────────────────────────────────────────────────
 
     private static final ShiftWindow[] SCHEDULE_RED_FIRST = {
         new ShiftWindow(130.0, 105.0, Alliance.Red),
@@ -60,30 +54,16 @@ public final class HubSchedule {
         new ShiftWindow( 55.0,  30.0, Alliance.Red),
     };
 
-    // ── Private helpers ────────────────────────────────────────────────────
-
-    /**
-     * Returns the correct schedule based on game-specific message, or
-     * {@code null} if the message is absent or unrecognised.
-     */
     private static ShiftWindow[] resolveSchedule() {
         String gameData = DriverStation.getGameSpecificMessage();
         if (gameData == null || gameData.isEmpty()) return null;
+
         char firstInactive = gameData.charAt(0);
         if (firstInactive == 'R') return SCHEDULE_RED_FIRST;
         if (firstInactive == 'B') return SCHEDULE_BLUE_FIRST;
         return null;
     }
 
-    // ── Public API ─────────────────────────────────────────────────────────
-
-    /**
-     * Returns {@code true} if {@code alliance}'s hub is inactive right now
-     * according to the shift schedule.
-     *
-     * @param alliance alliance to check
-     * @return {@code true} if the hub is currently inactive
-     */
     public static boolean isHubInactive(Alliance alliance) {
         ShiftWindow[] schedule = resolveSchedule();
         if (schedule == null) return false;
@@ -98,28 +78,24 @@ public final class HubSchedule {
     }
 
     /**
-     * Returns {@code true} if {@code alliance}'s hub is inactive now <em>or</em>
-     * will become inactive within {@code bufferSecs} seconds.
-     *
-     * @param alliance   alliance to check
-     * @param bufferSecs look-ahead buffer (seconds)
-     * @return {@code true} if the hub is inactive or imminently going inactive
+     * True when this alliance's hub is in a usable shoot window:
+     * start shooting a bit before active, and keep going briefly after it flips inactive.
      */
-    public static boolean isHubImminentlyInactive(Alliance alliance, double bufferSecs) {
+    public static boolean isHubShootWindowOpen(Alliance alliance) {
         ShiftWindow[] schedule = resolveSchedule();
         if (schedule == null) return false;
 
         double matchTime = DriverStation.getMatchTime();
+
         for (ShiftWindow window : schedule) {
-            // Currently inside this window and it's our alliance's inactive shift
-            if (matchTime <= window.high && matchTime > window.low) {
-                return window.inactive == alliance;
-            }
-            // Just outside the top of a window affecting our alliance — within buffer
-            if (window.inactive == alliance
-                    && matchTime > window.high
-                    && matchTime <= window.high + bufferSecs) {
-                return true;
+            // Our alliance is active during this window.
+            if (window.inactive != alliance) {
+                double start = window.high + SHOOT_EARLY_SECS;
+                double end   = window.low  - SHOOT_LATE_SECS;
+
+                if (matchTime <= start && matchTime >= end) {
+                    return true;
+                }
             }
         }
         return false;
