@@ -13,7 +13,7 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
+// import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.generated.TunerConstants;
@@ -24,7 +24,7 @@ import frc.robot.subsystems.Intake;
 import frc.robot.Constants.OI;
 import frc.robot.commands.Funnel;
 import frc.robot.commands.Shoot;
-import frc.robot.commands.SwallowIntake;
+// import frc.robot.commands.SwallowIntake;
 import frc.robot.commands.WheelRadiusCharacterization;
 import frc.robot.Constants.Drive;
 
@@ -39,7 +39,7 @@ import com.pathplanner.lib.auto.NamedCommands;
 public class RobotContainer {
         private final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
         private final double MaxAngularRate = Drive.maxAngularRateRadPerSec;
-        private boolean m_shootActive = false;
+        // private boolean m_shootActive = false;
 
         private final SlewRateLimiter xSlewLimiter = new SlewRateLimiter(OI.slewRate);
         private final SlewRateLimiter ySlewLimiter = new SlewRateLimiter(OI.slewRate);
@@ -80,28 +80,28 @@ public class RobotContainer {
                         "Retract Intake", 
                         Commands.runOnce(() -> intake.retract(), intake)
                 );
-                // NamedCommands.registerCommand(
-                //         "ShootFullHopper",
-                //         new Shoot(shooter, feeder, drivetrain,
-                //                 () -> 0.0, () -> 0.0,      // stationary in auto
-                //                 true, 11) //TUNE
-                // );
+                NamedCommands.registerCommand(
+                        "ShootFullHopper",
+                        new Shoot(shooter, feeder, drivetrain,
+                                () -> 0.0, () -> 0.0,      // stationary in auto
+                                true, 11) //TUNE
+                );
                 NamedCommands.registerCommand( //zoned event in pathplanner
                         "Run Intake", 
                         Commands.run(() -> intake.runIntake(), intake)
                                 .finallyDo(() -> intake.stopIntake())
                 );
-                // NamedCommands.registerCommand(
-                // "Spin Up Shooter", //zoned event in pathplanner
-                // Commands.run(() -> shooter.warmUp(), shooter)
-                //         .finallyDo(() -> shooter.stop())
-                // );
-                // NamedCommands.registerCommand(
-                //         "ShootDepot",
-                //         new Shoot(shooter, feeder, drivetrain,
-                //                 () -> 0.0, () -> 0.0,
-                //                 true, 6) //TUNE
-                // );
+                NamedCommands.registerCommand(
+                "Spin Up Shooter", //zoned event in pathplanner
+                Commands.run(() -> shooter.warmUp(), shooter)
+                        .finallyDo(() -> shooter.stop())
+                );
+                NamedCommands.registerCommand(
+                        "ShootDepot",
+                        new Shoot(shooter, feeder, drivetrain,
+                                () -> 0.0, () -> 0.0,
+                                true, 6) //TUNE
+                );
                 
                 configureBindings();
                 autoChooser = AutoBuilder.buildAutoChooser();
@@ -109,7 +109,7 @@ public class RobotContainer {
         }
 
         private void configureBindings() {
-                RobotModeTriggers.autonomous().onTrue(Commands.runOnce(() -> intake.deploy(), intake));
+                // RobotModeTriggers.autonomous().onTrue(Commands.runOnce(() -> intake.deploy(), intake));
                 //we always want to immediately deploy the intake. we do it anyway in the auto, but this is a safekeeping measure
 
 
@@ -134,7 +134,7 @@ public class RobotContainer {
                 // Toggle intake deployment
                 mainController.leftBumper().onTrue(Commands.runOnce(() -> intake.toggleIntake(), intake));
 
-                Trigger shootingTrigger = new Trigger(() -> m_shootActive);
+                // Trigger shootingTrigger = new Trigger(() -> m_shootActive);
                 // Shoot on the move (right trigger held)
                 // Joystick inputs are read live each tick inside the command.
                 // Speed is capped at kShootOnMoveSpeedFraction of MaxSpeed.
@@ -142,8 +142,8 @@ public class RobotContainer {
                         shooter, feeder, drivetrain,
                         () -> xSlewLimiter.calculate(-mainController.getLeftY()) * MaxSpeed,
                         () -> ySlewLimiter.calculate(-mainController.getLeftX()) * MaxSpeed)
-                        .beforeStarting(() -> m_shootActive = true)
-                        .finallyDo(interrupted -> m_shootActive = false)
+                        // .beforeStarting(() -> m_shootActive = true)
+                        // .finallyDo(interrupted -> m_shootActive = false)
                 );
                 mainController.rightBumper().whileTrue(new Funnel(
                         shooter, drivetrain, feeder,
@@ -167,21 +167,14 @@ public class RobotContainer {
                         .finallyDo(() -> intake.stopIntake()));
 
 
-
-
                 // ── Secondary controller ──────────────────────────────────────────────
-                secondaryController.a().whileTrue(drivetrain.applyRequest(() -> brake));
-                secondaryController.rightBumper().whileTrue(Commands.run(() -> intake.runIntake(), intake).finallyDo(() -> intake.stopIntake()));
-                secondaryController.x().whileTrue(Commands.run(() -> shooter.test(), shooter).finallyDo(() -> shooter.stop()));
-                secondaryController.leftTrigger().whileTrue(Commands.run(() -> feeder.test(), feeder).finallyDo(() -> feeder.stop()));
-                secondaryController.rightTrigger().whileTrue(Commands.run(() -> intake.reverseIntake(), intake).finallyDo(() -> intake.stopIntake()));
+                secondaryController.b().whileTrue(drivetrain.applyRequest(() -> brake));
+                secondaryController.leftTrigger().whileTrue(Commands.run(() -> intake.runIntake(), intake).finallyDo(() -> intake.stopIntake()));
+                secondaryController.rightBumper().whileTrue(Commands.run(() -> feeder.setSpeed(1), feeder).finallyDo(() -> feeder.stop()));
+                secondaryController.rightTrigger().whileTrue(Commands.run(() -> shooter.setRPM(1000), shooter).finallyDo(() -> shooter.stop()));
 
 
 
-                secondaryController.leftBumper().whileTrue(
-                Commands.run(() -> shooter.warmUp(), shooter)
-                        .finallyDo(() -> shooter.stop())
-                );
                 // ── SysId routines (dev/practice bot only) ────────────────────────────
                 if (!Drive.comp) {
                 // ── Drivetrain SysID ──────────────────────────────────────────────

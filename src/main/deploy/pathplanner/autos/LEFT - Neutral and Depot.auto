@@ -5,9 +5,21 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "Deploy Intake"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.0
+          }
+        },
+        {
           "type": "path",
           "data": {
-            "pathName": "Right Start - Intake Neutral - Right Shooting"
+            "pathName": "Left Start - Intake Neutral - Left Shooting"
           }
         },
         {
@@ -19,25 +31,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right Shooting - Outpost"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Spin Up Shooter"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 2.0
+            "pathName": "Left Shooting - Depot"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Outpost - Right Shooting"
+            "pathName": "Depot - Shooting"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ShootDepot"
           }
         }
       ]

@@ -5,9 +5,21 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "Deploy Intake"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.0
+          }
+        },
+        {
           "type": "path",
           "data": {
-            "pathName": "Left Start - Intake Neutral - Left Trench Shooting"
+            "pathName": "Left Start - Intake Neutral - Left Shooting"
           }
         },
         {
@@ -19,13 +31,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Trench Shooting - Intake Neutral - Left Trench Shooting"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "ShootFullHopper"
+            "pathName": "Left Shooting - Neutral - Left Shooting"
           }
         }
       ]

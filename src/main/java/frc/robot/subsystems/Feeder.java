@@ -46,7 +46,7 @@ public class Feeder extends SubsystemBase {
 
     /** Reverse the feeder. */
     public void reverse() {
-        setMotor(kFeeder.reverseSpeed);
+        setMotor(-kFeeder.feedSpeed);
     }
 
     /** Stop the feeder. */
