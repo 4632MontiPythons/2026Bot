@@ -50,9 +50,9 @@ public final class Constants {
         public static final double kYawStdDev = Units.degreesToRadians(3);
 
         public static final String LL_camName = "limelight";
-        public static final double camX = 0.287; //11.29 in forward of robot center
-        public static final double camY = 0.255; //10.054 in to the right
-        public static final double camZ = 0.31242;
+        public static final double camX = 0.305; //12 in forward of robot center
+        public static final double camY = 0.257; //10 1/8 in to the right
+        public static final double camZ = 0.324; //12.75 in up
         public static final double camRoll = 0.0;
         public static final double camPitch = 21.0;
         public static final double camYaw = 0.0;
