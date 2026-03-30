@@ -64,18 +64,18 @@ public final class HubSchedule {
         return null;
     }
 
-    public static boolean isHubInactive(Alliance alliance) {
-        ShiftWindow[] schedule = resolveSchedule();
-        if (schedule == null) return false;
+    // public static boolean isHubInactive(Alliance alliance) {
+    //     ShiftWindow[] schedule = resolveSchedule();
+    //     if (schedule == null) return false;
 
-        double matchTime = DriverStation.getMatchTime();
-        for (ShiftWindow window : schedule) {
-            if (matchTime <= window.high && matchTime > window.low) {
-                return window.inactive == alliance;
-            }
-        }
-        return false;
-    }
+    //     double matchTime = DriverStation.getMatchTime();
+    //     for (ShiftWindow window : schedule) {
+    //         if (matchTime <= window.high && matchTime > window.low) {
+    //             return window.inactive == alliance;
+    //         }
+    //     }
+    //     return false;
+    // }
 
     /**
      * True when this alliance's hub is in a usable shoot window:
@@ -85,9 +85,9 @@ public final class HubSchedule {
         ShiftWindow[] schedule = resolveSchedule();
         if (schedule == null) return false;
 
-        double matchTime = DriverStation.getMatchTime();
+        double matchTime = Math.floor(DriverStation.getMatchTime()); //while practicing at shop, we don't have FMS to round for us, so we round down ourselves to simulate real match 
 
-        for (ShiftWindow window : schedule) {
+            for (ShiftWindow window : schedule) {
             // Our alliance is active during this window.
             if (window.inactive != alliance) {
                 double start = window.high + SHOOT_EARLY_SECS;
@@ -98,6 +98,6 @@ public final class HubSchedule {
                 }
             }
         }
-        return false;
+        return true; // treat as active outside of shift windows, and in practice when matchtime = -1;
     }
 }
