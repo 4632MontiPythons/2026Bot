@@ -71,7 +71,7 @@ public final class Constants {
 
     public static final class kShooter {
         public static final int shooterMotorID = 15;
-        public static final double kMaxMotorRPM = 5800.0;
+        public static final double kMaxMotorRPM = 5500.0;
         public static final double kWarmUpRPM = 2000; //TUNE
         public static final Translation2d kRedHub = new Translation2d(11.915394, 4.034536);
         public static final Translation2d kBlueHub = new Translation2d(4.625594, 4.034536);

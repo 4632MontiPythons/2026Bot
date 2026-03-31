@@ -84,7 +84,7 @@ public class RobotContainer {
                         "ShootFullHopper",
                         new Shoot(shooter, feeder, drivetrain,
                                 () -> 0.0, () -> 0.0,      // stationary in auto
-                                true, 11) //TUNE
+                                true, 8) //TUNE
                 );
                 NamedCommands.registerCommand( //zoned event in pathplanner
                         "Run Intake", 
@@ -102,7 +102,12 @@ public class RobotContainer {
                                 () -> 0.0, () -> 0.0,
                                 true, 6) //TUNE
                 );
-                
+                NamedCommands.registerCommand(
+                        "Shoot8",
+                        new Shoot(shooter, feeder, drivetrain,
+                                () -> 0.0, () -> 0.0,
+                                true, 3) //TUNE
+                );
                 configureBindings();
                 autoChooser = AutoBuilder.buildAutoChooser();
                 SmartDashboard.putData("Auto Chooser", autoChooser);

@@ -3,46 +3,53 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.57,
-        "y": 0.626
+        "x": 3.508573466476462,
+        "y": 4.035
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.3835418963095756,
-        "y": 1.024552437901507
+        "x": 3.258573466476462,
+        "y": 4.035
       },
       "isLocked": false,
-      "linkedName": "Outpost"
+      "linkedName": "Middle Start"
     },
     {
       "anchor": {
-        "x": 1.4642653352353778,
-        "y": 1.1949643366619125
+        "x": 2.1,
+        "y": 4.035
       },
       "prevControl": {
-        "x": 0.8679007714775075,
-        "y": 0.7953348741543951
+        "x": 2.35,
+        "y": 4.035
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Middle Shooting"
     }
   ],
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "Spin Up Shooter",
+      "waypointRelativePos": 0.0,
+      "endWaypointRelativePos": 1.0,
+      "command": null
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 4.5,
     "maxAcceleration": 7.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 1000.0,
-    "nominalVoltage": 12.0,
+    "nominalVoltage": 10.0,
     "unlimited": false
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 39.88
+    "rotation": 0.0
   },
   "reversed": false,
   "folder": null,

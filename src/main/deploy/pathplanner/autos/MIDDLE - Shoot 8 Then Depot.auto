@@ -1,0 +1,49 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "Deploy Intake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Middle Start - Middle Shooting"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Shoot8"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Middle Shooting - Depot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Depot - Middle Shooting"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ShootDepot"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}
