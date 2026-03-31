@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.3764766747587975,
-        "y": 7.585482269868265
+        "x": 4.3764766551074,
+        "y": 7.585481863852395
       },
       "isLocked": true,
       "linkedName": "Left Start"
@@ -110,6 +110,14 @@
   ],
   "rotationTargets": [
     {
+      "waypointRelativePos": 0.8084766093562473,
+      "rotationDegrees": 0.0
+    },
+    {
+      "waypointRelativePos": 1.6913234706117477,
+      "rotationDegrees": 90.0
+    },
+    {
       "waypointRelativePos": 3.1701244813278042,
       "rotationDegrees": 90.0
     }
@@ -124,6 +132,19 @@
         "maxAcceleration": 6.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 900.0,
+        "nominalVoltage": 10.0,
+        "unlimited": false
+      }
+    },
+    {
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 0.20503597122302158,
+      "maxWaypointRelativePos": 0.5589928057554002,
+      "constraints": {
+        "maxVelocity": 0.7,
+        "maxAcceleration": 7.0,
+        "maxAngularVelocity": 540.0,
+        "maxAngularAcceleration": 1000.0,
         "nominalVoltage": 10.0,
         "unlimited": false
       }
@@ -143,7 +164,7 @@
   ],
   "eventMarkers": [
     {
-      "name": "RunIntake",
+      "name": "Run Intake",
       "waypointRelativePos": 1.8149898717083053,
       "endWaypointRelativePos": 3.6299797434165937,
       "command": null
@@ -171,7 +192,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }
