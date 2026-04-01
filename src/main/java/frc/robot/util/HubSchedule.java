@@ -83,21 +83,19 @@ public final class HubSchedule {
      */
     public static boolean isHubShootWindowOpen(Alliance alliance) {
         ShiftWindow[] schedule = resolveSchedule();
-        if (schedule == null) return false;
+        if (schedule == null) return true; // no FMS → treat as always active
 
-        double matchTime = Math.floor(DriverStation.getMatchTime()); //while practicing at shop, we don't have FMS to round for us, so we round down ourselves to simulate real match 
+        double matchTime = Math.floor(DriverStation.getMatchTime());
 
-            for (ShiftWindow window : schedule) {
-            // Our alliance is active during this window.
-            if (window.inactive != alliance) {
-                double start = window.high + SHOOT_EARLY_SECS;
-                double end   = window.low  - SHOOT_LATE_SECS;
+        for (ShiftWindow window : schedule) {
+            double start = window.high + SHOOT_EARLY_SECS;
+            double end   = window.low  - SHOOT_LATE_SECS;
 
-                if (matchTime <= start && matchTime >= end) {
-                    return true;
-                }
+            if (matchTime <= start && matchTime >= end) {
+                // We're in this shift window — active iff we're not the inactive alliance
+                return window.inactive != alliance;
             }
         }
-        return true; // treat as active outside of shift windows, and in practice when matchtime = -1;
+        return true; // outside all shift windows (auto, transition, endgame)
     }
 }

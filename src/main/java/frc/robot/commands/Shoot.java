@@ -37,7 +37,7 @@ public class Shoot extends Command {
 
     private final DoubleSupplier m_vxSupplier;
     private final DoubleSupplier m_vySupplier;
-
+    private boolean m_hubWasActive = false;
     /** Expected duration (seconds) to drain the full hopper. Auto only. */
     private final double m_expectedShootTimeSecs;
 
@@ -119,6 +119,8 @@ public class Shoot extends Command {
 
         Translation2d initPos = m_drivetrain.getState().Pose.getTranslation();
         m_shooter.setShootingDistance(initPos.getDistance(m_goalPos));
+
+        m_hubWasActive = false;
     }
 
     @Override
@@ -139,7 +141,11 @@ public class Shoot extends Command {
 
         // ── Hub status ───────────────────────────────────────────────────
         boolean hubShootWindowOpen = HubSchedule.isHubShootWindowOpen(m_alliance);
+        //only cancel command if went from active -> inactive. want ot be able to hold shoot button before window opens and have it warm up and aim
+        m_shouldFinish = m_hubWasActive && !hubShootWindowOpen;
 
+        
+        m_hubWasActive = hubShootWindowOpen;
 
 
         // ── Drive control ────────────────────────────────────────────────────
@@ -172,9 +178,8 @@ public class Shoot extends Command {
         m_shooter.setShootingDistance(shootDistance);
 
         // ── Feed gate ────────────────────────────────────────────────────────
-        boolean clearToFeed = m_isAuto
-            ? hubShootWindowOpen
-            : (isClearToFeed(currentPos) && hubShootWindowOpen);
+        boolean clearToFeed = hubShootWindowOpen;
+
 
 
         if (clearToFeed && m_shooter.atTargetRPM() && atAngle) {
@@ -232,13 +237,13 @@ public class Shoot extends Command {
             : Alliance.Blue;
     }
 
-    /**
-     * @param hubInactive pre-computed
-     */
-    private boolean isClearToFeed(Translation2d robotPos) {
-        double x = robotPos.getX();
-        return (m_alliance == Alliance.Red)
-            ? x >= kShooter.redXBoundary
-            : x <= kShooter.blueXBoundary;
-    }
+    // /**
+    //  * @param hubInactive pre-computed
+    //  */
+    // private boolean isClearToFeed(Translation2d robotPos) {
+    //     double x = robotPos.getX();
+    //     return (m_alliance == Alliance.Red)
+    //         ? x >= kShooter.redXBoundary
+    //         : x <= kShooter.blueXBoundary;
+    // }
 }
