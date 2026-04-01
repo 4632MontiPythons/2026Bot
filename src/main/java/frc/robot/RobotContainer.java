@@ -100,7 +100,7 @@ public class RobotContainer {
                         "ShootDepot",
                         new Shoot(shooter, feeder, drivetrain,
                                 () -> 0.0, () -> 0.0,
-                                true, 6) //TUNE
+                                true, 8) //TUNE
                 );
                 NamedCommands.registerCommand(
                         "Shoot8",

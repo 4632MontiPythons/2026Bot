@@ -147,13 +147,23 @@
       "name": "Run Intake",
       "waypointRelativePos": 2.722484807562473,
       "endWaypointRelativePos": 4.1,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Run Intake"
+        }
+      }
     },
     {
       "name": "Spin Up Shooter",
       "waypointRelativePos": 4.65,
       "endWaypointRelativePos": 4.8287841191067,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Spin Up Shooter"
+        }
+      }
     }
   ],
   "globalConstraints": {

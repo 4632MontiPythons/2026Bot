@@ -138,10 +138,10 @@
     },
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.20503597122302158,
+      "minWaypointRelativePos": 0.30790006752193855,
       "maxWaypointRelativePos": 0.5589928057554002,
       "constraints": {
-        "maxVelocity": 0.7,
+        "maxVelocity": 0.5,
         "maxAcceleration": 7.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 1000.0,
@@ -167,13 +167,23 @@
       "name": "Run Intake",
       "waypointRelativePos": 1.8149898717083053,
       "endWaypointRelativePos": 3.6299797434165937,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Run Intake"
+        }
+      }
     },
     {
       "name": "Spin Up Shooter",
       "waypointRelativePos": 4.68332207967589,
       "endWaypointRelativePos": 5.806451612903219,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Spin Up Shooter"
+        }
+      }
     }
   ],
   "globalConstraints": {

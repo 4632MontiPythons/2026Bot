@@ -9,7 +9,7 @@
       "prevControl": null,
       "nextControl": {
         "x": 2.671006460447288,
-        "y": 1.3734929200462627
+        "y": 1.3734929200462629
       },
       "isLocked": true,
       "linkedName": "Right Shooting"
@@ -89,7 +89,7 @@
       },
       "nextControl": {
         "x": 2.9027998429712607,
-        "y": 0.5466040820340852
+        "y": 0.5466040820340856
       },
       "isLocked": false,
       "linkedName": null
@@ -101,7 +101,7 @@
       },
       "prevControl": {
         "x": 2.7838777777733528,
-        "y": 0.9255942222197938
+        "y": 0.9255942222197939
       },
       "nextControl": null,
       "isLocked": false,
@@ -147,13 +147,23 @@
       "name": "Run Intake",
       "waypointRelativePos": 2.722484807562473,
       "endWaypointRelativePos": 4.1,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Run Intake"
+        }
+      }
     },
     {
       "name": "Spin Up Shooter",
       "waypointRelativePos": 4.65,
       "endWaypointRelativePos": 4.8287841191067,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Spin Up Shooter"
+        }
+      }
     }
   ],
   "globalConstraints": {
