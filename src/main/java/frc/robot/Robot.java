@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.Drive;
 import frc.robot.util.Elastic;
+import frc.robot.util.HubSchedule;
 
 public class Robot extends TimedRobot {
 
@@ -77,49 +78,27 @@ public class Robot extends TimedRobot {
     }
 
     private class DriverTimeNotifications {
-
         private final String COLOR_GREEN  = "#148314cc";
         private final String COLOR_RED    = "#FF0000";
         private final String COLOR_YELLOW = "#ffc800ff";
 
-        // Cached from FMS game-specific message; null until available
-        private Boolean m_ownAllianceInactive = null;
-
-        private boolean ensureInitialized() {
-            if (m_ownAllianceInactive != null) return true;
-
-            String gameData = DriverStation.getGameSpecificMessage(); // first char = inactive alliance
-            var alliance = DriverStation.getAlliance();
-
-            if (gameData == null || gameData.isEmpty() || alliance.isEmpty()) return false;
-
-            char ownAllianceChar = (alliance.get() == DriverStation.Alliance.Red) ? 'R' : 'B';
-            m_ownAllianceInactive = (ownAllianceChar == gameData.charAt(0));
-            return true;
-        }
-
         public void update(double time) {
-            String hexColor;
-            double timeUntilNextShift;
-
-            if (time > 130 || time <= 30) {
-                // Initial/end-of-match buffer — always green
-                hexColor = COLOR_GREEN;
-                timeUntilNextShift = (time > 130) ? time - 130 : Math.max(0, time);
-            } else if (!ensureInitialized()) {
-                // Shift period, but no FMS data yet
-                hexColor = COLOR_YELLOW;
-                timeUntilNextShift = -1;
-            } else {
-                // Shift period (130s–30s): alternate active/inactive in 25s blocks
-                int block = (int) ((130 - time) / 25);
-                timeUntilNextShift = 25 - ((130 - time) % 25);
-                boolean isActive = (block % 2 == 0) != m_ownAllianceInactive;
-                hexColor = isActive ? COLOR_GREEN : COLOR_RED;
+            var alliance = DriverStation.getAlliance();
+            if (alliance.isEmpty()) {
+                SmartDashboard.putString("Hub/Status", COLOR_YELLOW);
+                SmartDashboard.putNumber("Hub/ShiftTimer", -1);
+                return;
             }
 
-            SmartDashboard.putString("Hub/StatusColor", hexColor);
-            SmartDashboard.putNumber("Hub/ShiftTimer", Math.round(timeUntilNextShift));
+            HubSchedule.HubStatus status = HubSchedule.getHubStatus(alliance.get());
+            String color = switch (status.state) {
+                case STRICTLY_ACTIVE -> COLOR_GREEN;
+                case MARGIN_ACTIVE   -> COLOR_YELLOW;
+                case INACTIVE        -> COLOR_RED;
+            };
+
+            SmartDashboard.putString("Hub/StatusColor", color);
+            SmartDashboard.putNumber("Hub/ShiftTimer", Math.round(status.secsUntilNextShift));
         }
     }
 }
