@@ -43,6 +43,8 @@ import frc.robot.Constants.kShooter;
  * kLaunchFraction is a single tunable constant (typically 0.75–0.90 for foam
  * game pieces). Measure it once: shoot from a known distance, back-calculate
  * v_muzzle from where the ball lands, then divide by v_surface.
+ * 
+ * WE Aren't using the math for now. planning on LUT for rpm and ToF, if they're parabolic, we can look at an equation
  */
 public final class AimingSolver {
 
@@ -113,7 +115,7 @@ public final class AimingSolver {
      * @return flight time in seconds
      */
     public static double flightTime(double distance) {
-        // Table is populated — use it
+        // use the table
         if (true) {
             return kShooter.flightTimeTable.get(distance);
         }
