@@ -48,16 +48,16 @@
     },
     {
       "anchor": {
-        "x": 7.027888730385163,
-        "y": 4.467517078459344
+        "x": 7.183152639087017,
+        "y": 4.42870110128388
       },
       "prevControl": {
-        "x": 6.457464327160392,
-        "y": 4.273054213723627
+        "x": 6.612728235862246,
+        "y": 4.234238236548164
       },
       "nextControl": {
-        "x": 7.885399841496276,
-        "y": 4.7598504117926765
+        "x": 8.04066375019813,
+        "y": 4.721034434617213
       },
       "isLocked": false,
       "linkedName": null
@@ -110,11 +110,19 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.8091286307053898,
+      "waypointRelativePos": 0.959488272921102,
       "rotationDegrees": -180.0
     },
     {
-      "waypointRelativePos": 2.71215351812367,
+      "waypointRelativePos": 1.3944562899786785,
+      "rotationDegrees": -180.0
+    },
+    {
+      "waypointRelativePos": 2.251599147121531,
+      "rotationDegrees": -102.58902780408496
+    },
+    {
+      "waypointRelativePos": 2.9040511727078795,
       "rotationDegrees": -180.0
     },
     {
@@ -145,8 +153,8 @@
   "eventMarkers": [
     {
       "name": "Run Intake",
-      "waypointRelativePos": 2.722484807562473,
-      "endWaypointRelativePos": 4.1,
+      "waypointRelativePos": 2.301147873058745,
+      "endWaypointRelativePos": 4.213369345037124,
       "command": {
         "type": "named",
         "data": {
@@ -156,8 +164,8 @@
     },
     {
       "name": "Spin Up Shooter",
-      "waypointRelativePos": 4.65,
-      "endWaypointRelativePos": 4.8287841191067,
+      "waypointRelativePos": 5.0560432140445615,
+      "endWaypointRelativePos": 6.0,
       "command": {
         "type": "named",
         "data": {

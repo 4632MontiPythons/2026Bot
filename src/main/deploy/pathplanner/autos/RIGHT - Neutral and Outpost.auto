@@ -11,40 +11,15 @@
           }
         },
         {
-          "type": "wait",
-          "data": {
-            "waitTime": 1.0
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "Right Start - Intake Neutral - Right Shooting"
           }
         },
         {
-          "type": "deadline",
+          "type": "path",
           "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Right Shooting - Outpost"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Run Intake"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Spin Up Shooter"
-                }
-              }
-            ]
+            "pathName": "Right Shooting - Outpost"
           }
         },
         {

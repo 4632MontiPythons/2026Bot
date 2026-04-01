@@ -57,12 +57,12 @@ public class Shooter extends SubsystemBase {
         cfg.CurrentLimits
             .withSupplyCurrentLimit(30.0)
             .withSupplyCurrentLimitEnable(true)
-            .withStatorCurrentLimit(80.0)
+            .withStatorCurrentLimit(90)
             .withStatorCurrentLimitEnable(true);
 
         cfg.MotorOutput
             .withNeutralMode(NeutralModeValue.Coast)
-            .withInverted(InvertedValue.CounterClockwise_Positive);
+            .withInverted(InvertedValue.Clockwise_Positive);
 
         // todo: Run SysID to replace these placeholder gains.
         cfg.Slot0
@@ -191,7 +191,6 @@ public class Shooter extends SubsystemBase {
         SmartDashboard.putNumber("Shooter/TargetRPM",     m_targetRpm);
         SmartDashboard.putNumber("Shooter/MeasuredRPM",   measuredRpm);
         SmartDashboard.putNumber("Shooter/StatorCurrent", getStatorCurrent());
-
         if (!Drive.comp && getCurrentCommand() == null) {
             double dashRpm = SmartDashboard.getNumber("Shooter/TestRPM", 0.0);
             if (dashRpm != m_lastDashRpm) {

@@ -94,7 +94,7 @@ public class RobotContainer {
                 NamedCommands.registerCommand(
                 "Spin Up Shooter", //zoned event in pathplanner
                 Commands.run(() -> shooter.warmUp(), shooter)
-                        .finallyDo(() -> shooter.stop())
+                        // .finallyDo(() -> shooter.stop())
                 );
                 NamedCommands.registerCommand(
                         "ShootDepot",
