@@ -114,10 +114,10 @@ public final class AimingSolver {
      */
     public static double flightTime(double distance) {
         // Table is populated — use it
-        if (true) {
+        // if (true) {
             return kShooter.flightTimeTable.get(distance);
-        }
-        return flightTimePhysics(distance);
+        // }
+        // return flightTimePhysics(distance);
     }
     /**
      * Physics-derived flight time,fall back
