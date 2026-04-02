@@ -56,7 +56,7 @@ public class TunerConstants {
     // Some configs will be overwritten; check the `with*InitialConfigs()` API documentation.
     private static final TalonFXConfiguration driveInitialConfigs = new TalonFXConfiguration().withCurrentLimits(
         new CurrentLimitsConfigs()
-            .withSupplyCurrentLimit(50)         // Peak supply from battery,
+            .withSupplyCurrentLimit(45)         // Peak supply from battery,
             .withSupplyCurrentLimitEnable(true)
             
             .withStatorCurrentLimit(kSlipCurrent)        // Matches kSlipCurrent for max torque

@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.Constants.Drive;
+import frc.robot.Constants.kShooter;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.RobotConfig;
@@ -232,6 +233,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                                 : kBlueAlliancePerspectiveRotation);
                 m_hasAppliedOperatorPerspective = true;
             });
+        }
+        if(!Drive.comp){
+            SmartDashboard.putNumber("Shooter/Hub Distance", this.getState().Pose.getTranslation().getDistance(kShooter.kRedHub));
         }
     }
 

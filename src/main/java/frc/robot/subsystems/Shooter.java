@@ -26,9 +26,7 @@ import static edu.wpi.first.units.Units.*;
  * Shooter subsystem with velocity closed-loop control and SysID.
  * KrakenX60 using VelocityVoltage. Debating keeping shooter warmed for whole match.
  * Will depend on whether or not we add a flywheel, the voltage we need to keep it running and how our battery is looking.
- * RPM values throughout this class are MOTOR SHAFT RPM, not shooter RPM.
- * There is a 1:2 gear step up (kGearRatio) between motor and shooter,
- * so 3000 motor RPM = 6000 shooter RPM.
+ * There is a 1:1 gear ratio
  */
 public class Shooter extends SubsystemBase {
 
@@ -55,21 +53,21 @@ public class Shooter extends SubsystemBase {
         var cfg = new TalonFXConfiguration();
 
         cfg.CurrentLimits
-            .withSupplyCurrentLimit(30.0)
+            .withSupplyCurrentLimit(40.0)
             .withSupplyCurrentLimitEnable(true)
-            .withStatorCurrentLimit(80.0)
+            .withStatorCurrentLimit(100)
             .withStatorCurrentLimitEnable(true);
 
         cfg.MotorOutput
             .withNeutralMode(NeutralModeValue.Coast)
-            .withInverted(InvertedValue.CounterClockwise_Positive);
+            .withInverted(InvertedValue.Clockwise_Positive);
 
         // todo: Run SysID to replace these placeholder gains.
         cfg.Slot0
             .withKS(0.10)
-            .withKV(0.0586)
+            .withKV(0.125)
             .withKA(0.0025)
-            .withKP(0.35)
+            .withKP(0.3)
             .withKI(0.0)
             .withKD(0.0);
 
@@ -191,7 +189,6 @@ public class Shooter extends SubsystemBase {
         SmartDashboard.putNumber("Shooter/TargetRPM",     m_targetRpm);
         SmartDashboard.putNumber("Shooter/MeasuredRPM",   measuredRpm);
         SmartDashboard.putNumber("Shooter/StatorCurrent", getStatorCurrent());
-
         if (!Drive.comp && getCurrentCommand() == null) {
             double dashRpm = SmartDashboard.getNumber("Shooter/TestRPM", 0.0);
             if (dashRpm != m_lastDashRpm) {

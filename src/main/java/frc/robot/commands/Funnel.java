@@ -57,12 +57,15 @@ import java.util.function.DoubleSupplier;
  *
  * ── Feed gating ───────────────────────────────────────────────────────────────
  *
- * Feeding is suppressed unless ALL of the following are true:
+ * Feeding is suppressed unless ALL of the following are true (when auto=false):
  *   1. Robot is within the neutral zone (between blueXBoundary and redXBoundary).
- *   3. Shooter is at target RPM.
- *   4. Heading error is within tolerance.
+ *   2. Shooter is at target RPM.
+ *   3. Heading error is within tolerance.
  *
- * runs until the driver releases the button.
+ * When auto=true, boundary and angle checks are skipped — feeding is gated only
+ * on shooter RPM. Heading control is also disabled; the robot drives freely.
+ *
+ * Runs until the driver releases the button.
  */
 public class Funnel extends Command {
 
@@ -80,16 +83,6 @@ public class Funnel extends Command {
      */
     private static final double kAngularClearanceRads = Math.toRadians(7.5);
 
-    /**
-     * The neutral zone is the strip of field between the two alliance boundaries.
-     * A robot must be inside this strip to be allowed to feed (shoot).
-     *
-     * Blue robots funnel toward x = blueXBoundary (their own side, lower X).
-     * Red  robots funnel toward x = redXBoundary  (their own side, higher X).
-     *
-     * Both boundaries are already defined in kShooter; no new constants needed.
-     */
-
     // ── Dependencies ──────────────────────────────────────────────────────────
 
     private final Shooter m_shooter;
@@ -97,6 +90,15 @@ public class Funnel extends Command {
     private final Feeder m_feeder;
     private final DoubleSupplier m_vxSupplier;
     private final DoubleSupplier m_vySupplier;
+
+    /**
+     * When true, boundary and angle checks are bypassed. The robot does not
+     * attempt to control its heading, and feeding is gated only on shooter RPM.
+     * Intended for use in autonomous or situations where the driver has already
+     * pre-positioned and aimed the robot.
+     */
+    private final boolean m_auto;
+
     private boolean m_useLow;
     private Translation2d m_hubCornerLow;
     private Translation2d m_hubCornerHigh;
@@ -110,6 +112,7 @@ public class Funnel extends Command {
      * The aim angle (radians, field-relative) chosen at initialize() and held
      * fixed for the life of the command. Pointing toward either the low slot
      * (below the hub) or the high slot (above the hub), with angular clearance.
+     * Unused when m_auto=true.
      */
     private double m_targetAngleRads;
 
@@ -134,19 +137,23 @@ public class Funnel extends Command {
      * @param feeder     feeder subsystem — feeds game pieces into the shooter
      * @param vxSupplier field-relative X velocity from the driver joystick (m/s)
      * @param vySupplier field-relative Y velocity from the driver joystick (m/s)
+     * @param auto       if true, skips boundary and angle checks; feeds whenever
+     *                   shooter is at RPM regardless of robot position or heading
      */
     public Funnel(
         Shooter shooter,
         CommandSwerveDrivetrain drivetrain,
         Feeder feeder,
         DoubleSupplier vxSupplier,
-        DoubleSupplier vySupplier
+        DoubleSupplier vySupplier,
+        boolean auto
     ) {
         m_shooter    = shooter;
         m_drivetrain = drivetrain;
         m_feeder     = feeder;
         m_vxSupplier = vxSupplier;
         m_vySupplier = vySupplier;
+        m_auto       = auto;
 
         addRequirements(shooter, drivetrain, feeder);
     }
@@ -158,7 +165,7 @@ public class Funnel extends Command {
         m_headingPID.reset();
         m_headingPID.enableContinuousInput(-Math.PI, Math.PI);
 
-        Translation2d robotPos      = m_drivetrain.getState().Pose.getTranslation();
+        Translation2d robotPos       = m_drivetrain.getState().Pose.getTranslation();
         double        currentHeading = m_drivetrain.getState().Pose.getRotation().getRadians();
 
         // Determine alliance — use DriverStation if available, else infer from
@@ -169,39 +176,44 @@ public class Funnel extends Command {
         // The hub we must avoid sits on OUR alliance's boundary (the X line
         // separating neutral zone from our alliance zone). Its Y extent is
         // [hubLeftY, hubRightY] = [3.3, 4.9].
-        //
-        // boundaryX is the X coordinate of that boundary line.
         double boundaryX = (m_alliance == Alliance.Red)
             ? kShooter.redXBoundary
             : kShooter.blueXBoundary;
 
-        // Compute the angle from the robot to each hub corner.
-        // hubLeftY  = 3.3 → the "low"  corner (smaller Y, below center)
-        // hubRightY = 4.9 → the "high" corner (larger  Y, above center)
         m_hubCornerLow  = new Translation2d(boundaryX, kShooter.hubLeftY);
         m_hubCornerHigh = new Translation2d(boundaryX, kShooter.hubRightY);
 
-        double angleToCornerLow  = angleToPoint(robotPos, m_hubCornerLow);
-        double angleToCornerHigh = angleToPoint(robotPos, m_hubCornerHigh);
+        // In auto mode, skip slot selection — heading is not controlled.
+        if (!m_auto) {
+            double angleToCornerLow  = angleToPoint(robotPos, m_hubCornerLow);
+            double angleToCornerHigh = angleToPoint(robotPos, m_hubCornerHigh);
 
-        // Subtract clearance from the low-corner angle  → aim passes BELOW the hub.
-        // Add    clearance to   the high-corner angle   → aim passes ABOVE the hub.
-        // The clearance is in radians so the physical margin scales with distance.
-        double angleLow  = angleToCornerLow  - kAngularClearanceRads;
-        double angleHigh = angleToCornerHigh + kAngularClearanceRads;
+            double angleLow  = angleToCornerLow  - kAngularClearanceRads;
+            double angleHigh = angleToCornerHigh + kAngularClearanceRads;
 
-        // Pick whichever slot requires the smallest heading change from current pose.
-        // Locked for the duration of the command to prevent mid-shot slot switching.
-        double errorLow  = Math.abs(Rotation2d.fromRadians(currentHeading)
-                               .minus(Rotation2d.fromRadians(angleLow)).getRadians());
-        double errorHigh = Math.abs(Rotation2d.fromRadians(currentHeading)
-                               .minus(Rotation2d.fromRadians(angleHigh)).getRadians());
+            double errorLow  = Math.abs(Rotation2d.fromRadians(currentHeading)
+                                   .minus(Rotation2d.fromRadians(angleLow)).getRadians());
+            double errorHigh = Math.abs(Rotation2d.fromRadians(currentHeading)
+                                   .minus(Rotation2d.fromRadians(angleHigh)).getRadians());
 
-        m_useLow = errorLow <= errorHigh;
-        m_targetAngleRads = m_useLow ? angleLow : angleHigh;
+            m_useLow = errorLow <= errorHigh;
+            m_targetAngleRads = m_useLow ? angleLow : angleHigh;
 
-        SmartDashboard.putString("Funnel/ChosenSlot", m_useLow ? "Low (left of hub)" : "High (right of hub)");
-        SmartDashboard.putNumber("Funnel/TargetAngleDeg", Math.toDegrees(m_targetAngleRads));
+            SmartDashboard.putString("Funnel/ChosenSlot", m_useLow ? "Low (left of hub)" : "High (right of hub)");
+            SmartDashboard.putNumber("Funnel/TargetAngleDeg", Math.toDegrees(m_targetAngleRads));
+        } else {
+            // Still pick a hub corner for distance-based RPM calculation, using
+            // whichever corner is closer to the robot's current heading.
+            double angleToCornerLow  = angleToPoint(robotPos, m_hubCornerLow);
+            double angleToCornerHigh = angleToPoint(robotPos, m_hubCornerHigh);
+            double errorLow  = Math.abs(Rotation2d.fromRadians(currentHeading)
+                                   .minus(Rotation2d.fromRadians(angleToCornerLow)).getRadians());
+            double errorHigh = Math.abs(Rotation2d.fromRadians(currentHeading)
+                                   .minus(Rotation2d.fromRadians(angleToCornerHigh)).getRadians());
+            m_useLow = errorLow <= errorHigh;
+
+            SmartDashboard.putString("Funnel/ChosenSlot", "Auto (no angle control)");
+        }
     }
 
     @Override
@@ -209,23 +221,38 @@ public class Funnel extends Command {
         Translation2d robotPos       = m_drivetrain.getState().Pose.getTranslation();
         double        currentHeading = m_drivetrain.getState().Pose.getRotation().getRadians();
 
-        double angleError = Math.abs(
-            Rotation2d.fromRadians(currentHeading)
-                .minus(Rotation2d.fromRadians(m_targetAngleRads))
-                .getRadians());
+        // Set shooter RPM based on distance to the relevant hub corner.
+        m_shooter.setShootingDistance(
+            m_auto ? 5.5 : robotPos.getDistance(m_useLow ? m_hubCornerLow : m_hubCornerHigh));
 
-        boolean atAngle = angleError < kShooter.angleTolerance_Rads;
-        double pidOutput = m_headingPID.calculate(currentHeading, Rotation2d.fromRadians(m_targetAngleRads).getRadians());
+        boolean atAngle;
+        double pidOutput = 0.0;
+
+        if (m_auto) {
+            // No heading control — pass driver rotation through directly (zero here;
+            // caller may combine with a separate rotation supplier if needed).
+            atAngle = true;
+        } else {
+            double angleError = Math.abs(
+                Rotation2d.fromRadians(currentHeading)
+                    .minus(Rotation2d.fromRadians(m_targetAngleRads))
+                    .getRadians());
+
+            atAngle   = angleError < kShooter.angleTolerance_Rads;
+            pidOutput = m_headingPID.calculate(currentHeading,
+                            Rotation2d.fromRadians(m_targetAngleRads).getRadians());
+
+            SmartDashboard.putNumber("Shooter/AngleError", Math.toDegrees(angleError));
+        }
+
         m_drivetrain.setControl(
             m_fieldCentric
                 .withVelocityX(m_vxSupplier.getAsDouble())
                 .withVelocityY(m_vySupplier.getAsDouble())
                 .withRotationalRate(pidOutput)
         );
-        // Set shooter RPM //TUNE
-        m_shooter.setShootingDistance(
-            0.6* robotPos.getDistance(m_useLow ? m_hubCornerLow : m_hubCornerHigh)); //not trying to get up into a hub, just over to other side
-        boolean clearToFeed = isClearToFeed(robotPos);
+
+        boolean clearToFeed = m_auto || isClearToFeed(robotPos);
 
         if (clearToFeed && m_shooter.atTargetRPM() && atAngle) {
             m_feeder.feed();
@@ -244,7 +271,6 @@ public class Funnel extends Command {
             status = "Firing";
         }
         SmartDashboard.putString("Shooter/Status", status);
-        SmartDashboard.putNumber("Shooter/AngleError", Math.toDegrees(angleError));
     }
 
     @Override
@@ -271,17 +297,12 @@ public class Funnel extends Command {
     }
 
     /**
-     * Returns true if the robot is in the neutral zone and the hub is active.
-     *
-     * Neutral zone is the strip between blueXBoundary (5.3) and redXBoundary (11.3).
-     * Both alliances must be within this strip to funnel — Blue robots are moving
-     * toward lower X, Red robots toward higher X, but both start somewhere in the
-     * middle and the same neutral-zone check applies to both.
+     * Returns true if the robot is in the neutral zone.
+     * Not evaluated when m_auto=true.
      */
     private boolean isClearToFeed(Translation2d robotPos) {
         double x = robotPos.getX();
-        boolean inNeutralZone = x >= kShooter.blueXBoundary && x <= kShooter.redXBoundary;
-        return inNeutralZone;
+        return x >= kShooter.blueXBoundary && x <= kShooter.redXBoundary;
     }
 
     /**

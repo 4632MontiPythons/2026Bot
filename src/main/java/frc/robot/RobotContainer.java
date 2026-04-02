@@ -84,7 +84,7 @@ public class RobotContainer {
                         "ShootFullHopper",
                         new Shoot(shooter, feeder, drivetrain,
                                 () -> 0.0, () -> 0.0,      // stationary in auto
-                                true, 8) //TUNE
+                                true, 8, false) //TUNE
                 );
                 NamedCommands.registerCommand( //zoned event in pathplanner
                         "Run Intake", 
@@ -94,20 +94,23 @@ public class RobotContainer {
                 NamedCommands.registerCommand(
                 "Spin Up Shooter", //zoned event in pathplanner
                 Commands.run(() -> shooter.warmUp(), shooter)
-                        .finallyDo(() -> shooter.stop())
+                        // .finallyDo(() -> shooter.stop())
                 );
                 NamedCommands.registerCommand(
                         "ShootDepot",
                         new Shoot(shooter, feeder, drivetrain,
                                 () -> 0.0, () -> 0.0,
-                                true, 6) //TUNE
+                                true, 8, false) //TUNE
                 );
                 NamedCommands.registerCommand(
                         "Shoot8",
                         new Shoot(shooter, feeder, drivetrain,
                                 () -> 0.0, () -> 0.0,
-                                true, 3) //TUNE
+                                true, 3, false) //TUNE
                 );
+                NamedCommands.registerCommand("Funnel",
+                        new Funnel(shooter, drivetrain, feeder,
+                        () -> 0.0, () -> 0.0, true));
                 configureBindings();
                 autoChooser = AutoBuilder.buildAutoChooser();
                 SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -153,7 +156,7 @@ public class RobotContainer {
                 mainController.rightBumper().whileTrue(new Funnel(
                         shooter, drivetrain, feeder,
                         () -> xSlewLimiter.calculate(-mainController.getLeftY()) * MaxSpeed,
-                        () -> ySlewLimiter.calculate(-mainController.getLeftX()) * MaxSpeed
+                        () -> ySlewLimiter.calculate(-mainController.getLeftX()) * MaxSpeed, false
                 ));
 
 

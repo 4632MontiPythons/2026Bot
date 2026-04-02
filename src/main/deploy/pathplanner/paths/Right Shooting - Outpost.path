@@ -16,12 +16,12 @@
     },
     {
       "anchor": {
-        "x": 0.57,
-        "y": 0.626
+        "x": 0.6232524964336661,
+        "y": 0.5868473609129818
       },
       "prevControl": {
-        "x": 0.32086356043877984,
-        "y": 0.6052386300365674
+        "x": 0.3732524964336661,
+        "y": 0.5868473609129818
       },
       "nextControl": null,
       "isLocked": false,
@@ -32,10 +32,10 @@
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.7157326130992572,
+      "minWaypointRelativePos": 0.8,
       "maxWaypointRelativePos": 0.9939230249831034,
       "constraints": {
-        "maxVelocity": 0.15,
+        "maxVelocity": 0.2,
         "maxAcceleration": 7.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 1000.0,
@@ -45,7 +45,32 @@
     }
   ],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "",
+      "waypointRelativePos": 0.3214044564483458,
+      "endWaypointRelativePos": 1.0,
+      "command": {
+        "type": "parallel",
+        "data": {
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "Run Intake"
+              }
+            },
+            {
+              "type": "named",
+              "data": {
+                "name": "Spin Up Shooter"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 4.5,
     "maxAcceleration": 3.0,
@@ -62,7 +87,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 49.5
+    "rotation": 49.43
   },
   "useDefaultConstraints": false
 }

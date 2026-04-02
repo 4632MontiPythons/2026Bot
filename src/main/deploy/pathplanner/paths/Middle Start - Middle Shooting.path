@@ -36,13 +36,18 @@
       "name": "Spin Up Shooter",
       "waypointRelativePos": 0.0,
       "endWaypointRelativePos": 1.0,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Spin Up Shooter"
+        }
+      }
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 4.5,
-    "maxAcceleration": 7.0,
-    "maxAngularVelocity": 540.0,
+    "maxVelocity": 5.0,
+    "maxAcceleration": 7.5,
+    "maxAngularVelocity": 600.0,
     "maxAngularAcceleration": 1000.0,
     "nominalVoltage": 10.0,
     "unlimited": false

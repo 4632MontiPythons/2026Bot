@@ -19,19 +19,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right Start - Intake Neutral - Right Shooting"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "ShootFullHopper"
+            "pathName": "Right Start - Neutral Feed"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Right Shooting - Neutral - Right Shooting"
+            "pathName": "Right Neutral Feed - Intake Shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Right - Intake Shoot"
           }
         }
       ]
