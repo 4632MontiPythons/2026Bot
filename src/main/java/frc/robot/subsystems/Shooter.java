@@ -65,9 +65,9 @@ public class Shooter extends SubsystemBase {
         // todo: Run SysID to replace these placeholder gains.
         cfg.Slot0
             .withKS(0.10)
-            .withKV(0.0586)
+            .withKV(0.125)
             .withKA(0.0025)
-            .withKP(0.35)
+            .withKP(0.3)
             .withKI(0.0)
             .withKD(0.0);
 

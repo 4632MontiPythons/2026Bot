@@ -73,7 +73,7 @@
       },
       "nextControl": {
         "x": 6.885563480741797,
-        "y": 0.2624528844507845
+        "y": 0.2624528844507843
       },
       "isLocked": false,
       "linkedName": null
@@ -101,7 +101,7 @@
       },
       "prevControl": {
         "x": 2.568969116892565,
-        "y": 1.3249037461866437
+        "y": 1.324903746186644
       },
       "nextControl": null,
       "isLocked": true,
@@ -128,7 +128,7 @@
       "minWaypointRelativePos": 1.7825793382849495,
       "maxWaypointRelativePos": 3.1762322754895376,
       "constraints": {
-        "maxVelocity": 1.0,
+        "maxVelocity": 1.2,
         "maxAcceleration": 6.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 900.0,
@@ -138,8 +138,8 @@
     },
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.30790006752193855,
-      "maxWaypointRelativePos": 0.5589928057554002,
+      "minWaypointRelativePos": 0.25,
+      "maxWaypointRelativePos": 0.45,
       "constraints": {
         "maxVelocity": 0.5,
         "maxAcceleration": 7.0,
@@ -177,7 +177,7 @@
     {
       "name": "Spin Up Shooter",
       "waypointRelativePos": 4.68332207967589,
-      "endWaypointRelativePos": null,
+      "endWaypointRelativePos": 6.0,
       "command": {
         "type": "named",
         "data": {
@@ -187,8 +187,8 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 4.5,
-    "maxAcceleration": 7.0,
+    "maxVelocity": 5.0,
+    "maxAcceleration": 7.5,
     "maxAngularVelocity": 600.0,
     "maxAngularAcceleration": 1000.0,
     "nominalVoltage": 10.0,
@@ -196,7 +196,7 @@
   },
   "goalEndState": {
     "velocity": 0.0,
-    "rotation": 49.5
+    "rotation": 49.43
   },
   "reversed": false,
   "folder": null,

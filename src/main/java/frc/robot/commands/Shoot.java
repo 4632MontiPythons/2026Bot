@@ -35,6 +35,7 @@ public class Shoot extends Command {
     private final Shooter m_shooter;
     private final Feeder m_feeder;
     private final CommandSwerveDrivetrain m_drivetrain;
+    private final boolean m_pathplannerControlsDrive;
 
     private final DoubleSupplier m_vxSupplier;
     private final DoubleSupplier m_vySupplier;
@@ -63,13 +64,13 @@ public class Shoot extends Command {
     /** Teleop constructor. */
     public Shoot(Shooter shooter, Feeder feeder, CommandSwerveDrivetrain drivetrain, 
                  DoubleSupplier vxSupplier, DoubleSupplier vySupplier) {
-        this(shooter, feeder, drivetrain, vxSupplier, vySupplier, false, 0.0);
+        this(shooter, feeder, drivetrain, vxSupplier, vySupplier, false, 0.0, false);
     }
 
     /** Full constructor — teleop and auto. */
     public Shoot(Shooter shooter, Feeder feeder, CommandSwerveDrivetrain drivetrain, 
                  DoubleSupplier vxSupplier, DoubleSupplier vySupplier, 
-                 boolean isAuto, double expectedShootTimeSecs) {
+                 boolean isAuto, double expectedShootTimeSecs, boolean pathplannerControlsDrive) {
         m_shooter = shooter;
         m_feeder = feeder;
         m_drivetrain = drivetrain;
@@ -77,10 +78,15 @@ public class Shoot extends Command {
         m_vySupplier = vySupplier;
         m_isAuto = isAuto;
         m_expectedShootTimeSecs = expectedShootTimeSecs;
+        m_pathplannerControlsDrive = pathplannerControlsDrive;
 
         m_headingPID.enableContinuousInput(-Math.PI, Math.PI);
 
-        addRequirements(shooter, feeder, drivetrain);
+        if (pathplannerControlsDrive) {
+            addRequirements(shooter, feeder); // drivetrain NOT required
+        } else {
+            addRequirements(shooter, feeder, drivetrain);
+        }
     }
 
     // ── Command lifecycle ─────────────────────────────────────────────────────
@@ -132,20 +138,21 @@ public class Shoot extends Command {
         } else if (!joystickStationary || angleError > kShooter.angleTolerance_Rads * 2) {
             m_isBraking = false;
         }
-
-        if (m_isBraking) {
-            m_drivetrain.setControl(m_brake);
-        } else {
-            double pidOutput = m_headingPID.calculate(currentRotation.getRadians(), aim.aimAngle);
-            m_drivetrain.setControl(m_fieldCentric
-                .withVelocityX(joyVx)
-                .withVelocityY(joyVy)
-                .withRotationalRate(pidOutput)
-            );
+        if(!m_pathplannerControlsDrive){
+            if (m_isBraking) {
+                m_drivetrain.setControl(m_brake);
+            } else {
+                double pidOutput = m_headingPID.calculate(currentRotation.getRadians(), aim.aimAngle);
+                m_drivetrain.setControl(m_fieldCentric
+                    .withVelocityX(joyVx)
+                    .withVelocityY(joyVy)
+                    .withRotationalRate(pidOutput)
+                );
+            }
         }
 
         // ── Feed gate ────────────────────────────────────────────────────────
-        if (hubShootWindowOpen && m_shooter.atTargetRPM() && atAngle) {
+        if (hubShootWindowOpen && m_shooter.atTargetRPM() && (atAngle || m_pathplannerControlsDrive)) {
             m_feeder.feed();
         } else {
             m_feeder.stop();

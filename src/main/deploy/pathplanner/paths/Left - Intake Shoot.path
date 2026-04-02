@@ -1,0 +1,65 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 1.8679000000000001,
+        "y": 6.451622222222222
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 1.4538126410389982,
+        "y": 6.738009830502549
+      },
+      "isLocked": false,
+      "linkedName": "Intake Shoot"
+    },
+    {
+      "anchor": {
+        "x": 0.6790777777777779,
+        "y": 7.426066666666667
+      },
+      "prevControl": {
+        "x": 2.114831457137801,
+        "y": 6.432594370952992
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [
+    {
+      "fieldPosition": {
+        "x": 4.625594,
+        "y": 4.034536
+      },
+      "rotationOffset": 0.0,
+      "minWaypointRelativePos": 0.0,
+      "maxWaypointRelativePos": 1.0,
+      "name": "Point Towards Zone"
+    }
+  ],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 0.2,
+    "maxAcceleration": 7.5,
+    "maxAngularVelocity": 600.0,
+    "maxAngularAcceleration": 1000.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": -40.46222749209315
+  },
+  "reversed": false,
+  "folder": null,
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": -39.80557109226522
+  },
+  "useDefaultConstraints": false
+}
