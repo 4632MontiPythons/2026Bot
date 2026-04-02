@@ -22,6 +22,7 @@ import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Feeder;
 import frc.robot.subsystems.Intake;
 import frc.robot.Constants.OI;
+import frc.robot.Constants.kFeeder;
 import frc.robot.commands.Funnel;
 import frc.robot.commands.Shoot;
 // import frc.robot.commands.SwallowIntake;
@@ -111,6 +112,12 @@ public class RobotContainer {
                 NamedCommands.registerCommand("Funnel",
                         new Funnel(shooter, drivetrain, feeder,
                         () -> 0.0, () -> 0.0, true));
+                NamedCommands.registerCommand(
+                        "Auto Aim and Shoot",
+                        new Shoot(shooter, feeder, drivetrain,
+                                () -> 0.0, () -> 0.0,
+                                false, 10, true) //TUNE
+                );
                 configureBindings();
                 autoChooser = AutoBuilder.buildAutoChooser();
                 SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -178,8 +185,17 @@ public class RobotContainer {
                 // ── Secondary controller ──────────────────────────────────────────────
                 secondaryController.b().whileTrue(drivetrain.applyRequest(() -> brake));
                 secondaryController.leftTrigger().whileTrue(Commands.run(() -> intake.runIntake(), intake).finallyDo(() -> intake.stopIntake()));
-                secondaryController.rightBumper().whileTrue(Commands.run(() -> feeder.setSpeed(1), feeder).finallyDo(() -> feeder.stop()));
+                secondaryController.rightBumper().whileTrue(Commands.run(() -> feeder.setSpeed(kFeeder.feedSpeed), feeder).finallyDo(() -> feeder.stop()));
                 secondaryController.rightTrigger().whileTrue(Commands.run(() -> shooter.setRPM(1000), shooter).finallyDo(() -> shooter.stop()));
+                secondaryController.x().whileTrue(
+                        Commands.parallel(
+                                Commands.run(() -> intake.reverseIntake(), intake), // Replace with your intake's reverse method
+                                Commands.run(() -> shooter.setRPM(-100), shooter) 
+                        ).finallyDo(() -> {
+                                intake.stopIntake();
+                                shooter.stop();
+                        })
+                        );
 
 
 

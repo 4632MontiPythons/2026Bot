@@ -4,15 +4,15 @@
     {
       "anchor": {
         "x": 1.8679000000000001,
-        "y": 1.6174497777777779
+        "y": 6.451622222222222
       },
       "prevControl": null,
       "nextControl": {
         "x": 1.4538126410389982,
-        "y": 1.331062169497451
+        "y": 6.165234613941895
       },
       "isLocked": false,
-      "linkedName": "Intake Shoot"
+      "linkedName": "Left Intake Shoot"
     },
     {
       "anchor": {
@@ -59,7 +59,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 39.80557109226522
+    "rotation": -39.80557109226522
   },
   "useDefaultConstraints": false
 }

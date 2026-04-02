@@ -21,7 +21,7 @@
       },
       "prevControl": {
         "x": 5.391556208150097,
-        "y": 0.6527497777777791
+        "y": 0.6527497777777792
       },
       "nextControl": {
         "x": 6.366477777777778,
@@ -69,7 +69,7 @@
       },
       "prevControl": {
         "x": 7.0057677071000235,
-        "y": 2.1523185494468615
+        "y": 2.1523185494468597
       },
       "nextControl": {
         "x": 6.740122222222222,
@@ -89,7 +89,7 @@
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Neutral Feed"
+      "linkedName": "Right Neutral Feed"
     }
   ],
   "rotationTargets": [

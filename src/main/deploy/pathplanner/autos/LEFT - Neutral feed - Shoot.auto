@@ -29,9 +29,27 @@
           }
         },
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "Left - Intake Shoot"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Left - Intake Shoot"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Run Intake"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Auto Aim and Shoot"
+              }
+            ]
           }
         }
       ]

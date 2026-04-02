@@ -3,16 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.773033333333334,
-        "y": 4.814555555555555
+        "x": 7.791269614835947,
+        "y": 4.960114122681883
       },
       "prevControl": null,
       "nextControl": {
-        "x": 8.503866666666667,
-        "y": 4.873022222222222
+        "x": 8.52210294816928,
+        "y": 5.01858078934855
       },
       "isLocked": false,
-      "linkedName": "Neutral Feed"
+      "linkedName": "Left Neutral Feed"
     },
     {
       "anchor": {
@@ -41,7 +41,7 @@
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Intake Shoot"
+      "linkedName": "Left Intake Shoot"
     }
   ],
   "rotationTargets": [
@@ -69,7 +69,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 164.87599269168945
+    "rotation": 164.88
   },
   "useDefaultConstraints": true
 }

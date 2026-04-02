@@ -130,7 +130,7 @@ public class Shoot extends Command {
 
         double joyVx = m_vxSupplier.getAsDouble();
         double joyVy = m_vySupplier.getAsDouble();
-        boolean joystickStationary = Math.hypot(joyVx, joyVy) < 0.05; // TUNE
+        boolean joystickStationary = Math.hypot(joyVx, joyVy) < 0.10; // TUNE
 
         // Braking hysteresis
         if (joystickStationary && atAngle) {
