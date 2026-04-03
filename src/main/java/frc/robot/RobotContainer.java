@@ -85,7 +85,7 @@ public class RobotContainer {
                         "ShootFullHopper",
                         new Shoot(shooter, feeder, drivetrain,
                                 () -> 0.0, () -> 0.0,      // stationary in auto
-                                true, 8, false) //TUNE
+                                true, 8, false, () -> false) //TUNE
                 );
                 NamedCommands.registerCommand( //zoned event in pathplanner
                         "Run Intake", 
@@ -101,13 +101,13 @@ public class RobotContainer {
                         "ShootDepot",
                         new Shoot(shooter, feeder, drivetrain,
                                 () -> 0.0, () -> 0.0,
-                                true, 8, false) //TUNE
+                                true, 8, false, () -> false) //TUNE
                 );
                 NamedCommands.registerCommand(
                         "Shoot8",
                         new Shoot(shooter, feeder, drivetrain,
                                 () -> 0.0, () -> 0.0,
-                                true, 3, false) //TUNE
+                                true, 3, false, () -> false) //TUNE
                 );
                 NamedCommands.registerCommand("Funnel",
                         new Funnel(shooter, drivetrain, feeder,
@@ -116,7 +116,7 @@ public class RobotContainer {
                         "Auto Aim and Shoot",
                         new Shoot(shooter, feeder, drivetrain,
                                 () -> 0.0, () -> 0.0,
-                                false, 10, true) //TUNE
+                                false, 10, false, () -> false) //TUNE
                 );
                 configureBindings();
                 autoChooser = AutoBuilder.buildAutoChooser();
@@ -124,8 +124,7 @@ public class RobotContainer {
         }
 
         private void configureBindings() {
-                // RobotModeTriggers.autonomous().onTrue(Commands.runOnce(() -> intake.deploy(), intake));
-                //we always want to immediately deploy the intake. we do it anyway in the auto, but this is a safekeeping measure
+
 
 
                 // ── Default drive command ─────────────────────────────────────────────
@@ -152,14 +151,12 @@ public class RobotContainer {
                 // Trigger shootingTrigger = new Trigger(() -> m_shootActive);
                 // Shoot on the move (right trigger held)
                 // Joystick inputs are read live each tick inside the command.
-                // Speed is capped at kShootOnMoveSpeedFraction of MaxSpeed.
                 mainController.rightTrigger().whileTrue(new Shoot(
-                        shooter, feeder, drivetrain,
-                        () -> xSlewLimiter.calculate(-mainController.getLeftY()) * MaxSpeed,
-                        () -> ySlewLimiter.calculate(-mainController.getLeftX()) * MaxSpeed)
-                        // .beforeStarting(() -> m_shootActive = true)
-                        // .finallyDo(interrupted -> m_shootActive = false)
-                );
+                shooter, feeder, drivetrain,
+                () -> xSlewLimiter.calculate(-mainController.getLeftY()) * MaxSpeed,
+                () -> ySlewLimiter.calculate(-mainController.getLeftX()) * MaxSpeed,
+                secondaryController.x() // This is a BooleanSupplier/Trigger
+                ));
                 mainController.rightBumper().whileTrue(new Funnel(
                         shooter, drivetrain, feeder,
                         () -> xSlewLimiter.calculate(-mainController.getLeftY()) * MaxSpeed,
@@ -167,32 +164,23 @@ public class RobotContainer {
                 ));
 
 
-                // SwallowIntake: intake faces direction of travel (left trigger held)
-                // mainController.leftTrigger()
-                // .and(shootingTrigger.negate())
-                // .whileTrue(new SwallowIntake(
-                //         drivetrain, intake,
-                //         () -> xSlewLimiter.calculate(-mainController.getLeftY()) * MaxSpeed,
-                //         () -> ySlewLimiter.calculate(-mainController.getLeftX()) * MaxSpeed
-                // ));
-                //when we're already shooting, prioritize that, and run basic intake without heading control
+
                 mainController.leftTrigger()
-                // .and(shootingTrigger)
                 .whileTrue(Commands.run(() -> intake.runIntake(), intake)
                         .finallyDo(() -> intake.stopIntake()));
 
 
                 // ── Secondary controller ──────────────────────────────────────────────
-                secondaryController.b().whileTrue(drivetrain.applyRequest(() -> brake));
-                secondaryController.leftTrigger().whileTrue(Commands.run(() -> intake.runIntake(), intake).finallyDo(() -> intake.stopIntake()));
+                secondaryController.x().whileTrue(drivetrain.applyRequest(() -> brake));
+                secondaryController.leftTrigger().whileTrue(Commands.run(() -> intake.reverseIntake(), intake).finallyDo(() -> intake.stopIntake()));
                 secondaryController.rightBumper().whileTrue(Commands.run(() -> feeder.setSpeed(kFeeder.feedSpeed), feeder).finallyDo(() -> feeder.stop()));
-                secondaryController.rightTrigger().whileTrue(Commands.run(() -> shooter.setRPM(1000), shooter).finallyDo(() -> shooter.stop()));
-                secondaryController.x().whileTrue(
+                secondaryController.rightTrigger().whileTrue(Commands.run(() -> shooter.setRPM(1800+secondaryController.getLeftY()*1000), shooter).finallyDo(() -> shooter.stop()));
+                secondaryController.b().whileTrue(
                         Commands.parallel(
-                                Commands.run(() -> intake.reverseIntake(), intake), // Replace with your intake's reverse method
+                                Commands.run(() -> feeder.reverse(), feeder),
                                 Commands.run(() -> shooter.setRPM(-100), shooter) 
                         ).finallyDo(() -> {
-                                intake.stopIntake();
+                                feeder.stop();
                                 shooter.stop();
                         })
                         );

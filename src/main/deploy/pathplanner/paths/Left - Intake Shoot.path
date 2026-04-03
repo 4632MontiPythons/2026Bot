@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.4538126410389982,
-        "y": 6.738009830502549
+        "x": 1.5956496389660102,
+        "y": 6.60085658803422
       },
       "isLocked": false,
       "linkedName": "Left Intake Shoot"
@@ -20,8 +20,8 @@
         "y": 7.426066666666667
       },
       "prevControl": {
-        "x": 2.114831457137801,
-        "y": 6.432594370952992
+        "x": 2.5296755948010805,
+        "y": 6.047940030934467
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,8 +33,8 @@
   "pointTowardsZones": [
     {
       "fieldPosition": {
-        "x": 4.625594,
-        "y": 4.034536
+        "x": 4.626,
+        "y": 4.035
       },
       "rotationOffset": 0.0,
       "minWaypointRelativePos": 0.0,
@@ -44,7 +44,7 @@
   ],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 0.2,
+    "maxVelocity": 0.17,
     "maxAcceleration": 7.5,
     "maxAngularVelocity": 600.0,
     "maxAngularAcceleration": 1000.0,
@@ -53,13 +53,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -40.46222749209315
+    "rotation": -40.7378318963461
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -39.80557109226522
+    "rotation": -41.158
   },
   "useDefaultConstraints": false
 }

@@ -35,7 +35,7 @@
       "minWaypointRelativePos": 0.8,
       "maxWaypointRelativePos": 0.9939230249831034,
       "constraints": {
-        "maxVelocity": 0.2,
+        "maxVelocity": 0.1,
         "maxAcceleration": 7.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 1000.0,
@@ -47,7 +47,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "",
+      "name": "Run Intake",
       "waypointRelativePos": 0.3214044564483458,
       "endWaypointRelativePos": 1.0,
       "command": {
@@ -58,12 +58,6 @@
               "type": "named",
               "data": {
                 "name": "Run Intake"
-              }
-            },
-            {
-              "type": "named",
-              "data": {
-                "name": "Spin Up Shooter"
               }
             }
           ]

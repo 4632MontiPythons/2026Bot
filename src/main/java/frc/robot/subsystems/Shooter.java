@@ -141,8 +141,8 @@ public class Shooter extends SubsystemBase {
     }
 
     /** @return true if shooter is within tolerance of target RPM */
-    public boolean atTargetRPM() {
-        return !m_isStopped && Math.abs(getMeasuredRPM() - m_targetRpm) < kShooter.rpmTolerance;
+    public boolean atTargetRPM(double tolerance) {
+        return !m_isStopped && Math.abs(getMeasuredRPM() - m_targetRpm) < tolerance;
     }
 
     /** @return the last commanded target motor shaft RPM */

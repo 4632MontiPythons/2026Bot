@@ -13,25 +13,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Middle Start - Middle Shooting"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot8"
+            "pathName": "Middle - Depot"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Middle Shooting - Depot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Depot - Middle Shooting"
+            "pathName": "Depot - Shooting"
           }
         },
         {

@@ -72,11 +72,13 @@ public final class Constants {
     public static final class kShooter {
         public static final int shooterMotorID = 15;
         public static final double kMaxMotorRPM = 5500.0;
-        public static final double kWarmUpRPM = 2000; //TUNE
+        public static final double kWarmUpRPM = 1750; //TUNE
         public static final Translation2d kRedHub = new Translation2d(11.915394, 4.034536);
         public static final Translation2d kBlueHub = new Translation2d(4.625594, 4.034536);
-        public static final double kGearRatio = 2;
-        public static final double kLaunchFraction = 0.7; //TUNE. for ToF 
+        public static final Translation2d kBlueFunnelLeft = new Translation2d(0.4,7.6);
+        public static final Translation2d kBlueFunnelRight = new Translation2d(0.4,0.47);
+        public static final Translation2d kRedFunnelLeft = new Translation2d(16.141,7.6); //flip over x = 8.270494
+        public static final Translation2d kRedFunnelRight = new Translation2d(16.141,0.47); //flip over x = 8.270494
         public static final double kWheelRadius = 0.0762;
         public static final double kLaunchAngleRads = Math.toRadians(60.0);
         public static final double redXBoundary = 11.3;
@@ -92,22 +94,22 @@ public final class Constants {
             rpmTable.put(1.0, 1600.0);
             rpmTable.put(2.0, 1700.0);
             rpmTable.put(2.5, 1800.0);
-            rpmTable.put(3.0, 1900.0);
-            rpmTable.put(3.5, 2000.0);
+            rpmTable.put(3.0, 1950.0);
+            rpmTable.put(3.5, 2100.0);
             rpmTable.put(4.0, 2240.0); //tuned
             rpmTable.put(5.0, 2400.0);
-            rpmTable.put(7.0, 2900.0);
+            rpmTable.put(7.0, 2700.0);
         }
         public static final InterpolatingDoubleTreeMap flightTimeTable = new InterpolatingDoubleTreeMap();
         static {
             // Distance (m) -> flight time (s)
             //TUNE
-            flightTimeTable.put(1.5, 0.38);
-            flightTimeTable.put(2.0, 0.44);
-            flightTimeTable.put(2.5, 0.49);
-            flightTimeTable.put(3.0, 0.54);
-            flightTimeTable.put(3.5, 0.59);
-            flightTimeTable.put(4.0, 0.64);
+            flightTimeTable.put(1.5, 0.8);
+            flightTimeTable.put(2.0, 0.9);
+            flightTimeTable.put(2.5, 1.0);
+            flightTimeTable.put(3.0, 1.08);
+            flightTimeTable.put(3.5, 1.15);
+            flightTimeTable.put(4.0, 1.25);
         }
 
     }

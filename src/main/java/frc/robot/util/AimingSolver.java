@@ -116,31 +116,30 @@ public final class AimingSolver {
      */
     public static double flightTime(double distance) {
         // use the table
-        if (true) {
             return kShooter.flightTimeTable.get(distance);
-        }
-        return flightTimePhysics(distance);
+        
+        // return flightTimePhysics(distance);
     }
     /**
      * Physics-derived flight time,fall back
      */
-    static double flightTimePhysics(double distance) {
-        double motorRpm   = kShooter.rpmTable.get(distance);
-        double shooterRpm = motorRpm * kShooter.kGearRatio;
-        double vSurface   = (shooterRpm / 60.0) * (2.0 * Math.PI * kShooter.kWheelRadius);
-        double vMuzzle    = vSurface * kShooter.kLaunchFraction;
+    // static double flightTimePhysics(double distance) {
+    //     double motorRpm   = kShooter.rpmTable.get(distance);
+    //     double shooterRpm = motorRpm * kShooter.kGearRatio;
+    //     double vSurface   = (shooterRpm / 60.0) * (2.0 * Math.PI * kShooter.kWheelRadius);
+    //     double vMuzzle    = vSurface * kShooter.kLaunchFraction;
 
-        double vY           = vMuzzle * Math.sin(kShooter.kLaunchAngleRads);
-        double discriminant = vY * vY - 2.0 * kG * kGoalHeightDelta;
+    //     double vY           = vMuzzle * Math.sin(kShooter.kLaunchAngleRads);
+    //     double discriminant = vY * vY - 2.0 * kG * kGoalHeightDelta;
 
-        if (discriminant >= 0.0) {
-            return (vY - Math.sqrt(discriminant)) / kG;
-        }
+    //     if (discriminant >= 0.0) {
+    //         return (vY - Math.sqrt(discriminant)) / kG;
+    //     }
 
-        double vHorizontal = vMuzzle * Math.cos(kShooter.kLaunchAngleRads);
-        if (vHorizontal < 0.1) return 1.0;
-        return distance / vHorizontal;
-    }
+    //     double vHorizontal = vMuzzle * Math.cos(kShooter.kLaunchAngleRads);
+    //     if (vHorizontal < 0.1) return 1.0;
+    //     return distance / vHorizontal;
+    // }
 
     // ── Aiming solve ───────────────────────────────────────────────────────
 
