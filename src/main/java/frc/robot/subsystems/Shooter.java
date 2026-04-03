@@ -62,14 +62,13 @@ public class Shooter extends SubsystemBase {
             .withNeutralMode(NeutralModeValue.Coast)
             .withInverted(InvertedValue.Clockwise_Positive);
 
-        cfg.Slot0
+        cfg.Slot0 //tuned with sysID
             .withKS(0.085)
             .withKV(0.1221)
             .withKA(0.032)
-            .withKP(0.17)
-            .withKI(0.0)
-            .withKD(0.0);
-
+            .withKP(1.0) //sysID said 0.17, but this is just for fun
+            .withKI(0)
+            .withKD(0.002);
         // cfg.ClosedLoopRamps.withVoltageClosedLoopRampPeriod(15.00);
         return cfg;
     }
