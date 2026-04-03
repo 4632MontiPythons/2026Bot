@@ -62,12 +62,11 @@ public class Shooter extends SubsystemBase {
             .withNeutralMode(NeutralModeValue.Coast)
             .withInverted(InvertedValue.Clockwise_Positive);
 
-        // todo: Run SysID to replace these placeholder gains.
         cfg.Slot0
-            .withKS(0.10)
-            .withKV(0.125)
-            .withKA(0.0025)
-            .withKP(0.3)
+            .withKS(0.085)
+            .withKV(0.1221)
+            .withKA(0.032)
+            .withKP(0.17)
             .withKI(0.0)
             .withKD(0.0);
 
