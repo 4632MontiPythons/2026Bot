@@ -113,7 +113,7 @@ public class Shoot extends Command {
         AimingSolver.Solution aim = AimingSolver.solve(currentPos, m_goalPos, vx, vy);
         m_shooter.setShootingDistance(aim.shootDistance);
         
-        boolean hubShootWindowOpen = HubSchedule.isHubShootWindowOpen(m_alliance);
+        boolean hubShootWindowOpen = HubSchedule.isHubShootWindowOpen();
 
         double angleError = Math.abs(currentRotation.minus(Rotation2d.fromRadians(aim.aimAngle)).getRadians());
         boolean atAngle = angleError < kShooter.angleTolerance_Rads;

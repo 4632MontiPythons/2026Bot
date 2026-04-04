@@ -83,14 +83,7 @@ public class Robot extends TimedRobot {
         private final String COLOR_YELLOW = "#ffc800ff";
 
         public void update(double time) {
-            var alliance = DriverStation.getAlliance();
-            if (alliance.isEmpty()) {
-                SmartDashboard.putString("Hub/Status", COLOR_YELLOW);
-                SmartDashboard.putNumber("Hub/ShiftTimer", -1);
-                return;
-            }
-
-            HubSchedule.HubStatus status = HubSchedule.getHubStatus(alliance.get());
+            HubSchedule.HubStatus status = HubSchedule.getHubStatus();
             String color = switch (status.state) {
                 case STRICTLY_ACTIVE -> COLOR_GREEN;
                 case MARGIN_ACTIVE   -> COLOR_YELLOW;
@@ -98,7 +91,7 @@ public class Robot extends TimedRobot {
             };
 
             SmartDashboard.putString("Hub/StatusColor", color);
-            SmartDashboard.putNumber("Hub/ShiftTimer", Math.round(status.secsUntilNextShift));
+            SmartDashboard.putNumber("Hub/ShiftTimer", Math.round(status.secsUntilNextBoundary));
         }
     }
 }

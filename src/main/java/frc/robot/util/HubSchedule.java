@@ -2,48 +2,29 @@ package frc.robot.util;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
- * Tracks hub activity state throughout a match.
- *
- * - Both hubs are ACTIVE during AUTO (0–20s), TRANSITION (130–140s), and ENDGAME (0–30s).
- * - During TELEOP shifts (130s → 30s), exactly one hub is inactive at a time.
- * - The alliance that wins AUTO (or is randomly selected) has their hub INACTIVE in SHIFT 1,
- *   then hub activity alternates every shift (4 total shifts, 25s each).
- * - FMS sends which alliance is inactive first via Game Specific Message:
- *     'R' = Red inactive in SHIFT 1, 'B' = Blue inactive in SHIFT 1.
- *
- * Timing (matchTime counts down):
- *   SHIFT 1: 130–105
- *   SHIFT 2: 105–80
- *   SHIFT 3:  80–55
- *   SHIFT 4:  55–30
- *
- * HubState:
- *   STRICTLY_ACTIVE — hub is definitively active (green)
- *   MARGIN_ACTIVE   — in early/late shoot margin, not yet strictly active (yellow)
- *   INACTIVE        — hub is inactive, do not shoot (red)
+ * Tracks hub activity state throughout a match based on FRC game-specific messaging.
+ * * Strict shift windows (matchTime counts down from 2:20 during TELEOP):
+ * - TRANSITION: 140–130s (both active)
+ * - SHIFT 1:    130–105s
+ * - SHIFT 2:    105–80s
+ * - SHIFT 3:     80–55s
+ * - SHIFT 4:     55–30s
+ * - END GAME:    30–0s   (both active)
+ * * Margin: within 2.0s of a boundary, the hub is MARGIN_ACTIVE if active in either 
+ * adjacent window.
  */
 public final class HubSchedule {
     private HubSchedule() {}
 
-    // ── Margins ───────────────────────────────────────────────────────────────
+    private static final double SHOOT_MARGIN_SECS = 2.0;
 
-    /** Start shooting this many seconds before the strict active window opens. */
-    private static final double SHOOT_EARLY_SECS = 2.0;
-
-    /**
-     * Keep shooting this many seconds after the strict active window closes.
-     * 1.9 instead of 2.0 to account for FMS rounding
-     */
-    private static final double SHOOT_LATE_SECS = 1.9;
-
-    // ── Shift windows ─────────────────────────────────────────────────────────
+    // --- Internal Data Structures ---
 
     private static final class ShiftWindow {
-        final double high;
-        final double low;
+        final double high; // matchTime start
+        final double low;  // matchTime end
         final Alliance inactive;
 
         ShiftWindow(double high, double low, Alliance inactive) {
@@ -67,96 +48,112 @@ public final class HubSchedule {
         new ShiftWindow( 55.0,  30.0, Alliance.Red),
     };
 
-    // ── Public types ──────────────────────────────────────────────────────────
-
     public enum HubState {
-        /** Hub is definitively active. */
         STRICTLY_ACTIVE,
-        /** Within early/late shoot margin — treat as active but not yet strict. */
         MARGIN_ACTIVE,
-        /** Hub is inactive — do not shoot. */
         INACTIVE
     }
 
     public static final class HubStatus {
         public final HubState state;
-        /** Seconds until the next strict boundary flip. -1 if unknown. */
-        public final double secsUntilNextShift;
+        public final double secsUntilNextBoundary;
 
-        HubStatus(HubState state, double secsUntilNextShift) {
+        HubStatus(HubState state, double secsUntilNextBoundary) {
             this.state = state;
-            this.secsUntilNextShift = secsUntilNextShift;
+            this.secsUntilNextBoundary = secsUntilNextBoundary;
         }
     }
 
-    // ── Public API ────────────────────────────────────────────────────────────
+    // --- Public API ---
 
     /**
-     * Returns the full hub status for the given alliance, including state and
-     * time until next shift boundary. Logs to SmartDashboard as a side effect.
+     * Returns the current hub status based on Alliance and match time.
      */
-    public static HubStatus getHubStatus(Alliance alliance) {
+    public static HubStatus getHubStatus() {
+        Alliance alliance = DriverStation.getAlliance().orElse(null);
         double matchTime = DriverStation.getMatchTime();
 
-        // Outside shift period (auto, transition, endgame) — always strictly active
-        if (matchTime > 130 || matchTime <= 30) {
-            double secsUntilShift = (matchTime > 130) ? matchTime - 130 : Math.max(0, matchTime);
-            return new HubStatus(HubState.STRICTLY_ACTIVE, secsUntilShift);
+        // Outside of specific shift periods, both hubs are active
+        if (matchTime > 130.0 || matchTime <= 30.0) {
+            double secsUntilShiftPeriod = (matchTime > 130.0) ? matchTime - 130.0 : -1;
+            return new HubStatus(HubState.STRICTLY_ACTIVE, secsUntilShiftPeriod);
         }
 
         ShiftWindow[] schedule = resolveSchedule();
         if (schedule == null) {
-            // No FMS data yet — treat as active, timer unknown
             return new HubStatus(HubState.STRICTLY_ACTIVE, -1);
         }
 
-        double flooredTime = Math.floor(matchTime);
+        ShiftWindow containingWindow = null;
+        double nearestBoundaryDist = Double.MAX_VALUE;
+        double nearestBoundary = -1;
 
-        for (ShiftWindow window : schedule) {
-            double marginStart = window.high + SHOOT_EARLY_SECS;
-            double marginEnd   = window.low  - SHOOT_LATE_SECS;
-
-            if (flooredTime > marginStart || flooredTime < marginEnd) continue;
-
-            // We're within this window's margin band
-            boolean strictlyInWindow = flooredTime <= window.high && flooredTime > window.low;
-            boolean isActiveAlliance = window.inactive != alliance;
-            double secsUntilNextShift = flooredTime - window.low;
-
-            if (!strictlyInWindow) {
-                // In early or late margin
-                return new HubStatus(HubState.MARGIN_ACTIVE, secsUntilNextShift);
-            } else if (isActiveAlliance) {
-                return new HubStatus(HubState.STRICTLY_ACTIVE, secsUntilNextShift);
-            } else {
-                return new HubStatus(HubState.INACTIVE, secsUntilNextShift);
+        // Determine which window we are in and the distance to the nearest boundary
+        for (ShiftWindow w : schedule) {
+            double distHigh = Math.abs(matchTime - w.high);
+            if (distHigh < nearestBoundaryDist) {
+                nearestBoundaryDist = distHigh;
+                nearestBoundary = w.high;
+            }
+            double distLow = Math.abs(matchTime - w.low);
+            if (distLow < nearestBoundaryDist) {
+                nearestBoundaryDist = distLow;
+                nearestBoundary = w.low;
+            }
+            if (matchTime <= w.high && matchTime > w.low) {
+                containingWindow = w;
             }
         }
 
-        // Between windows but inside shift period — shouldn't normally happen
+        double secsUntilNextBoundary = (nearestBoundary >= 0) ? Math.abs(matchTime - nearestBoundary) : -1;
+
+        // Handle Margin Logic
+        if (nearestBoundaryDist <= SHOOT_MARGIN_SECS) {
+            boolean activeInAnyAdjacentWindow = false;
+            for (ShiftWindow w : schedule) {
+                if (Math.abs(w.high - nearestBoundary) < 0.01 || Math.abs(w.low - nearestBoundary) < 0.01) {
+                    if (w.inactive != alliance) {
+                        activeInAnyAdjacentWindow = true;
+                        break;
+                    }
+                }
+            }
+            // If we are at the edge of the 130s or 30s boundaries, we are adjacent to a "STRICTLY_ACTIVE" period
+            if (Math.abs(nearestBoundary - 130.0) < 0.01 || Math.abs(nearestBoundary - 30.0) < 0.01) {
+                activeInAnyAdjacentWindow = true;
+            }
+
+            return new HubStatus(
+                activeInAnyAdjacentWindow ? HubState.MARGIN_ACTIVE : HubState.INACTIVE,
+                secsUntilNextBoundary
+            );
+        }
+
+        // Handle strict window logic
+        if (containingWindow != null) {
+            HubState state = (containingWindow.inactive != alliance)
+                ? HubState.STRICTLY_ACTIVE
+                : HubState.INACTIVE;
+            return new HubStatus(state, secsUntilNextBoundary);
+        }
+
         return new HubStatus(HubState.STRICTLY_ACTIVE, -1);
     }
 
-    /**
-     * True when it is safe to shoot — either strictly active or within margins.
-     * Also logs "Shooter/Hub Considered Active" to SmartDashboard.
-     */
-    public static boolean isHubShootWindowOpen(Alliance alliance) {
-        HubStatus status = getHubStatus(alliance);
-        boolean active = status.state != HubState.INACTIVE;
-        SmartDashboard.putBoolean("Shooter/Hub Considered Active", active);
-        return active;
+
+    public static boolean isHubShootWindowOpen() {
+        HubStatus status = getHubStatus();
+        return status.state != HubState.INACTIVE;
     }
 
-    // ── Private helpers ───────────────────────────────────────────────────────
+    // --- Private Helpers ---
 
     private static ShiftWindow[] resolveSchedule() {
         String gameData = DriverStation.getGameSpecificMessage();
         if (gameData == null || gameData.isEmpty()) return null;
-
-        char firstInactive = gameData.charAt(0);
-        if (firstInactive == 'R') return SCHEDULE_RED_FIRST;
-        if (firstInactive == 'B') return SCHEDULE_BLUE_FIRST;
+        char first = gameData.charAt(0);
+        if (first == 'R') return SCHEDULE_RED_FIRST;
+        if (first == 'B') return SCHEDULE_BLUE_FIRST;
         return null;
     }
 }

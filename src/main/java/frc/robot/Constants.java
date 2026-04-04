@@ -119,7 +119,7 @@ public final class Constants {
         public static final int forwardChannel = 0;
         public static final int reverseChannel = 1;
         public static final double intakeSpeed = 1;
-        public static final int motorCurrentLimit = 40;
+        public static final int motorCurrentLimit = 30;
         public static final int PCM_CAN_ID = 21;
     }
 

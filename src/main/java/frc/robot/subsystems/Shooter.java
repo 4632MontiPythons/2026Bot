@@ -53,9 +53,9 @@ public class Shooter extends SubsystemBase {
         var cfg = new TalonFXConfiguration();
 
         cfg.CurrentLimits
-            .withSupplyCurrentLimit(40.0)
+            .withSupplyCurrentLimit(50.0)
             .withSupplyCurrentLimitEnable(true)
-            .withStatorCurrentLimit(100)
+            .withStatorCurrentLimit(120.0)
             .withStatorCurrentLimitEnable(true);
 
         cfg.MotorOutput
