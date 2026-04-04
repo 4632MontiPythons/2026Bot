@@ -91,7 +91,7 @@ public class Funnel extends Command {
         boolean atAngle = angleError < kShooter.angleTolerance_Rads;
 
         // 2. Shooter Control
-        m_shooter.setShootingDistance(5.5); // TUNE
+        m_shooter.setShootingDistance(3); // TUNE
 
         // 3. Drivetrain Control (Only if NOT in auto)
         if (!m_auto) {
