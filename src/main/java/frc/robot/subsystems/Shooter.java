@@ -61,7 +61,7 @@ public class Shooter extends SubsystemBase {
         cfg.MotorOutput
             .withNeutralMode(NeutralModeValue.Coast)
             .withInverted(InvertedValue.Clockwise_Positive);
-
+        cfg.Voltage.withPeakReverseVoltage(1.5);
         cfg.Slot0 //tuned with sysID
             .withKS(0.085)
             .withKV(0.1221)
