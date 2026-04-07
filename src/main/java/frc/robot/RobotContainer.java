@@ -161,7 +161,7 @@ public class RobotContainer {
                 shooter, feeder, drivetrain,
                 () -> xSlewLimiter.calculate(-mainController.getLeftY()) * MaxSpeed,
                 () -> ySlewLimiter.calculate(-mainController.getLeftX()) * MaxSpeed,
-                secondaryController.x() // This is a BooleanSupplier/Trigger
+                secondaryController.x()
                 ));
                 mainController.rightBumper().whileTrue(new Funnel(
                         shooter, drivetrain, feeder,

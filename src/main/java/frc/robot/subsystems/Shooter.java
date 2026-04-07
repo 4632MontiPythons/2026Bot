@@ -66,7 +66,7 @@ public class Shooter extends SubsystemBase {
             .withKS(0.085)
             .withKV(0.1221)
             .withKA(0.032)
-            .withKP(1.0) //sysID said 0.17, but this is just for fun
+            .withKP(0.3) //sysID said 0.17, but this is just for fun
             .withKI(0)
             .withKD(0.002);
         // cfg.ClosedLoopRamps.withVoltageClosedLoopRampPeriod(15.00);
