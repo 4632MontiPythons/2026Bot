@@ -16,76 +16,76 @@
     },
     {
       "anchor": {
-        "x": 6.116477777777778,
-        "y": 0.6527497777777791
+        "x": 5.863409415121255,
+        "y": 0.6635513152639092
       },
       "prevControl": {
-        "x": 5.391556208150097,
-        "y": 0.6527497777777791
+        "x": 5.138487845493573,
+        "y": 0.6635513152639092
       },
       "nextControl": {
-        "x": 6.366477777777778,
-        "y": 0.6527497777777791
+        "x": 6.113409415121255,
+        "y": 0.6635513152639092
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 6.379577777777778,
-        "y": 2.1046720000000008
+        "x": 6.587974322396576,
+        "y": 1.4269321997146927
       },
       "prevControl": {
-        "x": 6.1424745433930745,
-        "y": 1.8460139261257806
+        "x": 6.350871088011873,
+        "y": 1.1682741258404725
       },
       "nextControl": {
-        "x": 6.593955555555556,
-        "y": 2.3385386666666665
+        "x": 6.802352100174354,
+        "y": 1.6607988663813584
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 7.928944444444445,
-        "y": 2.358027555555556
+        "x": 8.011226818830243,
+        "y": 1.9962331982881585
       },
       "prevControl": {
-        "x": 7.698866778045247,
-        "y": 2.1111324942505885
+        "x": 8.067441695504934,
+        "y": 1.7526353993645047
       },
       "nextControl": {
-        "x": 8.159022110843644,
-        "y": 2.6049226168605237
+        "x": 7.955011942155553,
+        "y": 2.239830997211813
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 6.9545,
-        "y": 2.3970053333333343
+        "x": 6.665606276747502,
+        "y": 2.293822356633381
       },
       "prevControl": {
-        "x": 7.0057677071000235,
-        "y": 2.1523185494468597
+        "x": 6.727063291055916,
+        "y": 2.051493993885032
       },
       "nextControl": {
-        "x": 6.740122222222222,
-        "y": 3.420172
+        "x": 6.604149262439089,
+        "y": 2.5361507193817303
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 7.791269614835947,
-        "y": 3.108957877318117
+        "x": 7.830085592011411,
+        "y": 2.940755309557775
       },
       "prevControl": {
-        "x": 7.55668383563167,
-        "y": 3.022531537611278
+        "x": 7.595499812807134,
+        "y": 2.854328969850936
       },
       "nextControl": null,
       "isLocked": false,
@@ -94,17 +94,17 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.7294605809128567,
+      "waypointRelativePos": 1.0444209413008956,
       "rotationDegrees": -0.0
     }
   ],
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 1.9503722084367139,
+      "minWaypointRelativePos": 2.1,
       "maxWaypointRelativePos": 5.0,
       "constraints": {
-        "maxVelocity": 0.75,
+        "maxVelocity": 0.72,
         "maxAcceleration": 6.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 900.0,
@@ -129,19 +129,30 @@
   "pointTowardsZones": [
     {
       "fieldPosition": {
-        "x": 0.4,
-        "y": 0.4690720000000006
+        "x": 0.0,
+        "y": 0.06907200000000024
       },
       "rotationOffset": 0.0,
-      "minWaypointRelativePos": 2.4,
+      "minWaypointRelativePos": 2.215909090909103,
       "maxWaypointRelativePos": 5.0,
       "name": "Point Towards Zone"
     }
   ],
   "eventMarkers": [
     {
+      "name": "Funnel",
+      "waypointRelativePos": 2.1786600496278066,
+      "endWaypointRelativePos": 5.0,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Funnel"
+        }
+      }
+    },
+    {
       "name": "Run Intake",
-      "waypointRelativePos": 1.9602977667493795,
+      "waypointRelativePos": 2.2159090909091006,
       "endWaypointRelativePos": 5.0,
       "command": {
         "type": "named",
@@ -149,12 +160,6 @@
           "name": "Run Intake"
         }
       }
-    },
-    {
-      "name": "Funnel",
-      "waypointRelativePos": 2.1786600496278066,
-      "endWaypointRelativePos": 5.0,
-      "command": null
     }
   ],
   "globalConstraints": {
@@ -167,7 +172,7 @@
   },
   "goalEndState": {
     "velocity": 0.0,
-    "rotation": -159.94
+    "rotation": -159.9
   },
   "reversed": false,
   "folder": null,

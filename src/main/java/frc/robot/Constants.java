@@ -75,10 +75,10 @@ public final class Constants {
         public static final double kWarmUpRPM = 1750; //TUNE
         public static final Translation2d kRedHub = new Translation2d(11.915394, 4.034536);
         public static final Translation2d kBlueHub = new Translation2d(4.625594, 4.034536);
-        public static final Translation2d kBlueFunnelLeft = new Translation2d(0.4,7.6);
-        public static final Translation2d kBlueFunnelRight = new Translation2d(0.4,0.47);
-        public static final Translation2d kRedFunnelLeft = new Translation2d(16.141,7.6); //flip over x = 8.270494
-        public static final Translation2d kRedFunnelRight = new Translation2d(16.141,0.47); //flip over x = 8.270494
+        public static final Translation2d kBlueFunnelLeft = new Translation2d(0.0,8.0);
+        public static final Translation2d kBlueFunnelRight = new Translation2d(0.0,0.0);
+        public static final Translation2d kRedFunnelLeft = new Translation2d(16.54,8.0); //flip over x = 8.270494
+        public static final Translation2d kRedFunnelRight = new Translation2d(16.54,0.0); //flip over x = 8.270494
         public static final double kWheelRadius = 0.0762;
         public static final double kLaunchAngleRads = Math.toRadians(60.0);
         public static final double redXBoundary = 11.3;

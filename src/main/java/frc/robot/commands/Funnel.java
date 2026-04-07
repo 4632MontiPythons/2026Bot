@@ -36,7 +36,7 @@ public class Funnel extends Command {
     private final SwerveRequest.FieldCentric m_fieldCentric = 
         new SwerveRequest.FieldCentric()
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
-            .withDeadband(0.1);
+            .withDeadband(0.45);
 
     public Funnel(
         Shooter shooter,
@@ -87,11 +87,11 @@ public class Funnel extends Command {
             m_activeTargetPoint.getX() - robotPos.getX()
         );
 
-        double angleError = Math.abs(currentRotation.minus(Rotation2d.fromRadians(m_targetAngleRads)).getRadians());
-        boolean atAngle = angleError < kShooter.angleTolerance_Rads;
+        double angleError = Math.abs(( currentRotation.minus(Rotation2d.fromRadians(m_targetAngleRads)) ).getRadians());
+        boolean atAngle = angleError < kShooter.angleTolerance_Rads*3;
 
         // 2. Shooter Control
-        m_shooter.setShootingDistance(3); // TUNE
+        m_shooter.setShootingDistance(3.0); // TUNE
 
         // 3. Drivetrain Control (Only if NOT in auto)
         if (!m_auto) {
@@ -115,7 +115,7 @@ public class Funnel extends Command {
             m_feeder.stop();
         }
 
-        SmartDashboard.putNumber("Funnel/AngleErrorDeg", Math.toDegrees(angleError));
+        SmartDashboard.putNumber("Shooter/AngleError", Math.toDegrees(angleError));
     }
 
     @Override

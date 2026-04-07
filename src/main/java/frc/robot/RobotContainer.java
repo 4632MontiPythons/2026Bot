@@ -30,6 +30,8 @@ import frc.robot.commands.WheelRadiusCharacterization;
 import frc.robot.Constants.Drive;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -111,7 +113,8 @@ public class RobotContainer {
                 );
                 NamedCommands.registerCommand("Funnel",
                         new Funnel(shooter, drivetrain, feeder,
-                        () -> 0.0, () -> 0.0, true));
+                        () -> 0.0, () -> 0.0, true)
+                );
                 NamedCommands.registerCommand(
                         "Auto Aim and Shoot",
                         new Shoot(shooter, feeder, drivetrain,
@@ -124,9 +127,12 @@ public class RobotContainer {
         }
 
         private void configureBindings() {
-
-
-
+                RobotModeTriggers.autonomous().onFalse(
+                Commands.sequence(
+                        Commands.runOnce(() -> mainController.setRumble(RumbleType.kBothRumble, 1.0)),
+                        Commands.waitSeconds(1.0),  //rumble for one second in the three second disabled period between auto and teleop to clarify which controller is which
+                        Commands.runOnce(() -> mainController.setRumble(RumbleType.kBothRumble, 0.0))
+                ));
                 // ── Default drive command ─────────────────────────────────────────────
                 drivetrain.setDefaultCommand(
                                 drivetrain.applyRequest(() -> drive
@@ -171,7 +177,9 @@ public class RobotContainer {
 
 
                 // ── Secondary controller ──────────────────────────────────────────────
-                secondaryController.x().whileTrue(drivetrain.applyRequest(() -> brake));
+                secondaryController.x().whileTrue(
+                        drivetrain.applyRequest(() -> brake).onlyWhile(() -> !mainController.rightTrigger().getAsBoolean())
+                );
                 secondaryController.leftTrigger().whileTrue(Commands.run(() -> intake.reverseIntake(), intake).finallyDo(() -> intake.stopIntake()));
                 secondaryController.rightBumper().whileTrue(Commands.run(() -> feeder.setSpeed(kFeeder.feedSpeed), feeder).finallyDo(() -> feeder.stop()));
                 secondaryController.rightTrigger().whileTrue(Commands.run(() -> shooter.setRPM(1800+secondaryController.getLeftY()*1000), shooter).finallyDo(() -> shooter.stop()));
