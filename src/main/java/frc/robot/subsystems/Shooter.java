@@ -53,11 +53,13 @@ public class Shooter extends SubsystemBase {
         var cfg = new TalonFXConfiguration();
 
         cfg.CurrentLimits
-            .withSupplyCurrentLimit(50.0)
-            .withSupplyCurrentLimitEnable(true)
+            .withSupplyCurrentLimit(70.0)
+            .withSupplyCurrentLowerLimit(40.0)
+            .withSupplyCurrentLowerTime(1.0)
             .withStatorCurrentLimit(120.0)
+            .withSupplyCurrentLimitEnable(true)
             .withStatorCurrentLimitEnable(true);
-
+        
         cfg.MotorOutput
             .withNeutralMode(NeutralModeValue.Coast)
             .withInverted(InvertedValue.Clockwise_Positive);
@@ -66,10 +68,9 @@ public class Shooter extends SubsystemBase {
             .withKS(0.085)
             .withKV(0.1221)
             .withKA(0.032)
-            .withKP(1.0) //sysID said 0.17, but i want to test this
+            .withKP(1.0) //sysID said 0.17, but i don't entirely trust it. Want fastest response possible because shooter is low inertia and we have a fast closed loop of 1ms
             .withKI(0)
-            .withKD(0.002);
-        // cfg.ClosedLoopRamps.withVoltageClosedLoopRampPeriod(15.00);
+            .withKD(0.005);
         return cfg;
     }
 
