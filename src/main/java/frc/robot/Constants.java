@@ -85,7 +85,7 @@ public final class Constants {
         public static final double blueXBoundary = 5.3;
         public static final double hubLeftY= 3.3;
         public static final double hubRightY= 4.9;
-        public static final double rpmTolerance = 50; //TUNE?
+        public static final double rpmTolerance = 25; //TUNE?
         public static final double angleTolerance_Rads = Units.degreesToRadians(1.5); //TUNE?
         // public static final Translation2d kShooterOffset = new Translation2d(0.34, 0.0); not used anywhere
 
@@ -126,6 +126,6 @@ public final class Constants {
     public static final class kFeeder {
         public static final int feederMotorID = 11;
         public static final boolean inverted = true;
-        public static final double feedSpeed = 0.5; //TUNE
+        public static final double feedSpeed = 0.25; //TUNE
     }
 }
