@@ -7,6 +7,7 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 
+import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
@@ -22,6 +23,7 @@ public class Intake extends SubsystemBase {
     // ── Hardware ───────────────────────────────────────────────────────────────
     private final SparkMax motor;
     private final DoubleSolenoid solenoid;
+    // private final Compressor compressor;
     public Intake() {
         motor = new SparkMax(kIntake.intakeMotorID, MotorType.kBrushed);
         SparkMaxConfig config = new SparkMaxConfig();
@@ -32,7 +34,8 @@ public class Intake extends SubsystemBase {
         motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         solenoid = new DoubleSolenoid(kIntake.PCM_CAN_ID,
             PneumaticsModuleType.CTREPCM, kIntake.forwardChannel, kIntake.reverseChannel);
-    }
+        // compressor = new Compressor(kIntake.PCM_CAN_ID, PneumaticsModuleType.)
+    }   
 
     // ── Deployment ─────────────────────────────────────────────────────────────
 

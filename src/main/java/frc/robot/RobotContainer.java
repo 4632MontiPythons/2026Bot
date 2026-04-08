@@ -119,7 +119,7 @@ public class RobotContainer {
                         "Auto Aim and Shoot",
                         new Shoot(shooter, feeder, drivetrain,
                                 () -> 0.0, () -> 0.0,
-                                false, 10, false, () -> false) //TUNE
+                                false, 10, true, () -> false) //TUNE
                 );
                 configureBindings();
                 autoChooser = AutoBuilder.buildAutoChooser();
@@ -152,7 +152,7 @@ public class RobotContainer {
                 mainController.x().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
                 // Toggle intake deployment
-                mainController.leftBumper().onTrue(Commands.runOnce(() -> intake.toggleIntake(), intake));
+                mainController.leftBumper().onTrue(Commands.runOnce(() -> intake.deploy(), intake));
 
                 // Trigger shootingTrigger = new Trigger(() -> m_shootActive);
                 // Shoot on the move (right trigger held)

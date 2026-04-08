@@ -65,10 +65,10 @@ public class Shooter extends SubsystemBase {
             .withInverted(InvertedValue.Clockwise_Positive);
         cfg.Voltage.withPeakReverseVoltage(1.5);
         cfg.Slot0 //tuned with sysID
-            .withKS(0.085)
+            .withKS(0.09)
             .withKV(0.1221)
             .withKA(0.032)
-            .withKP(1.0) //sysID said 0.17, but i don't entirely trust it. Want fastest response possible because shooter is low inertia and we have a fast closed loop of 1ms
+            .withKP(0.3) //sysID said 0.17, but i don't entirely trust it. Want fastest response possible because shooter is low inertia and we have a fast closed loop of 1ms
             .withKI(0)
             .withKD(0.005);
         return cfg;
