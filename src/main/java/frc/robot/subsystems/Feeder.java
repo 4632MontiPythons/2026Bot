@@ -54,7 +54,7 @@ public class Feeder extends SubsystemBase {
         setMotor(0.0);
     }
     public boolean isFeeding(){
-        return m_motor.get()>0.2;
+        return m_motor.get()>0.05;
     }
 
 

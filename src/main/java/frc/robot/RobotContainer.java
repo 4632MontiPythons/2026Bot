@@ -22,7 +22,6 @@ import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Feeder;
 import frc.robot.subsystems.Intake;
 import frc.robot.Constants.OI;
-import frc.robot.Constants.kFeeder;
 import frc.robot.commands.Funnel;
 import frc.robot.commands.Shoot;
 // import frc.robot.commands.SwallowIntake;
@@ -56,7 +55,7 @@ public class RobotContainer {
         private final SendableChooser<Command> autoChooser;
 
         private final CommandXboxController mainController = new CommandXboxController(OI.driverControllerPort);
-        private final CommandXboxController secondaryController = new CommandXboxController(OI.driverControllerPort + 1);
+        // private final CommandXboxController secondaryController = new CommandXboxController(OI.driverControllerPort + 1);
 
         public final CommandSwerveDrivetrain drivetrain = new CommandSwerveDrivetrain(
                 TunerConstants.DrivetrainConstants,
@@ -127,12 +126,6 @@ public class RobotContainer {
         }
 
         private void configureBindings() {
-                RobotModeTriggers.autonomous().onFalse(
-                Commands.sequence(
-                        Commands.runOnce(() -> mainController.setRumble(RumbleType.kBothRumble, 1.0)),
-                        Commands.waitSeconds(1.0),  //rumble for one second in the three second disabled period between auto and teleop to clarify which controller is which
-                        Commands.runOnce(() -> mainController.setRumble(RumbleType.kBothRumble, 0.0))
-                ));
                 // ── Default drive command ─────────────────────────────────────────────
                 drivetrain.setDefaultCommand(
                                 drivetrain.applyRequest(() -> drive
@@ -142,6 +135,9 @@ public class RobotContainer {
                                                                 * MaxSpeed)
                                                 .withRotationalRate(-mainController.getRightX()
                                                                 * MaxAngularRate)));
+                shooter.setDefaultCommand(Commands.run(() ->shooter.setRPM(2500),shooter));
+                feeder.setDefaultCommand(Commands.run(() -> feeder.stop(), feeder));
+                intake.setDefaultCommand(Commands.run(() -> intake.stopIntake(), intake));
 
                 final var idle = new SwerveRequest.Idle();
                 RobotModeTriggers.disabled().whileTrue(
@@ -152,8 +148,8 @@ public class RobotContainer {
                 mainController.x().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
                 // Toggle intake deployment
-                mainController.leftBumper().onTrue(Commands.runOnce(() -> intake.deploy(), intake));
-
+                mainController.leftBumper().onTrue(Commands.runOnce(() -> intake.toggleIntake()));
+                mainController.povCenter().whileTrue(Commands.run(() -> feeder.reverse(), feeder));
                 // Trigger shootingTrigger = new Trigger(() -> m_shootActive);
                 // Shoot on the move (right trigger held)
                 // Joystick inputs are read live each tick inside the command.
@@ -161,7 +157,7 @@ public class RobotContainer {
                 shooter, feeder, drivetrain,
                 () -> xSlewLimiter.calculate(-mainController.getLeftY()) * MaxSpeed,
                 () -> ySlewLimiter.calculate(-mainController.getLeftX()) * MaxSpeed,
-                secondaryController.x()
+                mainController.y()
                 ));
                 mainController.rightBumper().whileTrue(new Funnel(
                         shooter, drivetrain, feeder,
@@ -177,19 +173,19 @@ public class RobotContainer {
 
 
                 // ── Secondary controller ──────────────────────────────────────────────
-                secondaryController.x().whileTrue(
+                mainController.y().whileTrue(
                         drivetrain.applyRequest(() -> brake).onlyWhile(() -> !mainController.rightTrigger().getAsBoolean())
                 );
-                secondaryController.leftTrigger().whileTrue(Commands.run(() -> intake.reverseIntake(), intake).finallyDo(() -> intake.stopIntake()));
-                secondaryController.rightBumper().whileTrue(Commands.run(() -> feeder.setSpeed(kFeeder.feedSpeed), feeder).finallyDo(() -> feeder.stop()));
-                secondaryController.rightTrigger().whileTrue(Commands.run(() -> shooter.setRPM(1800+secondaryController.getLeftY()*1000), shooter).finallyDo(() -> shooter.stop()));
-                secondaryController.b().whileTrue(
+                // secondaryController.leftTrigger().whileTrue(Commands.run(() -> intake.reverseIntake(), intake).finallyDo(() -> intake.stopIntake()));
+                // secondaryController.rightBumper().whileTrue(Commands.run(() -> feeder.setSpeed(kFeeder.feedSpeed), feeder).finallyDo(() -> feeder.stop()));
+                // secondaryController.rightTrigger().whileTrue(Commands.run(() -> shooter.setRPM(1800+secondaryController.getLeftY()*1000), shooter).finallyDo(() -> shooter.stop()));
+                mainController.b().whileTrue(
                         Commands.parallel(
                                 Commands.run(() -> feeder.reverse(), feeder),
-                                Commands.run(() -> shooter.setRPM(-100), shooter) 
+                                // Commands.run(() -> shooter.setRPM(-100), shooter) 
+                                Commands.run(() -> intake.reverseIntake())
                         ).finallyDo(() -> {
-                                feeder.stop();
-                                shooter.stop();
+                                intake.stopIntake();
                         })
                         );
 
@@ -208,14 +204,14 @@ public class RobotContainer {
                                 .whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
                 // ── Shooter SysID ─────────────────────────────────────────────────
-                secondaryController.back().and(secondaryController.y())
-                                .whileTrue(shooter.sysIdDynamic(Direction.kForward));
-                secondaryController.back().and(secondaryController.x())
-                                .whileTrue(shooter.sysIdDynamic(Direction.kReverse));
-                secondaryController.start().and(secondaryController.y())
-                                .whileTrue(shooter.sysIdQuasistatic(Direction.kForward));
-                secondaryController.start().and(secondaryController.x())
-                                .whileTrue(shooter.sysIdQuasistatic(Direction.kReverse));
+                // secondaryController.back().and(secondaryController.y())
+                //                 .whileTrue(shooter.sysIdDynamic(Direction.kForward));
+                // secondaryController.back().and(secondaryController.x())
+                //                 .whileTrue(shooter.sysIdDynamic(Direction.kReverse));
+                // secondaryController.start().and(secondaryController.y())
+                //                 .whileTrue(shooter.sysIdQuasistatic(Direction.kForward));
+                // secondaryController.start().and(secondaryController.x())
+                //                 .whileTrue(shooter.sysIdQuasistatic(Direction.kReverse));
                 }
         }
 

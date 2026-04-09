@@ -63,14 +63,13 @@ public class Shooter extends SubsystemBase {
         cfg.MotorOutput
             .withNeutralMode(NeutralModeValue.Coast)
             .withInverted(InvertedValue.Clockwise_Positive);
-        cfg.Voltage.withPeakReverseVoltage(1.5);
         cfg.Slot0 //tuned with sysID
-            .withKS(0.085)
+            .withKS(0.0)
             .withKV(0.1221)
             .withKA(0.032) //no longer accurate, but not used
-            .withKP(0.3) //sysID suggested 0.17
+            .withKP(0.2) //sysID suggested 0.17
             .withKI(0.02)
-            .withKD(0.035);
+            .withKD(0.03);
         return cfg;
     }
 
@@ -131,7 +130,7 @@ public class Shooter extends SubsystemBase {
     
     /** Stop the shooter and coast. */
     public void stop() {
-        m_targetRpm = 0.0;
+        m_targetRpm = 2000.0;
         m_isStopped = true;
         m_motor.setControl(m_stopRequest);
     }
