@@ -90,7 +90,6 @@ public class Funnel extends Command {
         double angleError = Math.abs(( currentRotation.minus(Rotation2d.fromRadians(m_targetAngleRads)) ).getRadians());
         boolean atAngle = angleError < kShooter.angleTolerance_Rads*3;
 
-        // 2. Shooter Control
         m_shooter.setShootingDistance(3.0); // TUNE
 
         // 3. Drivetrain Control (Only if NOT in auto)
@@ -106,13 +105,11 @@ public class Funnel extends Command {
 
         // 4. Feed Gating
         boolean clearToFeed = m_auto || isClearToFeed(robotPos);
-        boolean rpmReady = m_shooter.atTargetRPM(2.5 * kShooter.rpmTolerance);
+        boolean rpmReady = m_shooter.atTargetRPM(3 * kShooter.rpmTolerance);
 
         // In auto, we ignore 'atAngle' check if we assume the path is handling heading
         if (clearToFeed && rpmReady && (atAngle || m_auto)) {
             m_feeder.feed();
-        } else {
-            m_feeder.stop();
         }
 
         SmartDashboard.putNumber("Shooter/AngleError", Math.toDegrees(angleError));
@@ -124,10 +121,7 @@ public class Funnel extends Command {
     }
 
     @Override
-    public void end(boolean interrupted) {
-        m_shooter.stop();
-        m_feeder.stop();
-    }
+    public void end(boolean interrupted) {}
 
     private boolean isClearToFeed(Translation2d robotPos) {
         double x = robotPos.getX();

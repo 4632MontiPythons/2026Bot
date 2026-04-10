@@ -12,8 +12,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.Constants.Drive;
-import frc.robot.util.Elastic;
+
 
 public class Robot extends TimedRobot {
 
@@ -29,14 +28,11 @@ public class Robot extends TimedRobot {
         StatusLogger.disableAutoLogging();
         SmartDashboard.putData(CommandScheduler.getInstance());
         SignalLogger.enableAutoLogging(false);
-        if (Drive.comp) Elastic.selectTab("Prematch");
     }
 
     @Override
     public void robotPeriodic() {
         CommandScheduler.getInstance().run();
-
-        if (!Drive.comp) return;
 
         double matchTime = DriverStation.getMatchTime();
         SmartDashboard.putNumber("MatchTime", matchTime);
@@ -49,13 +45,11 @@ public class Robot extends TimedRobot {
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().schedule(m_autonomousCommand);
         }
-        if (Drive.comp) Elastic.selectTab("Autonomous");
     }
 
     @Override
     public void teleopInit() {
         if (m_autonomousCommand != null) m_autonomousCommand.cancel();
-        if (Drive.comp) Elastic.selectTab("Teleop");
     }
 
     @Override public void disabledInit() {}

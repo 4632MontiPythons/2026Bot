@@ -14,6 +14,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -234,9 +235,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 m_hasAppliedOperatorPerspective = true;
             });
         }
-        if(!Drive.comp){
-            SmartDashboard.putNumber("Shooter/Hub Distance", this.getState().Pose.getTranslation().getDistance(kShooter.kRedHub));
-        }
+        Translation2d pos = this.getState().Pose.getTranslation();
+        Translation2d hub = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red 
+            ? kShooter.kRedHub : kShooter.kBlueHub;
+        SmartDashboard.putNumber("Shooter/Hub Distance", pos.getDistance(hub));
     }
 
     /**
