@@ -85,20 +85,21 @@ public final class Constants {
         public static final double blueXBoundary = 5.3;
         public static final double hubLeftY= 3.3;
         public static final double hubRightY= 4.9;
-        public static final double rpmTolerance = 25; //TUNE?
+        public static final double rpmTolerance = 100; //TUNE?
         public static final double angleTolerance_Rads = Units.degreesToRadians(1.5); //TUNE?
         // public static final Translation2d kShooterOffset = new Translation2d(0.34, 0.0); not used anywhere
 
         public static final InterpolatingDoubleTreeMap rpmTable = new InterpolatingDoubleTreeMap();
         static {
-            rpmTable.put(1.0, 2500.0);
-            rpmTable.put(2.0, 2500.0);
-            rpmTable.put(2.5, 2500.0);
-            rpmTable.put(3.0, 2700.0);
-            rpmTable.put(3.5, 2900.0); //tuned
-            rpmTable.put(4.0, 3150.0); //tuned
-            rpmTable.put(5.0, 3600.0);
-            rpmTable.put(7.0, 4000.0);
+            rpmTable.put(1.0, 4300.0);
+            rpmTable.put(2.0, 3150.0);
+            rpmTable.put(2.25, 3250.0);
+            rpmTable.put(2.5, 3500.0);
+            rpmTable.put(3.0, 3600.0);
+            rpmTable.put(3.5, 3700.0); //tuned
+            rpmTable.put(4.0, 3800.0); //tuned
+            rpmTable.put(5.0, 4000.0);
+            rpmTable.put(7.0, 5000.0);
         }
         public static final InterpolatingDoubleTreeMap flightTimeTable = new InterpolatingDoubleTreeMap();
         static {
@@ -126,6 +127,6 @@ public final class Constants {
     public static final class kFeeder {
         public static final int feederMotorID = 11;
         public static final boolean inverted = true;
-        public static final double feedSpeed = 0.25; //TUNE
+        public static final double feedSpeed = 0.15; //TUNE
     }
 }

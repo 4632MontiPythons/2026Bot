@@ -105,17 +105,14 @@ public class Shoot extends Command {
     @Override
     public void execute() {
         var state = m_drivetrain.getState();
-        double vx = state.Speeds.vxMetersPerSecond;
-        double vy = state.Speeds.vyMetersPerSecond;
         Translation2d currentPos = state.Pose.getTranslation();
         Rotation2d currentRotation = state.Pose.getRotation();
 
-        AimingSolver.Solution aim = AimingSolver.solve(currentPos, m_goalPos, vx, vy);
-        m_shooter.setShootingDistance(aim.shootDistance);
+        m_shooter.setShootingDistance(state.Pose.getTranslation().getDistance(m_goalPos));
         
-        boolean hubShootWindowOpen = HubSchedule.isHubShootWindowOpen();
-
-        double angleError = Math.abs(currentRotation.minus(Rotation2d.fromRadians(aim.aimAngle)).getRadians());
+        // boolean hubShootWindowOpen = HubSchedule.isHubShootWindowOpen();
+        boolean hubShootWindowOpen = true;
+        double angleError = Math.abs(currentRotation.getRadians()-Math.atan2(-state.Pose.getY()+m_goalPos.getY(),-state.Pose.getX()+m_goalPos.getX()));
         boolean atAngle = angleError < kShooter.angleTolerance_Rads;
 
         double joyVx = m_vxSupplier.getAsDouble();
@@ -126,7 +123,7 @@ public class Shoot extends Command {
             if (m_brakeButton.getAsBoolean()) {
                 m_drivetrain.setControl(m_brake);
             } else {
-                double pidOutput = m_headingPID.calculate(currentRotation.getRadians(), aim.aimAngle);
+                double pidOutput = m_headingPID.calculate(currentRotation.getRadians(), Math.atan2(-currentPos.getY()+m_goalPos.getY(),-currentPos.getX()+m_goalPos.getX()));
                 m_drivetrain.setControl(m_fieldCentric
                     .withVelocityX(joyVx)
                     .withVelocityY(joyVy)

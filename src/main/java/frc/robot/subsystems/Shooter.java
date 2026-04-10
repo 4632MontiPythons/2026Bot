@@ -31,17 +31,16 @@ import static edu.wpi.first.units.Units.*;
 public class Shooter extends SubsystemBase {
 
     private final TalonFX m_motor;
-    private double m_lastDashRpm = -1.0; 
+    private double m_lastDashRpm = -1.0;
     private double rpmAdjust = 0;
-    private final VelocityVoltage m_velocityRequest =
-            new VelocityVoltage(0).withSlot(0).withEnableFOC(false);
+    private final VelocityVoltage m_velocityRequest = new VelocityVoltage(0).withSlot(0).withEnableFOC(false);
     private final NeutralOut m_stopRequest = new NeutralOut();
 
     // ── Cached high-frequency signals ────────────────────────────────────────
-    private final StatusSignal<Angle>           m_posSignal;
+    private final StatusSignal<Angle> m_posSignal;
     private final StatusSignal<AngularVelocity> m_velSignal;
-    private final StatusSignal<Voltage>         m_voltSignal;
-    private final StatusSignal<Current>         m_currentSignal;
+    private final StatusSignal<Voltage> m_voltSignal;
+    private final StatusSignal<Current> m_currentSignal;
 
     // ── State ─────────────────────────────────────────────────────────────────
     private double m_targetRpm = 0.0;
@@ -53,23 +52,23 @@ public class Shooter extends SubsystemBase {
         var cfg = new TalonFXConfiguration();
 
         cfg.CurrentLimits
-            .withSupplyCurrentLimit(70.0)
-            .withSupplyCurrentLowerLimit(40.0)
-            .withSupplyCurrentLowerTime(1.0)
-            .withStatorCurrentLimit(120.0)
-            .withSupplyCurrentLimitEnable(true)
-            .withStatorCurrentLimitEnable(true);
-        
+                .withSupplyCurrentLimit(70.0)
+                .withSupplyCurrentLowerLimit(40.0)
+                .withSupplyCurrentLowerTime(1.0)
+                .withStatorCurrentLimit(120.0)
+                .withSupplyCurrentLimitEnable(true)
+                .withStatorCurrentLimitEnable(true);
+
         cfg.MotorOutput
-            .withNeutralMode(NeutralModeValue.Coast)
-            .withInverted(InvertedValue.Clockwise_Positive);
+                .withNeutralMode(NeutralModeValue.Coast)
+                .withInverted(InvertedValue.Clockwise_Positive);
         cfg.Slot0 //tuned with sysID
-            .withKS(0.085)
-            .withKV(0.1221)
-            .withKA(0.032) //no longer accurate, but not used
-            .withKP(0.3) //sysID suggested 0.17
-            .withKI(0.02)
-            .withKD(0.035);
+                .withKS(0.0)
+                .withKV(0.1221)
+                .withKA(0.032) //no longer accurate, but not used
+                .withKP(0.2) //sysID suggested 0.17
+                .withKI(0.02)
+                .withKD(0.03);
         return cfg;
     }
 
@@ -78,32 +77,29 @@ public class Shooter extends SubsystemBase {
         m_motor = new TalonFX(kShooter.shooterMotorID, "SWERVE");
         m_motor.getConfigurator().apply(buildMotorConfig());
 
-        m_posSignal     = m_motor.getPosition();
-        m_velSignal     = m_motor.getVelocity();
-        m_voltSignal    = m_motor.getMotorVoltage();
+        m_posSignal = m_motor.getPosition();
+        m_velSignal = m_motor.getVelocity();
+        m_voltSignal = m_motor.getMotorVoltage();
         m_currentSignal = m_motor.getStatorCurrent();
         BaseStatusSignal.setUpdateFrequencyForAll(250,
                 m_posSignal, m_velSignal, m_voltSignal, m_currentSignal);
         m_motor.optimizeBusUtilization();
 
         m_sysIdRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(
-                Volts.of(0.5).per(Second),
-                Volts.of(5.0),
-                Seconds.of(10)
-            ),
-            new SysIdRoutine.Mechanism(
-                volts -> m_motor.setVoltage(volts.in(Volts)),
-                log -> {
-                    BaseStatusSignal.refreshAll(m_posSignal, m_velSignal, m_voltSignal, m_currentSignal);
-                    log.motor("shooter")
-                        .voltage(Volts.of(m_voltSignal.getValueAsDouble()))
-                        .angularPosition(Rotations.of(m_posSignal.getValueAsDouble()))
-                        .angularVelocity(RotationsPerSecond.of(m_velSignal.getValueAsDouble()));
-                },
-                this
-            )
-        );
+                new SysIdRoutine.Config(
+                        Volts.of(0.5).per(Second),
+                        Volts.of(5.0),
+                        Seconds.of(10)),
+                new SysIdRoutine.Mechanism(
+                        volts -> m_motor.setVoltage(volts.in(Volts)),
+                        log -> {
+                            BaseStatusSignal.refreshAll(m_posSignal, m_velSignal, m_voltSignal, m_currentSignal);
+                            log.motor("shooter")
+                                    .voltage(Volts.of(m_voltSignal.getValueAsDouble()))
+                                    .angularPosition(Rotations.of(m_posSignal.getValueAsDouble()))
+                                    .angularVelocity(RotationsPerSecond.of(m_velSignal.getValueAsDouble()));
+                        },
+                        this));
         SmartDashboard.putNumber("Shooter/TestRPM", 0.0);
     }
 
@@ -123,13 +119,14 @@ public class Shooter extends SubsystemBase {
      * @param rpm target motor shaft rotations per minute
      */
     public void setRPM(double rpm) {
-        m_targetRpm = Math.min(rpm+rpmAdjust, kShooter.kMaxMotorRPM);
+        m_targetRpm = Math.min(rpm + rpmAdjust, kShooter.kMaxMotorRPM);
         m_motor.setControl(m_velocityRequest.withVelocity(m_targetRpm / 60.0));
     }
-    
+
     /** Stop the shooter and coast. */
     public void stop() {
         m_targetRpm = 0.0;
+        m_isStopped = true;
         m_motor.setControl(m_stopRequest);
     }
 
@@ -144,7 +141,9 @@ public class Shooter extends SubsystemBase {
     }
 
     /** @return the last commanded target motor shaft RPM */
-    public double getTargetRPM() { return m_targetRpm; }
+    public double getTargetRPM() {
+        return m_targetRpm;
+    }
 
     /** @return stator current drawn by the shooter motor in amps */
     public double getStatorCurrent() {
@@ -154,8 +153,9 @@ public class Shooter extends SubsystemBase {
     public void test() {
         setRPM(5500);
     }
-    public void adjustRPM(double adjustment){
-        rpmAdjust+=adjustment;
+
+    public void adjustRPM(double adjustment) {
+        rpmAdjust += adjustment;
     }
 
     // ── SysID Commands ────────────────────────────────────────────────────────
@@ -164,7 +164,8 @@ public class Shooter extends SubsystemBase {
      * Quasistatic SysID test. Only available outside competition mode.
      */
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-        if (!Drive.comp) return m_sysIdRoutine.quasistatic(direction);
+        if (!Drive.comp)
+            return m_sysIdRoutine.quasistatic(direction);
         return Commands.none();
     }
 
@@ -172,7 +173,8 @@ public class Shooter extends SubsystemBase {
      * Dynamic SysID test. Only available outside competition mode.
      */
     public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-        if (!Drive.comp) return m_sysIdRoutine.dynamic(direction);
+        if (!Drive.comp)
+            return m_sysIdRoutine.dynamic(direction);
         return Commands.none();
     }
 
@@ -182,8 +184,8 @@ public class Shooter extends SubsystemBase {
         BaseStatusSignal.refreshAll(m_posSignal, m_velSignal, m_voltSignal, m_currentSignal);
 
         double measuredRpm = getMeasuredRPM();
-        SmartDashboard.putNumber("Shooter/TargetRPM",     m_targetRpm);
-        SmartDashboard.putNumber("Shooter/MeasuredRPM",   measuredRpm);
+        SmartDashboard.putNumber("Shooter/TargetRPM", m_targetRpm);
+        SmartDashboard.putNumber("Shooter/MeasuredRPM", measuredRpm);
         SmartDashboard.putNumber("Shooter/StatorCurrent", getStatorCurrent());
         if (!Drive.comp && getCurrentCommand() == null) {
             double dashRpm = SmartDashboard.getNumber("Shooter/TestRPM", 0.0);
