@@ -34,7 +34,6 @@ public class Shooter extends SubsystemBase {
     private double m_lastDashRpm = -1.0;
     private double rpmAdjust = 0;
     private final VelocityVoltage m_velocityRequest = new VelocityVoltage(0).withSlot(0).withEnableFOC(false);
-    private final NeutralOut m_stopRequest = new NeutralOut();
 
     // ── Cached high-frequency signals ────────────────────────────────────────
     private final StatusSignal<Angle> m_posSignal;
@@ -63,10 +62,10 @@ public class Shooter extends SubsystemBase {
                 .withNeutralMode(NeutralModeValue.Coast)
                 .withInverted(InvertedValue.Clockwise_Positive);
         cfg.Slot0 //tuned with sysID
-                .withKS(0.0)
-                .withKV(0.1221)
+                .withKS(0.091)
+                .withKV(0.1216)
                 .withKA(0.032) //no longer accurate, but not used
-                .withKP(0.2) //sysID suggested 0.17
+                .withKP(0.185)
                 .withKI(0.02)
                 .withKD(0.03);
         return cfg;
@@ -123,12 +122,11 @@ public class Shooter extends SubsystemBase {
         m_motor.setControl(m_velocityRequest.withVelocity(m_targetRpm / 60.0));
     }
 
-    /** Stop the shooter and coast. */
-    public void stop() {
-        m_targetRpm = 0.0;
-        m_isStopped = true;
-        m_motor.setControl(m_stopRequest);
-    }
+    // /** Stop the shooter and coast. */
+    // public void stop() {
+    //     m_targetRpm = 0.0;
+    //     m_motor.setControl(m_stopRequest);
+    // } removed because i set default command to stay at 2000 rpm
 
     /** @return current measured motor shaft speed in RPM */
     public double getMeasuredRPM() {
@@ -148,10 +146,6 @@ public class Shooter extends SubsystemBase {
     /** @return stator current drawn by the shooter motor in amps */
     public double getStatorCurrent() {
         return m_currentSignal.getValueAsDouble();
-    }
-
-    public void test() {
-        setRPM(5500);
     }
 
     public void adjustRPM(double adjustment) {
@@ -193,8 +187,6 @@ public class Shooter extends SubsystemBase {
                 m_lastDashRpm = dashRpm;
                 if (dashRpm > 0.0) {
                     setRPM(dashRpm);
-                } else {
-                    stop();
                 }
             }
         }

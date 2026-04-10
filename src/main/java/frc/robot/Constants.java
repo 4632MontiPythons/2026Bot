@@ -72,7 +72,6 @@ public final class Constants {
     public static final class kShooter {
         public static final int shooterMotorID = 15;
         public static final double kMaxMotorRPM = 5500.0;
-        public static final double kWarmUpRPM = 1750; //TUNE
         public static final Translation2d kRedHub = new Translation2d(11.915394, 4.034536);
         public static final Translation2d kBlueHub = new Translation2d(4.625594, 4.034536);
         public static final Translation2d kBlueFunnelLeft = new Translation2d(0.0,8.0);
@@ -83,35 +82,34 @@ public final class Constants {
         public static final double kLaunchAngleRads = Math.toRadians(60.0);
         public static final double redXBoundary = 11.3;
         public static final double blueXBoundary = 5.3;
-        public static final double hubLeftY= 3.3;
-        public static final double hubRightY= 4.9;
+        // public static final double hubLeftY= 3.3;
+        // public static final double hubRightY= 4.9;
         public static final double rpmTolerance = 100; //TUNE?
         public static final double angleTolerance_Rads = Units.degreesToRadians(1.5); //TUNE?
-        // public static final Translation2d kShooterOffset = new Translation2d(0.34, 0.0); not used anywhere
 
         public static final InterpolatingDoubleTreeMap rpmTable = new InterpolatingDoubleTreeMap();
         static {
-            rpmTable.put(1.0, 4300.0);
+            rpmTable.put(1.0, 3000.0);
             rpmTable.put(2.0, 3150.0);
-            rpmTable.put(2.25, 3250.0);
-            rpmTable.put(2.5, 3500.0);
+            rpmTable.put(2.25, 3250.0); //tuned
+            rpmTable.put(2.5, 3400.0);
             rpmTable.put(3.0, 3600.0);
-            rpmTable.put(3.5, 3700.0); //tuned
-            rpmTable.put(4.0, 3800.0); //tuned
-            rpmTable.put(5.0, 4000.0);
-            rpmTable.put(7.0, 5000.0);
+            rpmTable.put(3.5, 3800.0);
+            rpmTable.put(4.0, 4000.0); 
+            rpmTable.put(5.0, 4200.0);
+            rpmTable.put(7.0, 4500.0);
         }
-        public static final InterpolatingDoubleTreeMap flightTimeTable = new InterpolatingDoubleTreeMap();
-        static {
-            // Distance (m) -> flight time (s)
-            //TUNE
-            flightTimeTable.put(1.5, 0.8);
-            flightTimeTable.put(2.0, 0.9);
-            flightTimeTable.put(2.5, 1.0);
-            flightTimeTable.put(3.0, 1.08);
-            flightTimeTable.put(3.5, 1.15);
-            flightTimeTable.put(4.0, 1.25);
-        }
+        // public static final InterpolatingDoubleTreeMap flightTimeTable = new InterpolatingDoubleTreeMap();
+        // static {
+        //     // Distance (m) -> flight time (s)
+        //     //TUNE
+        //     flightTimeTable.put(1.5, 0.8);
+        //     flightTimeTable.put(2.0, 0.9);
+        //     flightTimeTable.put(2.5, 1.0);
+        //     flightTimeTable.put(3.0, 1.08);
+        //     flightTimeTable.put(3.5, 1.15);
+        //     flightTimeTable.put(4.0, 1.25);
+        // }
 
     }
 

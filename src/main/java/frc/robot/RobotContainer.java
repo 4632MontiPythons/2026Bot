@@ -30,7 +30,6 @@ import frc.robot.Constants.Drive;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -41,7 +40,6 @@ import com.pathplanner.lib.auto.NamedCommands;
 public class RobotContainer {
         private final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
         private final double MaxAngularRate = Drive.maxAngularRateRadPerSec;
-        // private boolean m_shootActive = false;
 
         private final SlewRateLimiter xSlewLimiter = new SlewRateLimiter(OI.slewRate);
         private final SlewRateLimiter ySlewLimiter = new SlewRateLimiter(OI.slewRate);
@@ -54,8 +52,7 @@ public class RobotContainer {
         private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
         private final SendableChooser<Command> autoChooser;
 
-        private final CommandXboxController mainController = new CommandXboxController(OI.driverControllerPort);
-        // private final CommandXboxController secondaryController = new CommandXboxController(OI.driverControllerPort + 1);
+        private final CommandXboxController controller = new CommandXboxController(OI.driverControllerPort);
 
         public final CommandSwerveDrivetrain drivetrain = new CommandSwerveDrivetrain(
                 TunerConstants.DrivetrainConstants,
@@ -70,34 +67,33 @@ public class RobotContainer {
 
 
         public RobotContainer() {
-                NamedCommands.registerCommand(
-                        "WheelRadiusCharacterization",
-                        new WheelRadiusCharacterization(drivetrain)
-                );
+                // NamedCommands.registerCommand(
+                //         "WheelRadiusCharacterization",
+                //         new WheelRadiusCharacterization(drivetrain)
+                // );
                 NamedCommands.registerCommand(
                         "Deploy Intake", 
                         Commands.runOnce(() -> intake.deploy(), intake)
                 );
-                NamedCommands.registerCommand(
-                        "Retract Intake", 
-                        Commands.runOnce(() -> intake.retract(), intake)
-                );
+                // NamedCommands.registerCommand(
+                //         "Retract Intake", 
+                //         Commands.runOnce(() -> intake.retract(), intake)
+                // );
                 NamedCommands.registerCommand(
                         "ShootFullHopper",
                         new Shoot(shooter, feeder, drivetrain,
-                                () -> 0.0, () -> 0.0,      // stationary in auto
+                                () -> 0.0, () -> 0.0,
                                 true, 8, false, () -> false) //TUNE
                 );
                 NamedCommands.registerCommand( //zoned event in pathplanner
                         "Run Intake", 
                         Commands.run(() -> intake.runIntake(), intake)
-                                .finallyDo(() -> intake.stopIntake())
                 );
                 NamedCommands.registerCommand(
                         "ShootDepot",
                         new Shoot(shooter, feeder, drivetrain,
                                 () -> 0.0, () -> 0.0,
-                                true, 8, false, () -> false) //TUNE
+                                true, 10, false, () -> false) //TUNE
                 );
                 NamedCommands.registerCommand(
                         "Shoot8",
@@ -124,11 +120,11 @@ public class RobotContainer {
                 // ── Default drive command ─────────────────────────────────────────────
                 drivetrain.setDefaultCommand(
                                 drivetrain.applyRequest(() -> drive
-                                                .withVelocityX(xSlewLimiter.calculate(-mainController.getLeftY())
+                                                .withVelocityX(xSlewLimiter.calculate(-controller.getLeftY())
                                                                 * MaxSpeed)
-                                                .withVelocityY(ySlewLimiter.calculate(-mainController.getLeftX())
+                                                .withVelocityY(ySlewLimiter.calculate(-controller.getLeftX())
                                                                 * MaxSpeed)
-                                                .withRotationalRate(-mainController.getRightX()
+                                                .withRotationalRate(-controller.getRightX()
                                                                 * MaxAngularRate)));
                 shooter.setDefaultCommand(Commands.run(() ->shooter.setRPM(2500),shooter));
                 feeder.setDefaultCommand(Commands.run(() -> feeder.stop(), feeder));
@@ -140,62 +136,53 @@ public class RobotContainer {
 
                 // ── Main controller ───────────────────────────────────────────────────
                 // Reset field-centric heading (x)
-                mainController.x().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+                controller.x().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
                 // Toggle intake deployment
-                mainController.leftBumper().onTrue(Commands.runOnce(() -> intake.toggleIntake()));
-                mainController.povCenter().whileTrue(Commands.run(() -> feeder.reverse(), feeder));
-                // Trigger shootingTrigger = new Trigger(() -> m_shootActive);
-                // Shoot on the move (right trigger held)
-                // Joystick inputs are read live each tick inside the command.
-                mainController.rightTrigger().whileTrue(new Shoot(
-                shooter, feeder, drivetrain,
-                () -> xSlewLimiter.calculate(-mainController.getLeftY()) * MaxSpeed,
-                () -> ySlewLimiter.calculate(-mainController.getLeftX()) * MaxSpeed,
-                mainController.y()
+                controller.leftBumper().onTrue(Commands.runOnce(() -> intake.toggleIntake()));
+
+                controller.rightTrigger().whileTrue(new Shoot(
+                        shooter, feeder, drivetrain,
+                        () -> xSlewLimiter.calculate(-controller.getLeftY()) * MaxSpeed,
+                        () -> ySlewLimiter.calculate(-controller.getLeftX()) * MaxSpeed,
+                        controller.y()
                 ));
-                mainController.rightBumper().whileTrue(new Funnel(
+                controller.rightBumper().whileTrue(new Funnel(
                         shooter, drivetrain, feeder,
-                        () -> xSlewLimiter.calculate(-mainController.getLeftY()) * MaxSpeed,
-                        () -> ySlewLimiter.calculate(-mainController.getLeftX()) * MaxSpeed, false
+                        () -> xSlewLimiter.calculate(-controller.getLeftY()) * MaxSpeed,
+                        () -> ySlewLimiter.calculate(-controller.getLeftX()) * MaxSpeed, false
                 ));
 
+                controller.povUp().onTrue(Commands.runOnce(() -> shooter.adjustRPM(50)));
+                controller.povDown().onTrue(Commands.runOnce(() -> shooter.adjustRPM(-50)));
 
 
-                mainController.leftTrigger()
-                .whileTrue(Commands.run(() -> intake.runIntake(), intake)
-                        .finallyDo(() -> intake.stopIntake()));
 
+                controller.leftTrigger()
+                .whileTrue(Commands.run(() -> intake.runIntake(), intake));
 
-                // ── Secondary controller ──────────────────────────────────────────────
-                mainController.y().whileTrue(
-                        drivetrain.applyRequest(() -> brake).onlyWhile(() -> !mainController.rightTrigger().getAsBoolean())
+                controller.y().whileTrue(
+                        drivetrain.applyRequest(() -> brake).onlyWhile(() -> !controller.rightTrigger().getAsBoolean())
                 );
-                // secondaryController.leftTrigger().whileTrue(Commands.run(() -> intake.reverseIntake(), intake).finallyDo(() -> intake.stopIntake()));
-                // secondaryController.rightBumper().whileTrue(Commands.run(() -> feeder.setSpeed(kFeeder.feedSpeed), feeder).finallyDo(() -> feeder.stop()));
-                // secondaryController.rightTrigger().whileTrue(Commands.run(() -> shooter.setRPM(1800+secondaryController.getLeftY()*1000), shooter).finallyDo(() -> shooter.stop()));
-                mainController.b().whileTrue(
+
+                controller.b().whileTrue(
                         Commands.parallel(
                                 Commands.run(() -> feeder.reverse(), feeder),
-                                // Commands.run(() -> shooter.setRPM(-100), shooter) 
-                                Commands.run(() -> intake.reverseIntake())
-                        ).finallyDo(() -> {
-                                intake.stopIntake();
-                        })
-                        );
+                                Commands.run(() -> intake.reverseIntake(), intake)
+                        ));
 
 
 
                 // ── SysId routines (dev/practice bot only) ────────────────────────────
                 if (!Drive.comp) {
                 // ── Drivetrain SysID ──────────────────────────────────────────────
-                mainController.back().and(mainController.y())
+                controller.back().and(controller.y())
                                 .whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-                mainController.back().and(mainController.x())
+                controller.back().and(controller.x())
                                 .whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-                mainController.start().and(mainController.y())
+                controller.start().and(controller.y())
                                 .whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-                mainController.start().and(mainController.x())
+                controller.start().and(controller.x())
                                 .whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
                 // ── Shooter SysID ─────────────────────────────────────────────────

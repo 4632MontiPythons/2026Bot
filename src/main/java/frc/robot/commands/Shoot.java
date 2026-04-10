@@ -19,9 +19,7 @@ import frc.robot.Constants.kShooter;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Feeder;
 import frc.robot.subsystems.Shooter;
-import frc.robot.util.AimingSolver;
-import frc.robot.util.HubSchedule;
-
+import edu.wpi.first.math.MathUtil;
 /**
  * Aims at the goal, spins up the shooter, and feeds game pieces.
  */
@@ -32,7 +30,7 @@ public class Shoot extends Command {
     private final Feeder m_feeder;
     private final CommandSwerveDrivetrain m_drivetrain;
     private final boolean m_pathplannerControlsDrive;
-    private final BooleanSupplier m_brakeButton; // Fixed: using consistent import
+    private final BooleanSupplier m_brakeButton;
     private final DoubleSupplier m_vxSupplier;
     private final DoubleSupplier m_vySupplier;
     private final boolean m_isAuto;
@@ -51,7 +49,6 @@ public class Shoot extends Command {
     private Alliance m_alliance;
     private Translation2d m_goalPos;
 
-    private boolean m_hubWasActive = false;
     private boolean m_shouldFinish = false;
 
     // ── Constructors ──────────────────────────────────────────────────────────
@@ -93,7 +90,6 @@ public class Shoot extends Command {
         m_headingPID.reset();
 
         m_shouldFinish = false;
-        m_hubWasActive = false;
 
         Translation2d initPos = m_drivetrain.getState().Pose.getTranslation();
         m_alliance = DriverStation.getAlliance().orElseGet(() -> closestAlliance(initPos));
@@ -109,10 +105,8 @@ public class Shoot extends Command {
         Rotation2d currentRotation = state.Pose.getRotation();
 
         m_shooter.setShootingDistance(state.Pose.getTranslation().getDistance(m_goalPos));
-        
-        // boolean hubShootWindowOpen = HubSchedule.isHubShootWindowOpen();
-        boolean hubShootWindowOpen = true;
-        double angleError = Math.abs(currentRotation.getRadians()-Math.atan2(-state.Pose.getY()+m_goalPos.getY(),-state.Pose.getX()+m_goalPos.getX()));
+        double targetAngle = Math.atan2(-currentPos.getY()+m_goalPos.getY(),-currentPos.getX()+m_goalPos.getX());
+        double angleError = Math.abs(MathUtil.angleModulus(currentRotation.getRadians() - targetAngle));
         boolean atAngle = angleError < kShooter.angleTolerance_Rads;
 
         double joyVx = m_vxSupplier.getAsDouble();
@@ -123,7 +117,7 @@ public class Shoot extends Command {
             if (m_brakeButton.getAsBoolean()) {
                 m_drivetrain.setControl(m_brake);
             } else {
-                double pidOutput = m_headingPID.calculate(currentRotation.getRadians(), Math.atan2(-currentPos.getY()+m_goalPos.getY(),-currentPos.getX()+m_goalPos.getX()));
+                double pidOutput = m_headingPID.calculate(currentRotation.getRadians(), targetAngle);
                 m_drivetrain.setControl(m_fieldCentric
                     .withVelocityX(joyVx)
                     .withVelocityY(joyVy)
@@ -132,22 +126,16 @@ public class Shoot extends Command {
             }
         }
 
-        if (hubShootWindowOpen && m_shooter.atTargetRPM(kShooter.rpmTolerance) && (atAngle || m_pathplannerControlsDrive)) {
+        if (m_shooter.atTargetRPM(kShooter.rpmTolerance) && (atAngle || m_pathplannerControlsDrive)) {
             m_feeder.feed();
         } else {
             m_feeder.stop();
         }
 
-        if (m_isAuto) {
-            m_shouldFinish = m_commandTimer.hasElapsed(m_expectedShootTimeSecs);
-        } else {
-            m_shouldFinish = m_hubWasActive && !hubShootWindowOpen;
-        }
-        m_hubWasActive |= hubShootWindowOpen;
+        if (m_isAuto) m_shouldFinish = m_commandTimer.hasElapsed(m_expectedShootTimeSecs);
 
         // Dashboard
-        String status = !hubShootWindowOpen ? "Hub Inactive" : 
-                        !m_shooter.atTargetRPM(kShooter.rpmTolerance) ? "RPM too low" : 
+        String status = !m_shooter.atTargetRPM(kShooter.rpmTolerance) ? "RPM too low" : 
                         !atAngle ? "Adjusting Angle" : "Firing";
 
         SmartDashboard.putString("Shooter/Status", status);
@@ -161,8 +149,6 @@ public class Shoot extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        m_shooter.stop();
-        m_feeder.stop();
     }
 
     private static Alliance closestAlliance(Translation2d robotPos) {
