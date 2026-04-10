@@ -95,11 +95,6 @@ public class RobotContainer {
                                 .finallyDo(() -> intake.stopIntake())
                 );
                 NamedCommands.registerCommand(
-                "Spin Up Shooter", //zoned event in pathplanner
-                Commands.run(() -> shooter.warmUp(), shooter)
-                        // .finallyDo(() -> shooter.stop())
-                );
-                NamedCommands.registerCommand(
                         "ShootDepot",
                         new Shoot(shooter, feeder, drivetrain,
                                 () -> 0.0, () -> 0.0,

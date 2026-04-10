@@ -32,6 +32,7 @@ public class Shooter extends SubsystemBase {
 
     private final TalonFX m_motor;
     private double m_lastDashRpm = -1.0; 
+    private double rpmAdjust = 0;
     private final VelocityVoltage m_velocityRequest =
             new VelocityVoltage(0).withSlot(0).withEnableFOC(false);
     private final NeutralOut m_stopRequest = new NeutralOut();
@@ -44,7 +45,6 @@ public class Shooter extends SubsystemBase {
 
     // ── State ─────────────────────────────────────────────────────────────────
     private double m_targetRpm = 0.0;
-    private boolean m_isStopped = true;
 
     private final SysIdRoutine m_sysIdRoutine;
 
@@ -63,7 +63,6 @@ public class Shooter extends SubsystemBase {
         cfg.MotorOutput
             .withNeutralMode(NeutralModeValue.Coast)
             .withInverted(InvertedValue.Clockwise_Positive);
-        cfg.Voltage.withPeakReverseVoltage(1.5);
         cfg.Slot0 //tuned with sysID
             .withKS(0.085)
             .withKV(0.1221)
@@ -124,15 +123,13 @@ public class Shooter extends SubsystemBase {
      * @param rpm target motor shaft rotations per minute
      */
     public void setRPM(double rpm) {
-        m_targetRpm = Math.min(rpm, kShooter.kMaxMotorRPM);
-        m_isStopped = false;
-        m_motor.setControl(m_velocityRequest.withVelocity(m_targetRpm / 60.0)); // use clamped value
+        m_targetRpm = Math.min(rpm+rpmAdjust, kShooter.kMaxMotorRPM);
+        m_motor.setControl(m_velocityRequest.withVelocity(m_targetRpm / 60.0));
     }
     
     /** Stop the shooter and coast. */
     public void stop() {
         m_targetRpm = 0.0;
-        m_isStopped = true;
         m_motor.setControl(m_stopRequest);
     }
 
@@ -143,7 +140,7 @@ public class Shooter extends SubsystemBase {
 
     /** @return true if shooter is within tolerance of target RPM */
     public boolean atTargetRPM(double tolerance) {
-        return !m_isStopped && Math.abs(getMeasuredRPM() - m_targetRpm) < tolerance;
+        return Math.abs(getMeasuredRPM() - m_targetRpm) < tolerance;
     }
 
     /** @return the last commanded target motor shaft RPM */
@@ -157,8 +154,8 @@ public class Shooter extends SubsystemBase {
     public void test() {
         setRPM(5500);
     }
-    public void warmUp() {
-        setRPM(kShooter.kWarmUpRPM);
+    public void adjustRPM(double adjustment){
+        rpmAdjust+=adjustment;
     }
 
     // ── SysID Commands ────────────────────────────────────────────────────────

@@ -14,14 +14,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.Drive;
 import frc.robot.util.Elastic;
-import frc.robot.util.HubSchedule;
 
 public class Robot extends TimedRobot {
 
     private Command m_autonomousCommand;
     private final RobotContainer m_robotContainer;
-    private final DriverTimeNotifications m_notifications = new DriverTimeNotifications();
-    private int m_updateTick = 0;
 
     public Robot() {
         m_robotContainer = new RobotContainer();
@@ -43,12 +40,6 @@ public class Robot extends TimedRobot {
 
         double matchTime = DriverStation.getMatchTime();
         SmartDashboard.putNumber("MatchTime", matchTime);
-
-        if (m_updateTick % 10 == 0 && DriverStation.isTeleopEnabled()) {
-            m_notifications.update(matchTime);
-        }
-
-        m_updateTick++;
     }
 
     @Override
@@ -77,21 +68,4 @@ public class Robot extends TimedRobot {
         CommandScheduler.getInstance().cancelAll();
     }
 
-    private class DriverTimeNotifications {
-        private final String COLOR_GREEN  = "#148314cc";
-        private final String COLOR_RED    = "#FF0000";
-        private final String COLOR_YELLOW = "#ffc800ff";
-
-        public void update(double time) {
-            HubSchedule.HubStatus status = HubSchedule.getHubStatus();
-            String color = switch (status.state) {
-                case STRICTLY_ACTIVE -> COLOR_GREEN;
-                case MARGIN_ACTIVE   -> COLOR_YELLOW;
-                case INACTIVE        -> COLOR_RED;
-            };
-
-            SmartDashboard.putString("Hub/StatusColor", color);
-            SmartDashboard.putNumber("Hub/ShiftTimer", Math.round(status.secsUntilNextBoundary));
-        }
-    }
 }
